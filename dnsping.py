@@ -103,7 +103,7 @@ def main():
                 hostname = a
 
     resolver = dns.resolver.Resolver()
-    resolver.nameservers.append(dnsserver)
+    resolver.nameservers=[dnsserver]
     resolver.timeout = timeout
     resolver.lifetime = timeout
     resolver.retry_servfail = 0
