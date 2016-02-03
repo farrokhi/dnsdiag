@@ -55,10 +55,13 @@ def main():
     #     signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
     #     signal.signal(signal.SIGINT, signal.SIG_IGN)  # ignore CTRL+C
 
-    hostname = 'wikipedia.org'
+    if len(sys.argv) == 1:
+        usage()
+
     dnsrecord = 'A'
     count = 10
     timeout = 5
+    quiet = False
     verbose = False
     dnsserver = '8.8.8.8'
 
@@ -71,9 +74,10 @@ def main():
         usage()
         exit(2)
 
-    quiet = False
-    hn = [h for h in sys.argv[-1:] if not h.startswith('-')]
-    hostname = hn[0]
+    if args and len(args) == 1:
+        hostname = args[0]
+    else:
+        usage()
 
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -130,8 +134,8 @@ def main():
             response_time.append(elapsed)
             if not quiet:
                 print(
-                        "%d bytes from %s: seq=%-3d time=%3.3f ms" % (
-                            len(str(answers.rrset)), dnsserver, i, elapsed))
+                    "%d bytes from %s: seq=%-3d time=%3.3f ms" % (
+                        len(str(answers.rrset)), dnsserver, i, elapsed))
             if verbose:
                 print(answers.rrset)
 
