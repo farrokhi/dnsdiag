@@ -72,7 +72,6 @@ def main():
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
         usage()
-        exit(2)
 
     if args and len(args) == 1:
         hostname = args[0]
@@ -96,11 +95,7 @@ def main():
         elif o in ("-t", "--type"):
             dnsrecord = a
         else:
-            if a.startswith('-'):
-                print("unknown syntax: %s" % a)
-                usage()
-            else:
-                hostname = a
+            usage()
 
     resolver = dns.resolver.Resolver()
     resolver.nameservers=[dnsserver]
@@ -161,3 +156,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
