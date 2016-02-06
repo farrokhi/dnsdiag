@@ -51,11 +51,11 @@ def usage():
     exit()
 
 
-def signal_handler(signal, frame):
+def signal_handler(sig, frame):
     global should_stop
-    if should_stop:  ## pressed twice, so exit immediately
+    if should_stop:  # pressed twice, so exit immediately
         exit(0)
-    should_stop = True  ## pressed once, exit gracefully
+    should_stop = True  # pressed once, exit gracefully
 
 
 def main():
@@ -71,6 +71,7 @@ def main():
     quiet = False
     verbose = False
     dnsserver = '8.8.8.8'
+    hostname = 'wikipedia.org'
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:v",
@@ -111,6 +112,7 @@ def main():
     resolver.retry_servfail = 0
 
     response_time = []
+    i = 0
 
     print("DNSPING %s: hostname=%s rdatatype=%s" % (dnsserver, hostname, dnsrecord))
 
