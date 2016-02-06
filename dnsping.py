@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#
 # Copyright (c) 2016, Babak Farrokhi
 # All rights reserved.
 #
@@ -39,7 +40,7 @@ should_stop = False
 
 def usage():
     print('dnsping version %1.1f\n' % __VERSION__)
-    print('syntax: dnsping [-h] [-q] [-s server] [-c count] [-t type] [-w wait] hostname')
+    print('syntax: dnsping [-h] [-q] [-v] [-s server] [-c count] [-t type] [-w wait] hostname')
     print('  -h  --help      show this help')
     print('  -q  --quiet     quiet')
     print('  -v  --verbose   print actual dns response')
