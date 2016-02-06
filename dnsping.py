@@ -34,6 +34,7 @@ import dns.rdatatype
 import dns.resolver
 
 __VERSION__ = 1.0
+should_stop = False
 
 
 def usage():
@@ -50,10 +51,16 @@ def usage():
     exit()
 
 
+def signal_handler(signal, frame):
+    global should_stop
+    if should_stop:  ## pressed twice, so exit immediately
+        exit(0)
+    should_stop = True  ## pressed once, exit gracefully
+
+
 def main():
-    # if not __debug__:
-    #     signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-    #     signal.signal(signal.SIGINT, signal.SIG_IGN)  # ignore CTRL+C
+    signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+    signal.signal(signal.SIGINT, signal_handler)  # ignore CTRL+C
 
     if len(sys.argv) == 1:
         usage()
@@ -98,7 +105,7 @@ def main():
             usage()
 
     resolver = dns.resolver.Resolver()
-    resolver.nameservers=[dnsserver]
+    resolver.nameservers = [dnsserver]
     resolver.timeout = timeout
     resolver.lifetime = timeout
     resolver.retry_servfail = 0
@@ -108,6 +115,8 @@ def main():
     print("DNSPING %s: hostname=%s rdatatype=%s" % (dnsserver, hostname, dnsrecord))
 
     for i in range(count):
+        if should_stop:
+            break
         try:
             stime = time.time()
             answers = resolver.query(hostname, dnsrecord)
@@ -156,4 +165,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
