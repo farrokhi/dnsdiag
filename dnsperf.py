@@ -148,8 +148,8 @@ def main():
 
     try:
         f = open(inputfile, 'rt')
-        print('server             avg(ms)     min(ms)     max(ms)     stddev(ms) lost(%)')
-        print('-------------------------------------------------------------------------')
+        print('server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
+        print('--------------------------------------------------------------------------')
         for server in f:
             s = server.strip()
             if not s:
