@@ -24,14 +24,16 @@ This script calculates minimum, maximum and average response time as well as jit
 dnsperf is a bulk ping utility that sends an arbitrary DNS query to a give list of DNS servers. This script is meant for comparing response time of multiple DNS servers at once:
 ```
 % ./dnsperf.py wikipedia.org
-server             avg(ms)     min(ms)     max(ms)     stddev(ms) lost(%)
--------------------------------------------------------------------------
-4.2.2.1            152.938     142.640     166.988     8.546       %10
-4.2.2.2            147.496     136.643     160.676     8.903       %30
-64.6.64.6          146.446     112.044     162.620     17.441      %0
-8.8.4.4            307.992     303.591     315.377     3.418       %0
-8.8.8.8            150.635     110.882     172.863     20.908      %0
-
+server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
+--------------------------------------------------------------------------
+4.2.2.1            151.067     131.270     221.742     28.643      %10
+4.2.2.2            142.175     132.921     178.133     13.348      %0
+64.6.64.6          133.047     109.145     162.938     20.609      %0
+64.6.65.6          377.270     97.669      661.471     172.717     %0
+8.8.4.4            389.048     294.581     511.134     67.953      %0
+8.8.8.8            0.000       0.000       0.000       0.000       %100
+208.67.222.222     179.068     135.975     258.582     50.681      %0
+208.67.220.220     137.817     135.822     140.113     1.504       %0
 ```
 # todo
 - input sanitization
