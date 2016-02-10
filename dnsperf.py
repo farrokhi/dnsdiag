@@ -26,10 +26,10 @@
 
 
 import getopt
+import signal
+import sys
 import time
 from statistics import stdev
-import sys
-import signal
 
 import dns.rdatatype
 import dns.resolver
@@ -37,16 +37,26 @@ import dns.resolver
 __VERSION__ = 1.0
 should_stop = False
 
+resolvers = [
+    '4.2.2.1',
+    '4.2.2.2',
+    '64.6.64.6',
+    '64.6.65.6',
+    '8.8.4.4',
+    '8.8.8.8',
+    '208.67.222.222',
+    '208.67.220.220'
+]
+
 
 def usage():
     print('dnsperf version %1.1f\n' % __VERSION__)
     print('syntax: dnsping [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname')
     print('  -h  --help      show this help')
-    print('  -f  --file      dns server to use (default: dnsperf.list)')
+    print('  -f  --file      dns server list to use')
     print('  -c  --count     number of requests to send (default: 10)')
     print('  -w  --wait      maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
-    print('  ')
     exit()
 
 
@@ -99,12 +109,8 @@ def dnsping(host, server, dnsrecord, timeout, count):
         r_avg = 0
         r_stddev = 0
 
-    # print("%-15s    avg: %-8.3f ms    min: %-8.3f ms    max: %-8.3f    stddev: %-8.3f    lost: %%%d" % (
-    #     server, r_avg, r_min, r_max, r_stddev, r_lost_percent))
     print("%-15s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d" % (
         server, r_avg, r_min, r_max, r_stddev, r_lost_percent))
-
-    # return r_min, r_max, r_avg, r_lost_percent, r_stddev
 
 
 def main():
@@ -117,7 +123,8 @@ def main():
     dnsrecord = 'A'
     count = 10
     waittime = 5
-    inputfile = 'dnsperf.list'
+    inputfilename = None
+    fromfile = False
     hostname = 'wikipedia.org'
 
     try:
@@ -138,16 +145,21 @@ def main():
         elif o in ("-c", "--count"):
             count = int(a)
         elif o in ("-f", "--file"):
-            inputfile = a
+            inputfilename = a
+            fromfile = True
         elif o in ("-w", "--wait"):
             waittime = int(a)
         elif o in ("-t", "--type"):
             dnsrecord = a
         else:
+            print("Invalid option: %s" % o)
             usage()
 
     try:
-        f = open(inputfile, 'rt')
+        if fromfile:
+            f = open(inputfilename, 'rt')
+        else:
+            f = resolvers
         print('server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
         print('--------------------------------------------------------------------------')
         for server in f:
@@ -155,7 +167,8 @@ def main():
             if not s:
                 continue
             dnsping(hostname, s, dnsrecord, waittime, count)
-        f.close()
+        if fromfile:
+            f.close()
     except Exception as e:
         print('error: %s' % e)
         exit(1)

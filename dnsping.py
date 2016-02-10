@@ -26,10 +26,10 @@
 
 
 import getopt
+import signal
+import sys
 import time
 from statistics import stdev
-import sys
-import signal
 
 import dns.rdatatype
 import dns.resolver
