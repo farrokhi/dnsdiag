@@ -37,4 +37,5 @@ server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 ```
 # todo
 - input sanitization
+- new tool: DNS traceroute
  
