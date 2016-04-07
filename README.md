@@ -2,7 +2,8 @@
 DNS Diagnostics and Performance Measurement Tools
 
 # prerequisites
-This script requires python3 as well as latest [dnspython](http://www.dnspython.org/)
+This script requires python3 as well as latest [dnspython](http://www.dnspython.org/).
+Please note that "dnstraceroute" requires a modified version of dnspython module, which is included. You just need to run `git submodule update --init`
 
 # dnsping
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number of times:
@@ -35,7 +36,22 @@ server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 208.67.222.222     179.068     135.975     258.582     50.681      %0
 208.67.220.220     137.817     135.822     140.113     1.504       %0
 ```
-# todo
-- input sanitization
-- new tool: DNS traceroute
- 
+
+# dnstraceroute
+dnstraceroute is a traceroute utility to figure out the path that your DNS request is passing through to get to its destination. You may want to compare it to your actual network traceroute and make sure your DNS traffic is not routed to any unwanted path.
+
+```
+% ./dnstraceroute.py -s 4.2.2.1 yahoo.com
+ dnstraceroute.py 4.2.2.1: hostname=yahoo.com rdatatype=A
+ 1       192.168.199.57 (192.168.199.57)  47 ms
+ 2       192.168.198.21 (192.168.198.21)  21 ms
+ 3       192.168.169.169 (192.168.169.169)  27 ms
+ 4       192.168.168.137 (192.168.168.137)  28 ms
+ 5       so-5-0-0.franco71.fra.seabone.net (89.221.34.6)  23 ms
+ 6       xe-5-3-1.fra44.ip4.gtt.net (89.149.129.185)  62 ms
+ 7       *  1126 ms
+ 8       ae-1-60.edge5.Frankfurt1.Level3.net (4.69.154.9)  62 ms
+ 9       ae-1-60.edge5.Frankfurt1.Level3.net (4.69.154.9)  12 ms
+ 10      a.resolvers.level3.net (4.2.2.1)  171 ms
+```
+
