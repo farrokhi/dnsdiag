@@ -132,7 +132,7 @@ def main():
             answers = resolver.query(hostname, dnsrecord, ipttl = ttl)
         except dns.resolver.NoNameservers as e:
             if not quiet:
-                print("no response:", e)
+                print("no or bad response:", e)
             exit(1)
         except dns.resolver.NXDOMAIN as e:
             if not quiet:
@@ -152,6 +152,7 @@ def main():
 
         curr_addr = None
         curr_host = None
+
         try: # expect ICMP response
             _, curr_addr = icmp_socket.recvfrom(512)
             curr_addr = curr_addr[0]
@@ -168,10 +169,10 @@ def main():
         if reached:
             curr_addr = dnsserver
 
-        elapsed -= timeout*1000
+        elapsed -= timeout * 1000
 
         try:
-            if curr_addr != "*":
+            if curr_addr:
                 curr_name = socket.gethostbyaddr(curr_addr)[0]
         except socket.error:
             curr_name = curr_addr
@@ -179,11 +180,9 @@ def main():
             print("unxpected error: ", sys.exc_info()[0])
 
         if curr_addr:
-            curr_host = "%s (%s)" % (curr_name, curr_addr)
+            print("%d\t%s (%s)  %d ms" % (ttl, curr_name, curr_addr, elapsed))
         else:
-            curr_host = "*"
-        
-        print("%d\t%s  %d ms" % (ttl, curr_host, elapsed))
+            print("%d\t *" % ttl) 
 
         ttl += 1
         hops += 1
