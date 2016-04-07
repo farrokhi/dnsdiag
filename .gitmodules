@@ -1,0 +1,4 @@
+[submodule "dnspython"]
+	path = dnspython
+	url = https://github.com/farrokhi/dnspython.git
+	branch = python3
