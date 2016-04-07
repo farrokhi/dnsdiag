@@ -61,7 +61,7 @@ def signal_handler(sig, frame):
 
 def main():
     signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-    signal.signal(signal.SIGINT, signal_handler)  # ignore CTRL+C
+    signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
 
     if len(sys.argv) == 1:
         usage()
@@ -124,9 +124,17 @@ def main():
             stime = time.time()
             answers = resolver.query(hostname, dnsrecord)
             etime = time.time()
-        except dns.resolver.NoNameservers:
+        except dns.resolver.NoNameservers as e:
             if not quiet:
                 print("no response to dns request")
+                if verbose:
+                    print("error:", e)
+            exit(1)
+        except dns.resolver.NXDOMAIN as e:
+            if not quiet:
+                print("Hostname does not exist")
+            if verbose:
+                print("error:", e)
             exit(1)
         except dns.resolver.Timeout:
             if not quiet:
