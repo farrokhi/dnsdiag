@@ -1,15 +1,31 @@
 # dnstools
 DNS Diagnostics and Performance Measurement Tools
+==================================================
 
-Ever been wondering your ISP is messing with your DNS traffic? Ever observed any misbehavior with your DNS responses? Ever been redirected to wrong address and suspected something is wrong with your DNS?
+Ever been wondering your ISP is messing with your DNS traffic? Ever observed 
+any misbehavior with your DNS responses? Ever been redirected to wrong address 
+and suspected something is wrong with your DNS?
 Here we have a set of tools to perform basic tests on your DNS requests and responses. 
-You can measure the response time of any given DNS server for arbitrary requests using `dnsping`. Just like traditional ping utility, it gives you similar functionality for DNS requests.
-You can also trace the path your DNS request takes to destination to make sure it is not being redirected or hijacked. This can be done by comparing different DNS queries being sent to the same DNS server using `dnstraceroute` and observe if there is any difference between the path.
-`dnsperf` helps you choose the best DNS server for your network. While it is highly recommended to use your own DNS resolver and never trust any third-party DNS server, but in case you need to choose the best DNS forwarder for your network, `dnsperf` lets you compare different DNS servers from performance (latency) and reliability (loss) point of view.
+
+You can measure the response time of any given DNS server for arbitrary requests 
+using `dnsping`. Just like traditional ping utility, it gives you similar 
+functionality for DNS requests.
+
+You can also trace the path your DNS request takes to destination to 
+make sure it is not being redirected or hijacked. This can be done by comparing 
+different DNS queries being sent to the same DNS server using `dnstraceroute` 
+and observe if there is any difference between the path.
+
+`dnsperf` helps you choose the best DNS server for your network. While it is highly 
+recommended to use your own DNS resolver and never trust any third-party DNS server, 
+but in case you need to choose the best DNS forwarder for your network, `dnsperf` 
+lets you compare different DNS servers from performance (latency) and reliability 
+(loss) point of view.
 
 # prerequisites
 This script requires python3 as well as latest [dnspython](http://www.dnspython.org/).
-Please note that "dnstraceroute" requires a modified version of dnspython module, which is included. You just need to run `git submodule update --init`
+Please note that "dnstraceroute" requires a modified version of dnspython module, 
+which is included. You just need to run `git submodule update --init`
 
 # dnsping
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number of times:
@@ -28,7 +44,9 @@ min=145.201 ms, avg=154.388 ms, max=161.607 ms, stddev=8.378 ms
 This script calculates minimum, maximum and average response time as well as jitter
 
 # dnsperf
-dnsperf is a bulk ping utility that sends an arbitrary DNS query to a give list of DNS servers. This script is meant for comparing response time of multiple DNS servers at once:
+dnsperf is a bulk ping utility that sends an arbitrary DNS query to a give 
+list of DNS servers. This script is meant for comparing response time of 
+multiple DNS servers at once:
 ```
 % ./dnsperf.py wikipedia.org
 server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
@@ -44,7 +62,9 @@ server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 ```
 
 # dnstraceroute
-dnstraceroute is a traceroute utility to figure out the path that your DNS request is passing through to get to its destination. You may want to compare it to your actual network traceroute and make sure your DNS traffic is not routed to any unwanted path.
+dnstraceroute is a traceroute utility to figure out the path that your DNS request is 
+passing through to get to its destination. You may want to compare it to your actual 
+network traceroute and make sure your DNS traffic is not routed to any unwanted path.
 
 ```
 % ./dnstraceroute.py -s 4.2.2.1 yahoo.com
