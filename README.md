@@ -1,6 +1,12 @@
 # dnstools
 DNS Diagnostics and Performance Measurement Tools
 
+Ever been wondering your ISP is messing with your DNS traffic? Ever observed any misbehavior with your DNS responses? Ever been redirected to wrong address and suspected something is wrong with your DNS?
+Here we have a set of tools to perform basic tests on your DNS requests and responses. 
+You can measure the response time of any given DNS server for arbitrary requests using `dnsping`. Just like traditional ping utility, it gives you similar functionality for DNS requests.
+You can also trace the path your DNS request takes to destination to make sure it is not being redirected or hijacked. This can be done by comparing different DNS queries being sent to the same DNS server using `dnstraceroute` and observe if there is any difference between the path.
+`dnsperf` helps you choose the best DNS server for your network. While it is highly recommended to use your own DNS resolver and never trust any third-party DNS server, but in case you need to choose the best DNS forwarder for your network, `dnsperf` lets you compare different DNS servers from performance (latency) and reliability (loss) point of view.
+
 # prerequisites
 This script requires python3 as well as latest [dnspython](http://www.dnspython.org/).
 Please note that "dnstraceroute" requires a modified version of dnspython module, which is included. You just need to run `git submodule update --init`
