@@ -27,8 +27,8 @@
 
 import getopt
 import signal
-import sys
 import socket
+import sys
 import time
 
 import dns.rdatatype
@@ -127,9 +127,9 @@ def main():
         icmp_socket.bind(("", dnsport))
         icmp_socket.settimeout(timeout)
 
-        try: # send DNS request
+        try:  # send DNS request
             stime = time.time()
-            answers = resolver.query(hostname, dnsrecord, ipttl = ttl)
+            answers = resolver.query(hostname, dnsrecord, ipttl=ttl)
         except dns.resolver.NoNameservers as e:
             if not quiet:
                 print("no or bad response:", e)
@@ -153,7 +153,7 @@ def main():
         curr_addr = None
         curr_host = None
 
-        try: # expect ICMP response
+        try:  # expect ICMP response
             _, curr_addr = icmp_socket.recvfrom(512)
             curr_addr = curr_addr[0]
 
@@ -182,12 +182,13 @@ def main():
         if curr_addr:
             print("%d\t%s (%s)  %d ms" % (ttl, curr_name, curr_addr, elapsed))
         else:
-            print("%d\t *" % ttl) 
+            print("%d\t *" % ttl)
 
         ttl += 1
         hops += 1
         if (hops >= count) or (curr_addr == dnsserver) or reached:
             break
+
 
 if __name__ == '__main__':
     main()
