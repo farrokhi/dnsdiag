@@ -1,10 +1,11 @@
 DNS Diagnostics and Performance Measurement Tools
 ==================================================
 
-Ever been wondering your ISP is messing with your DNS traffic? Ever observed
-any misbehavior with your DNS responses? Ever been redirected to wrong address
-and suspected something is wrong with your DNS? Here we have a set of tools to
-perform basic tests on your DNS requests and responses.
+Ever been wondering your ISP is hijacking your DNS traffic? Ever observed any
+misbehavior with your DNS responses? Ever been redirected to wrong address and
+suspected something is wrong with your DNS? Here we have a set of tools to
+perform basic audits on your DNS requests and responses to make sure your DNS is
+working as you expect.
 
 You can measure the response time of any given DNS server for arbitrary
 requests using `dnsping`. Just like traditional ping utility, it gives you
