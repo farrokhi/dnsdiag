@@ -26,6 +26,7 @@
 
 
 import getopt
+import os
 import signal
 import sys
 import time
@@ -35,6 +36,7 @@ import dns.rdatatype
 import dns.resolver
 
 __VERSION__ = 1.0
+__PROGNAME__ = os.path.basename(sys.argv[0])
 should_stop = False
 
 resolvers = [
@@ -50,8 +52,8 @@ resolvers = [
 
 
 def usage():
-    print('dnsperf version %1.1f\n' % __VERSION__)
-    print('syntax: dnsping [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname')
+    print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
+    print('syntax: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__ )
     print('  -h  --help      show this help')
     print('  -f  --file      dns server list to use')
     print('  -c  --count     number of requests to send (default: 10)')

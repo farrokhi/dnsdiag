@@ -26,6 +26,7 @@
 
 
 import getopt
+import os
 import signal
 import sys
 import time
@@ -35,12 +36,13 @@ import dns.rdatatype
 import dns.resolver
 
 __VERSION__ = 1.0
+__PROGNAME__ = os.path.basename(sys.argv[0])
 should_stop = False
 
 
 def usage():
-    print('dnsping version %1.1f\n' % __VERSION__)
-    print('syntax: dnsping [-h] [-q] [-v] [-s server] [-c count] [-t type] [-w wait] hostname')
+    print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
+    print('syntax: %s [-h] [-q] [-v] [-s server] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      show this help')
     print('  -q  --quiet     quiet')
     print('  -v  --verbose   print actual dns response')
@@ -115,7 +117,7 @@ def main():
     response_time = []
     i = 0
 
-    print("DNSPING %s: hostname=%s rdatatype=%s" % (dnsserver, hostname, dnsrecord))
+    print("%s %s: hostname=%s rdatatype=%s" % (__PROGNAME__, dnsserver, hostname, dnsrecord))
 
     for i in range(count):
         if should_stop:

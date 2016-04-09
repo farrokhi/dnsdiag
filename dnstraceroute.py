@@ -26,6 +26,7 @@
 
 
 import getopt
+import os
 import signal
 import socket
 import sys
@@ -35,7 +36,7 @@ import dns.rdatatype
 import dns.resolver
 
 __VERSION__ = 1.0
-__PROGNAME__ = sys.argv[0]
+__PROGNAME__ = os.path.basename(sys.argv[0])
 should_stop = False
 
 
