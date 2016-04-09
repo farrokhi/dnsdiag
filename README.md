@@ -1,7 +1,7 @@
 DNS Diagnostics and Performance Measurement Tools
 ==================================================
 
-Ever been wondering your ISP is hijacking your DNS traffic? Ever observed any
+Ever been wondering if your ISP is hijacking your DNS traffic? Ever observed any
 misbehavior with your DNS responses? Ever been redirected to wrong address and
 suspected something is wrong with your DNS? Here we have a set of tools to
 perform basic audits on your DNS requests and responses to make sure your DNS is
