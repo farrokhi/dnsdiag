@@ -120,7 +120,7 @@ def main():
         if should_stop:
             break
 
-        icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
+        icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, icmp)
         icmp_socket.bind(("", dnsport))
         icmp_socket.settimeout(timeout)
 
