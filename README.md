@@ -88,6 +88,6 @@ server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 
 ### Credits
 
-- @rthalley for invaluable [dnspython](/rthalley/dnspython) library
-- @JustinAzoff for [python-cymruwhois](/JustinAzoff/python-cymruwhois) library
-- @bortzmeyer for his feedback and patches
+- [@rthalley](https://github.com/rthalley) for invaluable [dnspython](https://github.com/rthalley/dnspython) library
+- [@JustinAzoff](https://github.com/JustinAzoff) for [python-cymruwhois](https://github.com/JustinAzoff/python-cymruwhois) library
+- [@bortzmeyer](https://github.com/bortzmeyer) for his feedback and patches
