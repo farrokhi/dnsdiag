@@ -85,3 +85,9 @@ server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 208.67.222.222     179.068     135.975     258.582     50.681      %0
 208.67.220.220     137.817     135.822     140.113     1.504       %0
 ```
+
+### Credits
+
+- @rthalley for invaluable [dnspython](/rthalley/dnspython) library
+- @JustinAzoff for [python-cymruwhois](/JustinAzoff/python-cymruwhois) library
+- @bortzmeyer for his feedback and patches
