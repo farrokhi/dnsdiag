@@ -25,15 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import dns.rdatatype
+import dns.resolver
 import getopt
 import os
 import signal
 import sys
 import time
 from statistics import stdev
-
-import dns.rdatatype
-import dns.resolver
 
 __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
@@ -53,7 +52,7 @@ resolvers = [
 
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
-    print('syntax: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__ )
+    print('syntax: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      show this help')
     print('  -f  --file      dns server list to use')
     print('  -c  --count     number of requests to send (default: 10)')
@@ -67,6 +66,14 @@ def signal_handler(sig, frame):
     if should_stop:  # pressed twice, so exit immediately
         exit(0)
     should_stop = True  # pressed once, exit gracefully
+
+
+def widest_len(names):
+    width = 0
+    for s in names:
+        if len(s) > width:
+            width = len(s)
+    return width
 
 
 def dnsping(host, server, dnsrecord, timeout, count):
@@ -111,8 +118,7 @@ def dnsping(host, server, dnsrecord, timeout, count):
         r_avg = 0
         r_stddev = 0
 
-    print("%-15s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d" % (
-        server, r_avg, r_min, r_max, r_stddev, r_lost_percent))
+    return (server, r_avg, r_min, r_max, r_stddev, r_lost_percent)
 
 
 def main():
@@ -159,18 +165,24 @@ def main():
 
     try:
         if fromfile:
-            f = open(inputfilename, 'rt')
+            with open(inputfilename, 'rt') as flist:
+                f = flist.read().splitlines()
         else:
             f = resolvers
-        print('server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
-        print('--------------------------------------------------------------------------')
+        width = widest_len(f)
+        blanks = (width - 5) * ' '
+        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
+        print((60 + width) * '-')
         for server in f:
             s = server.strip()
             if not s:
                 continue
-            dnsping(hostname, s, dnsrecord, waittime, count)
-        if fromfile:
-            f.close()
+            (server, r_avg, r_min, r_max, r_stddev, r_lost_percent) = dnsping(hostname, s, dnsrecord, waittime, count)
+
+            server = server.ljust(width + 1)
+            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d" % (
+                server, r_avg, r_min, r_max, r_stddev, r_lost_percent))
+
     except Exception as e:
         print('error: %s' % e)
         exit(1)
