@@ -38,23 +38,14 @@ __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
 should_stop = False
 
-resolvers = [
-    '4.2.2.1',
-    '4.2.2.2',
-    '64.6.64.6',
-    '64.6.65.6',
-    '8.8.4.4',
-    '8.8.8.8',
-    '208.67.222.222',
-    '208.67.220.220'
-]
+resolvers = dns.resolver.get_default_resolver().nameservers
 
 
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
     print('syntax: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      show this help')
-    print('  -f  --file      dns server list to use')
+    print('  -f  --file      dns server list to use (default: system resolvers)')
     print('  -c  --count     number of requests to send (default: 10)')
     print('  -w  --wait      maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
@@ -69,7 +60,7 @@ def signal_handler(sig, frame):
 
 
 def widest_len(names):
-    width = 0
+    width = 8
     for s in names:
         if len(s) > width:
             width = len(s)
@@ -169,6 +160,8 @@ def main():
                 f = flist.read().splitlines()
         else:
             f = resolvers
+        if len(f) == 0:
+            print("No nameserver specified")
         width = widest_len(f)
         blanks = (width - 5) * ' '
         print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
