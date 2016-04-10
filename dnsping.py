@@ -25,14 +25,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import dns.rdatatype
-import dns.resolver
 import getopt
+import ipaddress
 import os
+import re
 import signal
+import socket
 import sys
 import time
 from statistics import stdev
+
+import dns.rdatatype
+import dns.resolver
 
 __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
@@ -97,6 +101,7 @@ def main():
             verbose = True
         elif o in ("-s", "--server"):
             dnsserver = a
+
         elif o in ("-q", "--quiet"):
             quiet = True
             verbose = False
@@ -106,6 +111,16 @@ def main():
             dnsrecord = a
         else:
             usage()
+
+    # check if we have a valid dns server address
+    try:
+        ipaddress.ip_address(dnsserver)
+    except ValueError: # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
+        try:
+            dnsserver = socket.getaddrinfo(dnsserver, port = None)[1][4][0]
+        except OSError:
+            print('Error: cannot resolve hostname:', dnsserver)
+            exit(1)
 
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [dnsserver]
@@ -127,7 +142,7 @@ def main():
             etime = time.time()
         except dns.resolver.NoNameservers as e:
             if not quiet:
-                print("no response to dns request")
+                print("No response to dns request")
                 if verbose:
                     print("error:", e)
             exit(1)
@@ -135,15 +150,15 @@ def main():
             if not quiet:
                 print("Hostname does not exist")
             if verbose:
-                print("error:", e)
+                print("Error:", e)
             exit(1)
         except dns.resolver.Timeout:
             if not quiet:
-                print("request timeout")
+                print("Request timeout")
             pass
         except dns.resolver.NoAnswer:
             if not quiet:
-                print("invalid answer")
+                print("No answer")
             pass
         else:
             elapsed = (etime - stime) * 1000  # convert to milliseconds
