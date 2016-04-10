@@ -111,8 +111,6 @@ def main():
 
     icmp = socket.getprotobyname('icmp')
 
-    response_time = []
-    i = 0
     ttl = 1
     reached = False
 
@@ -128,7 +126,7 @@ def main():
 
         try:  # send DNS request
             stime = time.time()
-            answers = resolver.query(hostname, dnsrecord, ipttl=ttl)
+            resolver.query(hostname, dnsrecord, ipttl=ttl)
         except dns.resolver.NoNameservers as e:
             if not quiet:
                 print("no or bad response:", e)
