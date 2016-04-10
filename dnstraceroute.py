@@ -25,15 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import dns.rdatatype
+import dns.resolver
 import getopt
 import os
 import signal
 import socket
 import sys
 import time
-
-import dns.rdatatype
-import dns.resolver
 
 __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
@@ -45,7 +44,7 @@ def usage():
     print('syntax: %s [-h] [-q] [-s server] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      show this help')
     print('  -q  --quiet     quiet')
-    print('  -s  --server    dns server to use (default: 8.8.8.8)')
+    print('  -s  --server    dns server to use (default: first system resolver)')
     print('  -c  --count     maximum number of hops (default: 30)')
     print('  -w  --wait      maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
@@ -71,8 +70,7 @@ def main():
     count = 30
     timeout = 1
     quiet = False
-    dnsserver = '8.8.8.8'
-    hostname = 'wikipedia.org'
+    dnsserver = dns.resolver.get_default_resolver().nameservers[0]
     dnsport = 53
     hops = 0
 
