@@ -25,8 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import dns.rdatatype
-import dns.resolver
 import getopt
 import os
 import signal
@@ -34,19 +32,66 @@ import socket
 import sys
 import time
 
+import dns.rdatatype
+import dns.resolver
+
+# http://pythonhosted.org/cymruwhois/
+try:
+    import cymruwhois
+
+    has_whois = True
+except ImportError:
+    has_whois = False
+
+# Constants
 __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
+WHOIS_CACHE = 'whois.cache'
+
+# Globarl Variables
 should_stop = False
+
+if has_whois:
+    from cymruwhois import cymruwhois
+    import pickle
+
+
+    def whoisrecord(ip):
+        try:
+            currenttime = time.time()
+            ts = currenttime
+            if ip in whois:
+                ASN, ts = whois[ip]
+            else:
+                ts = 0
+            if ((currenttime - ts) > 36000):
+                c = cymruwhois.Client()
+                ASN = c.lookup(ip)
+                whois[ip] = (ASN, currenttime)
+            return ASN
+        except Exception as e:
+            return e
+
+
+    try:
+        pkl_file = open(WHOIS_CACHE, 'rb')
+        try:
+            whois = pickle.load(pkl_file)
+        except EOFError:
+            whois = {}
+    except IOError:
+        whois = {}
 
 
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
     print('syntax: %s [-h] [-q] [-s server] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
-    print('  -h  --help      show this help')
-    print('  -q  --quiet     quiet')
-    print('  -s  --server    dns server to use (default: first system resolver)')
-    print('  -c  --count     maximum number of hops (default: 30)')
-    print('  -w  --wait      maximum wait time for a reply (default: 5)')
+    print('  -h  --help      Show this help')
+    print('  -q  --quiet     Quiet')
+    print('  -a  --asn       Turn on AS# lookups for each hop encountered')
+    print('  -s  --server    DNS server to use (default: first system resolver)')
+    print('  -c  --count     Maximum number of hops (default: 30)')
+    print('  -w  --wait      Maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
     print('  ')
     exit()
@@ -73,10 +118,11 @@ def main():
     dnsserver = dns.resolver.get_default_resolver().nameservers[0]
     dnsport = 53
     hops = 0
+    as_lookup = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:",
-                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait="])
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:",
+                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "asn"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -100,6 +146,11 @@ def main():
             timeout = int(a)
         elif o in ("-t", "--type"):
             dnsrecord = a
+        elif o in ("-a", "--asn"):
+            if has_whois:
+                as_lookup = True
+            else:
+                print('Warning: cymruwhois module cannot be loaded. AS Lookup disabled.')
         else:
             usage()
 
@@ -141,6 +192,8 @@ def main():
             if not quiet:
                 print("invalid answer")
             pass
+        except SystemExit:
+            pass
         except:
             print("unxpected error: ", sys.exc_info()[0])
             exit(1)
@@ -173,11 +226,20 @@ def main():
                 curr_name = socket.gethostbyaddr(curr_addr)[0]
         except socket.error:
             curr_name = curr_addr
+        except SystemExit:
+            pass
         except:
             print("unxpected error: ", sys.exc_info()[0])
 
         if curr_addr:
-            print("%d\t%s (%s)  %d ms" % (ttl, curr_name, curr_addr, elapsed))
+            as_name = ""
+            if has_whois and as_lookup:
+                ASN = whoisrecord(curr_addr)
+                as_name = ''
+                if ASN and ASN.asn != "NA":
+                    as_name = "[%s %s] " % (ASN.asn, ASN.owner)
+
+            print("%d\t%s (%s) %s%d ms" % (ttl, curr_name, curr_addr, as_name, elapsed))
         else:
             print("%d\t *" % ttl)
 
@@ -188,4 +250,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    finally:
+        if has_whois:
+            pkl_file = open(WHOIS_CACHE, 'wb')
+            pickle.dump(whois, pkl_file)
