@@ -25,15 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import dns.rdatatype
+import dns.resolver
 import getopt
 import os
 import signal
 import sys
 import time
 from statistics import stdev
-
-import dns.rdatatype
-import dns.resolver
 
 __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
