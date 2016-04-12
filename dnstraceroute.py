@@ -171,7 +171,17 @@ def main():
         if should_stop:
             break
 
-        icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, icmp)
+        # some platforms permit opening a DGRAM socket for ICMP without root permission
+        # if not availble, we will fall back to RAW which explicitly requires root permission
+        try:
+            icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
+        except OSError:
+            try:
+                icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, icmp)
+            except OSError:
+                print("Error: Unable to create ICMP socket with unprivileged user. Please run as root.")
+                exit(1)
+
         icmp_socket.bind(("", dnsport))
         icmp_socket.settimeout(timeout)
 
@@ -236,8 +246,13 @@ def main():
             if has_whois and as_lookup:
                 ASN = whoisrecord(curr_addr)
                 as_name = ''
-                if ASN and ASN.asn != "NA":
-                    as_name = "[%s %s] " % (ASN.asn, ASN.owner)
+                try:
+                    if ASN and ASN.asn != "NA":
+                        as_name = "[%s %s] " % (ASN.asn, ASN.owner)
+                except AttributeError:
+                    if should_stop:
+                        exit(0)
+                    pass 
 
             print("%d\t%s (%s) %s%d ms" % (ttl, curr_name, curr_addr, as_name, elapsed))
         else:
