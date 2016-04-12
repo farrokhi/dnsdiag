@@ -44,7 +44,7 @@ except ImportError:
     has_whois = False
 
 # Constants
-__VERSION__ = 1.0
+__VERSION__ = 1.1
 __PROGNAME__ = os.path.basename(sys.argv[0])
 WHOIS_CACHE = 'whois.cache'
 
@@ -85,11 +85,12 @@ if has_whois:
 
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
-    print('syntax: %s [-h] [-q] [-s server] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
+    print('syntax: %s [-h] [-q] [-a] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      Show this help')
     print('  -q  --quiet     Quiet')
     print('  -a  --asn       Turn on AS# lookups for each hop encountered')
     print('  -s  --server    DNS server to use (default: first system resolver)')
+    print('  -p  --port      DNS server port number (default: 53)')
     print('  -c  --count     Maximum number of hops (default: 30)')
     print('  -w  --wait      Maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
@@ -116,13 +117,13 @@ def main():
     timeout = 1
     quiet = False
     dnsserver = dns.resolver.get_default_resolver().nameservers[0]
-    dnsport = 53
+    dest_port = 53
     hops = 0
     as_lookup = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:",
-                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "asn"])
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:p:",
+                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "asn", "port"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -146,6 +147,8 @@ def main():
             timeout = int(a)
         elif o in ("-t", "--type"):
             dnsrecord = a
+        elif o in ("-p", "--port"):
+            dest_port = int(a)
         elif o in ("-a", "--asn"):
             if has_whois:
                 as_lookup = True
@@ -165,7 +168,7 @@ def main():
     ttl = 1
     reached = False
 
-    print("%s %s: hostname=%s rdatatype=%s" % (__PROGNAME__, dnsserver, hostname, dnsrecord))
+    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
 
     while True:
         if should_stop:
@@ -182,7 +185,7 @@ def main():
                 print("Error: Unable to create ICMP socket with unprivileged user. Please run as root.")
                 exit(1)
 
-        icmp_socket.bind(("", dnsport))
+        icmp_socket.bind(("", dest_port))
         icmp_socket.settimeout(timeout)
 
         try:  # send DNS request
@@ -252,7 +255,7 @@ def main():
                 except AttributeError:
                     if should_stop:
                         exit(0)
-                    pass 
+                    pass
 
             print("%d\t%s (%s) %s%d ms" % (ttl, curr_name, curr_addr, as_name, elapsed))
         else:
