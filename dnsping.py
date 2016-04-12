@@ -45,12 +45,13 @@ should_stop = False
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
     print('syntax: %s [-h] [-q] [-v] [-s server] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
-    print('  -h  --help      show this help')
-    print('  -q  --quiet     quiet')
-    print('  -v  --verbose   print actual dns response')
-    print('  -s  --server    dns server to use (default: 8.8.8.8)')
-    print('  -c  --count     number of requests to send (default: 10)')
-    print('  -w  --wait      maximum wait time for a reply (default: 5)')
+    print('  -h  --help      Show this help')
+    print('  -q  --quiet     Quiet')
+    print('  -v  --verbose   Print actual dns response')
+    print('  -s  --server    DNS server to use (default: 8.8.8.8)')
+    print('  -p  --port      DNS server port number (default: 53)')
+    print('  -c  --count     Number of requests to send (default: 10)')
+    print('  -w  --wait      Maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
     print('  ')
     exit()
@@ -70,17 +71,19 @@ def main():
     if len(sys.argv) == 1:
         usage()
 
+    # defaults
     dnsrecord = 'A'
     count = 10
     timeout = 5
     quiet = False
     verbose = False
     dnsserver = '8.8.8.8'
+    dest_port = 53
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:v",
-                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:",
+                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "verbose", "port"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -100,7 +103,8 @@ def main():
             verbose = True
         elif o in ("-s", "--server"):
             dnsserver = a
-
+        elif o in ("-p", "--port"):
+            dest_port = int(a)
         elif o in ("-q", "--quiet"):
             quiet = True
             verbose = False
@@ -125,12 +129,14 @@ def main():
     resolver.nameservers = [dnsserver]
     resolver.timeout = timeout
     resolver.lifetime = timeout
+    resolver.port = dest_port
     resolver.retry_servfail = 0
 
     response_time = []
     i = 0
 
-    print("%s %s: hostname=%s rdatatype=%s" % (__PROGNAME__, dnsserver, hostname, dnsrecord))
+    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
+     
 
     for i in range(count):
         if should_stop:
