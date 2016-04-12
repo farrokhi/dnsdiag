@@ -36,15 +36,14 @@ dnsping pings a DNS resolver by sending an arbitrary DNS query for given number
 of times:
 ```
 % ./dnsping.py -c 3 -s 8.8.8.8 -t MX wikipedia.org
-
-DNSPING 8.8.8.8: hostname=wikipedia.org rdatatype=MX
-101 bytes from 8.8.8.8: seq=0   time=161.607 ms
-101 bytes from 8.8.8.8: seq=1   time=156.355 ms
-101 bytes from 8.8.8.8: seq=2   time=145.201 ms
+dnsping.py DNS: 8.8.8.8:53, hostname: wikipedia.org, rdatatype: MX
+101 bytes from 8.8.8.8: seq=0   time=262.896 ms
+101 bytes from 8.8.8.8: seq=1   time=305.608 ms
+101 bytes from 8.8.8.8: seq=2   time=307.221 ms
 
 --- 8.8.8.8 dnsping statistics ---
 3 requests transmitted, 3 responses received,   0% lost
-min=145.201 ms, avg=154.388 ms, max=161.607 ms, stddev=8.378 ms
+min=262.896 ms, avg=291.908 ms, max=307.221 ms, stddev=25.138 ms
 ```
 This script calculates minimum, maximum and average response time as well as
 jitter (stddev)
