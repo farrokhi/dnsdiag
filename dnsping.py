@@ -37,14 +37,14 @@ from statistics import stdev
 import dns.rdatatype
 import dns.resolver
 
-__VERSION__ = 1.0
+__VERSION__ = 1.1
 __PROGNAME__ = os.path.basename(sys.argv[0])
 should_stop = False
 
 
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
-    print('syntax: %s [-h] [-q] [-v] [-s server] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
+    print('syntax: %s [-h] [-q] [-v] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      Show this help')
     print('  -q  --quiet     Quiet')
     print('  -v  --verbose   Print actual dns response')
@@ -83,7 +83,8 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:",
-                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "verbose", "port"])
+                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "verbose",
+                                    "port"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -136,7 +137,6 @@ def main():
     i = 0
 
     print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
-     
 
     for i in range(count):
         if should_stop:
