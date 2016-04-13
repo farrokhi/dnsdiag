@@ -120,10 +120,11 @@ def main():
     dest_port = 53
     hops = 0
     as_lookup = False
+    should_resolve = True
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:p:",
-                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "asn", "port"])
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:p:n",
+                                   ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -149,6 +150,8 @@ def main():
             dnsrecord = a
         elif o in ("-p", "--port"):
             dest_port = int(a)
+        elif o in ("-n"):
+            should_resolve = False
         elif o in ("-a", "--asn"):
             if has_whois:
                 as_lookup = True
@@ -168,7 +171,8 @@ def main():
     ttl = 1
     reached = False
 
-    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
+    if not quiet:
+        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
 
     while True:
         if should_stop:
@@ -234,15 +238,18 @@ def main():
 
         elapsed -= timeout * 1000
 
-        try:
-            if curr_addr:
-                curr_name = socket.gethostbyaddr(curr_addr)[0]
-        except socket.error:
+        if should_resolve:
+            try:
+                if curr_addr:
+                    curr_name = socket.gethostbyaddr(curr_addr)[0]
+            except socket.error:
+                curr_name = curr_addr
+            except SystemExit:
+                pass
+            except:
+                print("unxpected error: ", sys.exc_info()[0])
+        else:
             curr_name = curr_addr
-        except SystemExit:
-            pass
-        except:
-            print("unxpected error: ", sys.exc_info()[0])
 
         if curr_addr:
             as_name = ""
