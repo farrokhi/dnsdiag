@@ -60,12 +60,9 @@ def signal_handler(sig, frame):
     should_stop = True  # pressed once, exit gracefully
 
 
-def widest_len(names):
-    width = 8
-    for s in names:
-        if len(s) > width:
-            width = len(s)
-    return width
+def maxlen(names):
+    sn = sorted(names, key=len)
+    return len(sn[-1])
 
 
 def dnsping(host, server, dnsrecord, timeout, count):
@@ -114,8 +111,11 @@ def dnsping(host, server, dnsrecord, timeout, count):
 
 
 def main():
-    signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-    signal.signal(signal.SIGINT, signal_handler)  # ignore CTRL+C
+    try:
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGINT, signal_handler)  # ignore CTRL+C
+    except AttributeError: # Some systems may not support all signals
+        pass
 
     if len(sys.argv) == 1:
         usage()
@@ -163,15 +163,16 @@ def main():
             f = resolvers
         if len(f) == 0:
             print("No nameserver specified")
-        width = widest_len(f)
+
+        f = [ name.strip() for name in f]
+        width = maxlen(f)
         blanks = (width - 5) * ' '
         print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
         print((60 + width) * '-')
         for server in f:
-            s = server.strip()
-            if not s:
+            if not server:
                 continue
-            (server, r_avg, r_min, r_max, r_stddev, r_lost_percent) = dnsping(hostname, s, dnsrecord, waittime, count)
+            (server, r_avg, r_min, r_max, r_stddev, r_lost_percent) = dnsping(hostname, server, dnsrecord, waittime, count)
 
             server = server.ljust(width + 1)
             print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d" % (
