@@ -65,8 +65,11 @@ def signal_handler(sig, frame):
 
 
 def main():
-    signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-    signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
+    try:
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
+    except AttributeError: # OS Does not support some signals, probably windows
+        pass
 
     if len(sys.argv) == 1:
         usage()
