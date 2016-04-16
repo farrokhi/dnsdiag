@@ -43,17 +43,19 @@ should_stop = False
 
 
 def usage():
-    print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
-    print('syntax: %s [-h] [-q] [-v] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
-    print('  -h  --help      Show this help')
-    print('  -q  --quiet     Quiet')
-    print('  -v  --verbose   Print actual dns response')
-    print('  -s  --server    DNS server to use (default: 8.8.8.8)')
-    print('  -p  --port      DNS server port number (default: 53)')
-    print('  -c  --count     Number of requests to send (default: 10)')
-    print('  -w  --wait      Maximum wait time for a reply (default: 5)')
-    print('  -t  --type      DNS request record type (default: A)')
-    print('  ')
+    print("""%s version %1.1f
+syntax: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+  -h  --help      Show this help
+  -q  --quiet     Quiet
+  -v  --verbose   Print actual dns response
+  -s  --server    DNS server to use (default: 8.8.8.8)
+  -p  --port      DNS server port number (default: 53)
+  -P  --srcport   Query source port number (default: 0)
+  -S  --srcip     Query source IP address (default: default interface address)
+  -c  --count     Number of requests to send (default: 10)
+  -w  --wait      Maximum wait time for a reply (default: 5)
+  -t  --type      DNS request record type (default: A)
+""" % (__PROGNAME__, __VERSION__, __PROGNAME__))
     exit()
 
 
@@ -68,7 +70,7 @@ def main():
     try:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
         signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError: # OS Does not support some signals, probably windows
+    except AttributeError:  # OS Does not support some signals, probably windows
         pass
 
     if len(sys.argv) == 1:
@@ -82,12 +84,14 @@ def main():
     verbose = False
     dnsserver = '8.8.8.8'
     dest_port = 53
+    src_port = 0
+    src_ip = None
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:",
                                    ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "verbose",
-                                    "port"])
+                                    "port", "dstport=", "srcip="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -116,6 +120,12 @@ def main():
             timeout = int(a)
         elif o in ("-t", "--type"):
             dnsrecord = a
+        elif o in ("-P", "--srcport"):
+            src_port = int(a)
+            if src_port < 1024:
+                print("WARNING: Source ports below 1024 are only available to superuser")
+        elif o in ("-S", "--srcip"):
+            src_ip = a
         else:
             usage()
 
@@ -146,7 +156,7 @@ def main():
             break
         try:
             stime = time.time()
-            answers = resolver.query(hostname, dnsrecord)
+            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip)
             etime = time.time()
         except dns.resolver.NoNameservers as e:
             if not quiet:
