@@ -43,13 +43,15 @@ resolvers = dns.resolver.get_default_resolver().nameservers
 
 
 def usage():
-    print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
-    print('syntax: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
-    print('  -h  --help      show this help')
-    print('  -f  --file      dns server list to use (default: system resolvers)')
-    print('  -c  --count     number of requests to send (default: 10)')
-    print('  -w  --wait      maximum wait time for a reply (default: 5)')
-    print('  -t  --type      DNS request record type (default: A)')
+    print("""%s version %1.1f
+
+usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
+  -h  --help      show this help
+  -f  --file      dns server list to use (default: system resolvers)
+  -c  --count     number of requests to send (default: 10)
+  -w  --wait      maximum wait time for a reply (default: 5)
+  -t  --type      DNS request record type (default: A)
+""" % (__PROGNAME__, __VERSION__, __PROGNAME__))
     exit()
 
 
