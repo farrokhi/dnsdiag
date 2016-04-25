@@ -44,7 +44,7 @@ should_stop = False
 
 def usage():
     print("""%s version %1.1f
-syntax: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
   -h  --help      Show this help
   -q  --quiet     Quiet
   -v  --verbose   Print actual dns response

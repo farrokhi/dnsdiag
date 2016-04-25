@@ -85,7 +85,7 @@ if has_whois:
 
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
-    print('syntax: %s [-h] [-q] [-a] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
+    print('usage: %s [-h] [-q] [-a] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      Show this help')
     print('  -q  --quiet     Quiet')
     print('  -a  --asn       Turn on AS# lookups for each hop encountered')
