@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/farrokhi/dnsdiag.svg)](https://travis-ci.org/farrokhi/dnsdiag)
+
 DNS Diagnostics and Performance Measurement Tools
 ==================================================
 
