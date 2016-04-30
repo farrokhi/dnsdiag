@@ -13,7 +13,7 @@ setup(
         "Development Status :: 5 - Production/Stable",
     ],
 
-    install_requires = ['cymruwhois>=1.0'],
+    install_requires = ['cymruwhois>=1.4'],
     author = "Babak Farrokhi",
     author_email = "babak@farrokhi.net",
     description = "DNS Diagnostics and measurement tools (ping, traceroute)",
