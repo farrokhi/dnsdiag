@@ -83,7 +83,7 @@ def main():
     quiet = False
     verbose = False
     dnsserver = '8.8.8.8'
-    dest_port = 53
+    dst_port = 53
     src_port = 0
     src_ip = None
     hostname = 'wikipedia.org'
@@ -112,7 +112,7 @@ def main():
         elif o in ("-s", "--server"):
             dnsserver = a
         elif o in ("-p", "--port"):
-            dest_port = int(a)
+            dst_port = int(a)
         elif o in ("-q", "--quiet"):
             quiet = True
             verbose = False
@@ -143,13 +143,13 @@ def main():
     resolver.nameservers = [dnsserver]
     resolver.timeout = timeout
     resolver.lifetime = timeout
-    resolver.port = dest_port
+    resolver.port = dst_port
     resolver.retry_servfail = 0
 
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
+    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dst_port, hostname, dnsrecord))
 
     for i in range(count):
         if should_stop:
