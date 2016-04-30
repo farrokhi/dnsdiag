@@ -1,3 +1,4 @@
 language: python
 python: "3.3"
-install: pip install .
+install: pip install dnsdiag
+script:
