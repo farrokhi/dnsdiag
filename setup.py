@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name = "dnsdiag",
-    version = "1.1",
+    version = "1.2",
     packages = find_packages(),
     scripts = ['dnsping.py', 'dnstraceroute.py', 'dnseval.py'],
     classifiers=[
@@ -13,7 +13,7 @@ setup(
         "Development Status :: 5 - Production/Stable",
     ],
 
-    install_requires = ['cymruwhois>=1.4'],
+    install_requires = ['cymruwhois>=1.0'],
     author = "Babak Farrokhi",
     author_email = "babak@farrokhi.net",
     description = "DNS Diagnostics and measurement tools (ping, traceroute)",
