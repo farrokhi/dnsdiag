@@ -5,7 +5,7 @@ DNS Diagnostics and Performance Measurement Tools
 
 Ever been wondering if your ISP is [hijacking your DNS traffic](https://decentralize.today/is-your-isp-hijacking-your-dns-traffic-f3eb7ccb0ee7#.fevks5wyc)? Ever observed any
 misbehavior with your DNS responses? Ever been redirected to wrong address and
-suspected something is wrong with your DNS? Here we have a set of tools to
+suspected something is wrong with your DNS? Here we have a [set of tools](http://github.com/farrokhi/dnsdiag) to
 perform basic audits on your DNS requests and responses to make sure your DNS is
 working as you expect.
 
