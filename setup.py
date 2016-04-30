@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name = "dnsdiag",
-    version = "1.2",
+    version = "1.2.1",
     packages = find_packages(),
     scripts = ['dnsping.py', 'dnstraceroute.py', 'dnseval.py'],
     classifiers=[
@@ -25,5 +25,5 @@ as well as tracing the path your DNS query takes to get to DNS server.
 """,
     license = "BSD",
     keywords = "dns traceroute ping",
-    url = "https://github.com/farrokhi/dnsdiag",
+    url = "https://dnsdiag.org/",
 )

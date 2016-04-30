@@ -3,7 +3,7 @@
 DNS Diagnostics and Performance Measurement Tools
 ==================================================
 
-Ever been wondering if your ISP is hijacking your DNS traffic? Ever observed any
+Ever been wondering if your ISP is [hijacking your DNS traffic](https://decentralize.today/is-your-isp-hijacking-your-dns-traffic-f3eb7ccb0ee7#.fevks5wyc)? Ever observed any
 misbehavior with your DNS responses? Ever been redirected to wrong address and
 suspected something is wrong with your DNS? Here we have a set of tools to
 perform basic audits on your DNS requests and responses to make sure your DNS is
@@ -88,6 +88,10 @@ server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 208.67.222.222     179.068     135.975     258.582     50.681      %0
 208.67.220.220     137.817     135.822     140.113     1.504       %0
 ```
+
+### License
+
+dnsdiag is released under a 2 clause BSD license.
 
 ### Credits
 
