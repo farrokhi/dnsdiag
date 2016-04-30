@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 setup(
     name = "dnsdiag",
     version = "1.2.2",
+	packages = find_packages(),
     install_requires = ['cymruwhois==1.4'],
     dependency_links = [
         "https://github.com/JustinAzoff/python-cymruwhois/archive/a34543335cbef02b1b615e774ce5b6187afb0cc2.zip#egg=cymruwhois-1.4"
