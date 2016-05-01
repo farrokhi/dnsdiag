@@ -46,7 +46,7 @@ git submodules init --update
 2. You can alternatively install the package using pip:
 
 ```
-pip3 install  --process-dependency-links dnsdiag
+pip3 install --process-dependency-links dnsdiag
 ```
 
 # dnsping
@@ -108,6 +108,7 @@ server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 ### Author
 
 Babak Farrokhi 
+
 - twitter: [@farrokhi](https://twitter.com/farrokhi)
 - github: [/farrokhi](https://github.com/farrokhi/)
 - website: [farrokhi.net](https://farrokhi.net/)
