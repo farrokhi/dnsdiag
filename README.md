@@ -105,6 +105,14 @@ server             avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 208.67.220.220     137.817     135.822     140.113     1.504       %0
 ```
 
+### Author
+
+Babak Farrokhi 
+- twitter: [@farrokhi](https://twitter.com/farrokhi)
+- github: [/farrokhi](https://github.com/farrokhi/)
+- website: [farrokhi.net](https://farrokhi.net/)
+
+
 ### License
 
 dnsdiag is released under a 2 clause BSD license.
