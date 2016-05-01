@@ -33,6 +33,22 @@ This script requires python3 as well as latest
 third-party modules are included as GIT submodules. You just need to run `git
 submodule update --init` and project directory to pull the required code.
 
+# installation
+
+1. You can checkout this git repo and its submodules
+
+```
+git clone https://github.com/farrokhi/dnsdiag.git
+cd dnsdiag
+git submodules init --update
+```
+
+2. You can alternatively install the package using pip:
+
+```
+pip3 install  --process-dependency-links dnsdiag
+```
+
 # dnsping
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number
 of times:
