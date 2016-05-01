@@ -1,8 +1,13 @@
 from setuptools import setup, find_packages
 setup(
     name = "dnsdiag",
-    version = "1.2.1",
-    packages = find_packages(),
+    version = "1.2.2",
+	packages = find_packages(),
+    install_requires = ['cymruwhois==1.4'],
+    dependency_links = [
+        "https://github.com/JustinAzoff/python-cymruwhois/archive/a34543335cbef02b1b615e774ce5b6187afb0cc2.zip#egg=cymruwhois-1.4"
+    ],
+
     scripts = ['dnsping.py', 'dnstraceroute.py', 'dnseval.py'],
     classifiers=[
         "Topic :: System :: Networking",
@@ -13,7 +18,6 @@ setup(
         "Development Status :: 5 - Production/Stable",
     ],
 
-    install_requires = ['cymruwhois>=1.4'],
     author = "Babak Farrokhi",
     author_email = "babak@farrokhi.net",
     description = "DNS Diagnostics and measurement tools (ping, traceroute)",
