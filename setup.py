@@ -3,9 +3,9 @@ setup(
     name = "dnsdiag",
     version = "1.2.2",
 	packages = find_packages(),
-    install_requires = ['cymruwhois==1.4'],
+    install_requires = ['cymruwhois==1.5'],
     dependency_links = [
-        "https://github.com/JustinAzoff/python-cymruwhois/archive/a34543335cbef02b1b615e774ce5b6187afb0cc2.zip#egg=cymruwhois-1.4"
+        "https://github.com/JustinAzoff/python-cymruwhois/archive/1.5.zip#egg=cymruwhois-1.5"
     ],
 
     scripts = ['dnsping.py', 'dnstraceroute.py', 'dnseval.py'],
