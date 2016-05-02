@@ -45,7 +45,7 @@ except ImportError:
     has_whois = False
 
 # Constants
-__VERSION__ = 1.1
+__VERSION__ = 1.2
 __PROGNAME__ = os.path.basename(sys.argv[0])
 WHOIS_CACHE = 'whois.cache'
 
