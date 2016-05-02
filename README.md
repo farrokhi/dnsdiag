@@ -40,7 +40,7 @@ submodule update --init` and project directory to pull the required code.
 ```
 git clone https://github.com/farrokhi/dnsdiag.git
 cd dnsdiag
-git submodules update --init
+git submodule update --init
 ```
 
 2. You can alternatively install the package using pip:
