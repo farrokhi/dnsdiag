@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import concurrent.futures
 import getopt
 import ipaddress
 import os
@@ -36,6 +37,10 @@ import time
 import dns.rdatatype
 import dns.resolver
 
+__author__ = 'Babak Farrokhi (babak@farrokhi.net)'
+__license__ = 'BSD'
+__version__ = 1.3
+
 # http://pythonhosted.org/cymruwhois/
 try:
     import cymruwhois
@@ -45,7 +50,6 @@ except ImportError:
     has_whois = False
 
 # Constants
-__VERSION__ = 1.2
 __PROGNAME__ = os.path.basename(sys.argv[0])
 WHOIS_CACHE = 'whois.cache'
 
@@ -102,7 +106,7 @@ if has_whois:
 
 
 def usage():
-    print('%s version %1.1f\n' % (__PROGNAME__, __VERSION__))
+    print('%s version %1.1f\n' % (__PROGNAME__, __version__))
     print('usage: %s [-h] [-q] [-a] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      Show this help')
     print('  -q  --quiet     Quiet')
@@ -157,7 +161,40 @@ def expert_report(trace_path, color_mode):
     print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
+def ping(resolver, hostname, dnsrecord, ttl):
+    reached = False
+
+    try:
+        resolver.query(hostname, dnsrecord, ipttl=ttl)
+
+    except dns.resolver.NoNameservers as e:
+        if not quiet:
+            print("no or bad response:", e)
+        exit(1)
+    except dns.resolver.NXDOMAIN as e:
+        if not quiet:
+            print("Invalid hostname:", e)
+        exit(1)
+    except dns.resolver.Timeout:
+        pass
+    except dns.resolver.NoAnswer:
+        if not quiet:
+            print("invalid answer")
+        pass
+    except SystemExit:
+        pass
+    except:
+        print("unxpected error: ", sys.exc_info()[0])
+        exit(1)
+    else:
+        reached = True
+
+    return reached
+
+
 def main():
+    global quiet
+
     try:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
         signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
@@ -257,51 +294,32 @@ def main():
         icmp_socket.bind(("", dest_port))
         icmp_socket.settimeout(timeout)
 
-        try:  # send DNS request
-            stime = time.time()
-            resolver.query(hostname, dnsrecord, ipttl=ttl)
-        except dns.resolver.NoNameservers as e:
-            if not quiet:
-                print("no or bad response:", e)
-            exit(1)
-        except dns.resolver.NXDOMAIN as e:
-            if not quiet:
-                print("Invalid hostname:", e)
-            exit(1)
-        except dns.resolver.Timeout:
-            pass
-        except dns.resolver.NoAnswer:
-            if not quiet:
-                print("invalid answer")
-            pass
-        except SystemExit:
-            pass
-        except:
-            print("unxpected error: ", sys.exc_info()[0])
-            exit(1)
-        else:
-            reached = True
-
         curr_addr = None
         curr_host = None
 
-        try:  # expect ICMP response
-            _, curr_addr = icmp_socket.recvfrom(512)
-            curr_addr = curr_addr[0]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
+            stime = time.time()
+            thr = pool.submit(ping, resolver, hostname, dnsrecord, ttl)
 
-        except socket.error:
-            pass
+            try:  # expect ICMP response
+                _, curr_addr = icmp_socket.recvfrom(512)
+                curr_addr = curr_addr[0]
+            except socket.error:
+                etime = time.time()
+                pass
+            finally:
+                etime = time.time()
+                icmp_socket.close()
 
-        finally:
-            icmp_socket.close()
-
-        etime = time.time()
-        elapsed = abs(etime - stime) * 1000  # convert to milliseconds
+        reached = thr.result()
 
         if reached:
             curr_addr = dnsserver
+            stime = time.time()  # need to recalculate elapsed time for last hop without waiting for an icmp error reply
+            ping(resolver, hostname, dnsrecord, ttl)
+            etime = time.time()
 
-        elapsed -= timeout * 1000
+        elapsed = abs(etime - stime) * 1000  # convert to milliseconds
 
         if should_resolve:
             try:
