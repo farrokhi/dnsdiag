@@ -73,18 +73,23 @@ it to your actual network traceroute and make sure your DNS traffic is not
 routed to any unwanted path.
 
 ```
-% ./dnstraceroute.py -s 4.2.2.1 yahoo.com
- dnstraceroute.py 4.2.2.1: hostname=yahoo.com rdatatype=A
- 1       192.168.199.57 (192.168.199.57)  47 ms
- 2       192.168.198.21 (192.168.198.21)  21 ms
- 3       192.168.169.169 (192.168.169.169)  27 ms
- 4       192.168.168.137 (192.168.168.137)  28 ms
- 5       so-5-0-0.franco71.fra.seabone.net (89.221.34.6)  23 ms
- 6       xe-5-3-1.fra44.ip4.gtt.net (89.149.129.185)  62 ms
- 7       *  1126 ms
- 8       ae-1-60.edge5.Frankfurt1.Level3.net (4.69.154.9)  62 ms
- 9       ae-1-60.edge5.Frankfurt1.Level3.net (4.69.154.9)  12 ms
- 10      a.resolvers.level3.net (4.2.2.1)  171 ms
+% ./dnstraceroute.py --expert -s 8.8.4.4 yahoo.com
+
+dnstraceroute.py DNS: 8.8.4.4:53, hostname: yahoo.com, rdatatype: A
+1	204.109.58.53 (204.109.58.53) 14 ms
+2	208.79.80.5 (208.79.80.5) 76 ms
+3	162.223.13.177 (162.223.13.177) 30 ms
+4	208.79.80.254 (208.79.80.254) 11 ms
+5	eqixva-google-gige.google.com (206.126.236.21) 74 ms
+6	209.85.242.140 (209.85.242.140) 21 ms
+7	209.85.143.210 (209.85.143.210) 47 ms
+8	72.14.235.12 (72.14.235.12) 48 ms
+9	74.125.37.222 (74.125.37.222) 74 ms
+10	 *
+11	google-public-dns-b.google.com (8.8.4.4) 48 ms
+
+=== Expert Report ===
+ [*] public DNS server is next to an invisible hop (probably a firewall)
 ```
 
 # dnseval
