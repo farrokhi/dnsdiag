@@ -142,7 +142,7 @@ def expert_report(trace_path, color_mode):
         return
 
     if prev_hop == '*':
-        print(" %s[*]%s public DNS server is next to an invisible hop (possible hijacking)" % (color.R, color.N))
+        print(" %s[*]%s public DNS server is next to an invisible hop (probably a firewall)" % (color.R, color.N))
         return
 
     if prev_hop and ipaddress.ip_address(prev_hop).is_private:
