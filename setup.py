@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name = "dnsdiag",
-    version = "1.2.5",
+    version = "1.2.6",
 	packages = find_packages(),
     install_requires = ['cymruwhois==1.5'],
     dependency_links = [
