@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name = "dnsdiag",
-    version = "1.2.4",
+    version = "1.2.5",
 	packages = find_packages(),
     install_requires = ['cymruwhois==1.5'],
     dependency_links = [
@@ -13,9 +13,11 @@ setup(
         "Topic :: System :: Networking",
         "Environment :: Console",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python",
+        "License :: OSI Approved :: BSD License",
+        'Programming Language :: Python :: 3.4',
         "Development Status :: 5 - Production/Stable",
+        "Operating System :: OS Independent",
+
     ],
 
     author = "Babak Farrokhi",
