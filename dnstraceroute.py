@@ -127,7 +127,7 @@ def signal_handler(sig, frame):
 
 def expert_report(trace_path, color_mode):
     color = Colors(color_mode)
-    print("\n%s=== Expert Report ===%s" % (color.B, color.N))
+    print("\n%s=== Expert Hints ===%s" % (color.B, color.N))
     if len(trace_path) == 0:
         print(" [*] empty trace - should not happen")
         return
@@ -154,7 +154,7 @@ def expert_report(trace_path, color_mode):
         return
 
     ## no expert info available
-    print(" %s[*]%s No expert hint available" % (color.G, color.N))
+    print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
 def main():
