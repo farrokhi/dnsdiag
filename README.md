@@ -92,6 +92,8 @@ dnstraceroute.py DNS: 8.8.4.4:53, hostname: yahoo.com, rdatatype: A
  [*] public DNS server is next to an invisible hop (probably a firewall)
 ```
 
+Using `--expert` will instruct dnstraceroute to print expert hints (such as warnings of possible DNS traffic hijacking).
+
 # dnseval
 dnseval is a bulk ping utility that sends an arbitrary DNS query to a give list
 of DNS servers. This script is meant for comparing response time of multiple
