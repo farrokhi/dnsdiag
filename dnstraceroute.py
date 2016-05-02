@@ -26,6 +26,7 @@
 
 
 import getopt
+import ipaddress
 import os
 import signal
 import socket
@@ -47,6 +48,23 @@ except ImportError:
 __VERSION__ = 1.1
 __PROGNAME__ = os.path.basename(sys.argv[0])
 WHOIS_CACHE = 'whois.cache'
+
+
+class Colors(object):
+    N = '\033[m'  # native
+    R = '\033[31m'  # red
+    G = '\033[32m'  # green
+    O = '\033[33m'  # orange
+    B = '\033[34m'  # blue
+
+    def __init__(self, mode):
+        if not mode:
+            self.N = ''
+            self.R = ''
+            self.G = ''
+            self.O = ''
+            self.B = ''
+
 
 # Globarl Variables
 should_stop = False
@@ -88,12 +106,14 @@ def usage():
     print('usage: %s [-h] [-q] [-a] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
     print('  -h  --help      Show this help')
     print('  -q  --quiet     Quiet')
+    print('  -e  --expert    Print expert hints if available')
     print('  -a  --asn       Turn on AS# lookups for each hop encountered')
     print('  -s  --server    DNS server to use (default: first system resolver)')
     print('  -p  --port      DNS server port number (default: 53)')
     print('  -c  --count     Maximum number of hops (default: 30)')
     print('  -w  --wait      Maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
+    print('  -C  --color     Print colorful output')
     print('  ')
     exit()
 
@@ -105,11 +125,43 @@ def signal_handler(sig, frame):
     should_stop = True  # pressed once, exit gracefully
 
 
+def expert_report(trace_path, color_mode):
+    color = Colors(color_mode)
+    print("\n%s=== Expert Report ===%s" % (color.B, color.N))
+    if len(trace_path) == 0:
+        print(" [*] empty trace - should not happen")
+        return
+
+    prev_hop = None
+    if len(trace_path) > 1:
+        prev_hop = trace_path[-2]
+
+    if len(trace_path) < 2:
+        print(
+            " %s[*]%s path too short (possible DNS hijacking, unless it is a local DNS resolver)" % (color.R, color.N))
+        return
+
+    if prev_hop == '*':
+        print(" %s[*]%s public DNS server is next to an invisible hop (possible hijacking)" % (color.R, color.N))
+        return
+
+    if prev_hop and ipaddress.ip_address(prev_hop).is_private:
+        print(" %s[*]%s public DNS server is next to a private IP address (possible hijacking)" % (color.R, color.N))
+        return
+
+    if prev_hop and ipaddress.ip_address(prev_hop).is_reserved:
+        print(" %s[*]%s public DNS server is next to a reserved IP address (possible hijacking)" % (color.R, color.N))
+        return
+
+    ## no expert info available
+    print(" %s[*]%s No expert hint available" % (color.G, color.N))
+
+
 def main():
     try:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
         signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError: # not all signals are supported on all platforms
+    except AttributeError:  # not all signals are supported on all platforms
         pass
 
     if len(sys.argv) == 1:
@@ -123,11 +175,14 @@ def main():
     dest_port = 53
     hops = 0
     as_lookup = False
+    expert_mode = False
     should_resolve = True
+    color_mode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:p:n",
-                                   ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port"])
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:p:neC",
+                                   ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port", "expert",
+                                    "color"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -143,6 +198,8 @@ def main():
             usage()
         elif o in ("-c", "--count"):
             count = int(a)
+        elif o in ("-e", "--expert"):
+            expert_mode = True
         elif o in ("-s", "--server"):
             dnsserver = a
         elif o in ("-q", "--quiet"):
@@ -153,6 +210,8 @@ def main():
             dnsrecord = a
         elif o in ("-p", "--port"):
             dest_port = int(a)
+        elif o in ("-C", "--color"):
+            color_mode = True
         elif o in ("-n"):
             should_resolve = False
         elif o in ("-a", "--asn"):
@@ -162,6 +221,8 @@ def main():
                 print('Warning: cymruwhois module cannot be loaded. AS Lookup disabled.')
         else:
             usage()
+
+    color = Colors(color_mode)
 
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [dnsserver]
@@ -173,6 +234,7 @@ def main():
 
     ttl = 1
     reached = False
+    trace_path = []
 
     if not quiet:
         print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
@@ -267,14 +329,29 @@ def main():
                         exit(0)
                     pass
 
-            print("%d\t%s (%s) %s%d ms" % (ttl, curr_name, curr_addr, as_name, elapsed))
+            c = color.N  # default
+            if curr_addr != '*':
+                IP = ipaddress.ip_address(curr_addr)
+                if IP.is_private:
+                    c = color.R
+                if IP.is_reserved:
+                    c = color.B
+                if curr_addr == dnsserver:
+                    c = color.G
+
+            print("%d\t%s (%s%s%s) %s%d ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
+            trace_path.append(curr_addr)
         else:
-            print("%d\t *" % ttl)
+            print("%d\t *" % ttl, flush=True)
+            trace_path.append("*")
 
         ttl += 1
         hops += 1
         if (hops >= count) or (curr_addr == dnsserver) or reached:
             break
+
+    if expert_mode and not should_stop:
+        expert_report(trace_path, color_mode)
 
 
 if __name__ == '__main__':
