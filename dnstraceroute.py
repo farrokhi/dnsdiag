@@ -260,6 +260,7 @@ def main():
         try:  # send DNS request
             stime = time.time()
             resolver.query(hostname, dnsrecord, ipttl=ttl)
+            etime = time.time()
         except dns.resolver.NoNameservers as e:
             if not quiet:
                 print("no or bad response:", e)
@@ -295,8 +296,7 @@ def main():
         finally:
             icmp_socket.close()
 
-        etime = time.time()
-        elapsed = (etime - stime) * 1000  # convert to milliseconds
+        elapsed = abs(etime - stime) * 1000  # convert to milliseconds
 
         if reached:
             curr_addr = dnsserver
