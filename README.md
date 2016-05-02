@@ -88,7 +88,7 @@ dnstraceroute.py DNS: 8.8.4.4:53, hostname: yahoo.com, rdatatype: A
 10	 *
 11	google-public-dns-b.google.com (8.8.4.4) 48 ms
 
-=== Expert Report ===
+=== Expert Hints ===
  [*] public DNS server is next to an invisible hop (probably a firewall)
 ```
 
