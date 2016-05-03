@@ -41,6 +41,9 @@ __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __version__ = 1.3
 
+def test_import():
+    pass
+
 # http://pythonhosted.org/cymruwhois/
 try:
     import cymruwhois
