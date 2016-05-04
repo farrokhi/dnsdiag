@@ -1,1 +1,0 @@
-https://github.com/JustinAzoff/python-cymruwhois/archive/1.5.zip#egg=cymruwhois==1.5

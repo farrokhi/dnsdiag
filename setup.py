@@ -1,13 +1,8 @@
 from setuptools import setup, find_packages
 setup(
     name = "dnsdiag",
-    version = "1.3.0",
+    version = "1.3.1",
 	packages = find_packages(),
-    install_requires = ['cymruwhois==1.5'],
-    dependency_links = [
-        "https://github.com/JustinAzoff/python-cymruwhois/archive/1.5.zip#egg=cymruwhois-1.5"
-    ],
-
     scripts = ['dnsping.py', 'dnstraceroute.py', 'dnseval.py'],
     classifiers=[
         "Topic :: System :: Networking",
@@ -17,7 +12,6 @@ setup(
         'Programming Language :: Python :: 3.4',
         "Development Status :: 5 - Production/Stable",
         "Operating System :: OS Independent",
-
     ],
 
     author = "Babak Farrokhi",
