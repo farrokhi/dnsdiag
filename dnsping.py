@@ -48,7 +48,7 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
   -h  --help      Show this help
   -q  --quiet     Quiet
   -v  --verbose   Print actual dns response
-  -s  --server    DNS server to use (default: 8.8.8.8)
+  -s  --server    DNS server to use (default: first entry from /etc/resolv.conf)
   -p  --port      DNS server port number (default: 53)
   -T  --tcp       Use TCP instead of UDP
   -4  --ipv4      Use IPv4 as default network protocol
@@ -85,7 +85,7 @@ def main():
     timeout = 5
     quiet = False
     verbose = False
-    dnsserver = '8.8.8.8'
+    dnsserver = dns.resolver.get_default_resolver().nameservers[0]
     dst_port = 53
     src_port = 0
     src_ip = None
