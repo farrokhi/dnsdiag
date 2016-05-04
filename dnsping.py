@@ -196,7 +196,10 @@ def main():
         r_min = min(response_time)
         r_max = max(response_time)
         r_avg = sum(response_time) / r_received
-        r_stddev = stdev(response_time)
+        if len(response_time) > 1:
+            r_stddev = stdev(response_time)
+        else:
+            r_stddev = 0
     else:
         r_min = 0
         r_max = 0
