@@ -50,6 +50,7 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
   -v  --verbose   Print actual dns response
   -s  --server    DNS server to use (default: 8.8.8.8)
   -p  --port      DNS server port number (default: 53)
+  -T  --tcp       Use TCP instead of UDP
   -P  --srcport   Query source port number (default: 0)
   -S  --srcip     Query source IP address (default: default interface address)
   -c  --count     Number of requests to send (default: 10)
@@ -86,12 +87,13 @@ def main():
     dst_port = 53
     src_port = 0
     src_ip = None
+    use_tcp = False
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:T",
                                    ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "verbose",
-                                    "port", "dstport=", "srcip="])
+                                    "port", "dstport=", "srcip=", "tcp"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -120,6 +122,8 @@ def main():
             timeout = int(a)
         elif o in ("-t", "--type"):
             dnsrecord = a
+        elif o in ("-T", "--tcp"):
+            use_tcp = True
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
@@ -156,7 +160,7 @@ def main():
             break
         try:
             stime = time.time()
-            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip)
+            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp)
             etime = time.time()
         except dns.resolver.NoNameservers as e:
             if not quiet:
