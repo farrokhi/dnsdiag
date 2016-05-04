@@ -29,6 +29,7 @@ import concurrent.futures
 import getopt
 import ipaddress
 import os
+import pickle
 import signal
 import socket
 import sys
@@ -36,21 +37,17 @@ import time
 
 import dns.rdatatype
 import dns.resolver
+from cymruwhois import cymruwhois
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __version__ = 1.3
 
+
 def test_import():
+    #  passing this test means imports were successful
     pass
 
-# http://pythonhosted.org/cymruwhois/
-try:
-    import cymruwhois
-
-    has_whois = True
-except ImportError:
-    has_whois = False
 
 # Constants
 __PROGNAME__ = os.path.basename(sys.argv[0])
@@ -76,36 +73,32 @@ class Colors(object):
 # Globarl Variables
 should_stop = False
 
-if has_whois:
-    from cymruwhois import cymruwhois
-    import pickle
 
-
-    def whoisrecord(ip):
-        try:
-            currenttime = time.time()
-            ts = currenttime
-            if ip in whois:
-                ASN, ts = whois[ip]
-            else:
-                ts = 0
-            if ((currenttime - ts) > 36000):
-                c = cymruwhois.Client()
-                ASN = c.lookup(ip)
-                whois[ip] = (ASN, currenttime)
-            return ASN
-        except Exception as e:
-            return e
-
-
+def whoisrecord(ip):
     try:
-        pkl_file = open(WHOIS_CACHE, 'rb')
-        try:
-            whois = pickle.load(pkl_file)
-        except EOFError:
-            whois = {}
-    except IOError:
+        currenttime = time.time()
+        ts = currenttime
+        if ip in whois:
+            ASN, ts = whois[ip]
+        else:
+            ts = 0
+        if ((currenttime - ts) > 36000):
+            c = cymruwhois.Client()
+            ASN = c.lookup(ip)
+            whois[ip] = (ASN, currenttime)
+        return ASN
+    except Exception as e:
+        return e
+
+
+try:
+    pkl_file = open(WHOIS_CACHE, 'rb')
+    try:
+        whois = pickle.load(pkl_file)
+    except EOFError:
         whois = {}
+except IOError:
+    whois = {}
 
 
 def usage():
@@ -255,10 +248,7 @@ def main():
         elif o in ("-n"):
             should_resolve = False
         elif o in ("-a", "--asn"):
-            if has_whois:
-                as_lookup = True
-            else:
-                print('Warning: cymruwhois module cannot be loaded. AS Lookup disabled.')
+            as_lookup = True
         else:
             usage()
 
@@ -339,7 +329,7 @@ def main():
 
         if curr_addr:
             as_name = ""
-            if has_whois and as_lookup:
+            if as_lookup:
                 ASN = whoisrecord(curr_addr)
                 as_name = ''
                 try:
@@ -379,6 +369,5 @@ if __name__ == '__main__':
     try:
         main()
     finally:
-        if has_whois:
-            pkl_file = open(WHOIS_CACHE, 'wb')
-            pickle.dump(whois, pkl_file)
+        pkl_file = open(WHOIS_CACHE, 'wb')
+        pickle.dump(whois, pkl_file)
