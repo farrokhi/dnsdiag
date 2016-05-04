@@ -51,6 +51,8 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
   -s  --server    DNS server to use (default: 8.8.8.8)
   -p  --port      DNS server port number (default: 53)
   -T  --tcp       Use TCP instead of UDP
+  -4  --ipv4      Use IPv4 as default network protocol
+  -6  --ipv6      Use IPv6 as default network protocol
   -P  --srcport   Query source port number (default: 0)
   -S  --srcip     Query source IP address (default: default interface address)
   -c  --count     Number of requests to send (default: 10)
@@ -88,12 +90,13 @@ def main():
     src_port = 0
     src_ip = None
     use_tcp = False
+    af = None
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:T",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:T46",
                                    ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "verbose",
-                                    "port", "dstport=", "srcip=", "tcp"])
+                                    "port", "dstport=", "srcip=", "tcp", "ipv4", "ipv6"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -124,6 +127,10 @@ def main():
             dnsrecord = a
         elif o in ("-T", "--tcp"):
             use_tcp = True
+        elif o in ("-4", "--ipv4"):
+            af = socket.AF_INET
+        elif o in ("-6", "--ipv6"):
+            af = socket.AF_INET6
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
@@ -160,7 +167,7 @@ def main():
             break
         try:
             stime = time.time()
-            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp)
+            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp, af=af)
             etime = time.time()
         except dns.resolver.NoNameservers as e:
             if not quiet:
