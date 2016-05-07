@@ -37,7 +37,7 @@ import dns.resolver
 
 __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
-should_stop = False
+shutdown = False
 
 resolvers = dns.resolver.get_default_resolver().nameservers
 
@@ -56,10 +56,10 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
 
 
 def signal_handler(sig, frame):
-    global should_stop
-    if should_stop:  # pressed twice, so exit immediately
+    global shutdown
+    if shutdown:  # pressed twice, so exit immediately
         exit(0)
-    should_stop = True  # pressed once, exit gracefully
+    shutdown = True  # pressed once, exit gracefully
 
 
 def maxlen(names):
@@ -77,10 +77,8 @@ def dnsping(host, server, dnsrecord, timeout, count):
     response_time = []
     i = 0
 
-    # print('DEBUG: host = %s , server = %s , count = %d' % (host, resolver.nameservers[0], count))
-
     for i in range(count):
-        if should_stop:
+        if shutdown:
             break
         try:
             stime = time.time()
@@ -102,7 +100,10 @@ def dnsping(host, server, dnsrecord, timeout, count):
         r_min = min(response_time)
         r_max = max(response_time)
         r_avg = sum(response_time) / r_received
-        r_stddev = stdev(response_time)
+        if len(response_time) > 1:
+            r_stddev = stdev(response_time)
+        else:
+            r_stddev = 0
     else:
         r_min = 0
         r_max = 0
@@ -116,7 +117,7 @@ def main():
     try:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
         signal.signal(signal.SIGINT, signal_handler)  # ignore CTRL+C
-    except AttributeError: # Some systems may not support all signals
+    except AttributeError:  # Some systems may not support all signals
         pass
 
     if len(sys.argv) == 1:
@@ -166,7 +167,7 @@ def main():
         if len(f) == 0:
             print("No nameserver specified")
 
-        f = [ name.strip() for name in f]
+        f = [name.strip() for name in f]
         width = maxlen(f)
         blanks = (width - 5) * ' '
         print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
@@ -174,11 +175,12 @@ def main():
         for server in f:
             if not server:
                 continue
-            (server, r_avg, r_min, r_max, r_stddev, r_lost_percent) = dnsping(hostname, server, dnsrecord, waittime, count)
+            (server, r_avg, r_min, r_max, r_stddev, r_lost_percent) = dnsping(hostname, server, dnsrecord, waittime,
+                                                                              count)
 
             server = server.ljust(width + 1)
             print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d" % (
-                server, r_avg, r_min, r_max, r_stddev, r_lost_percent))
+                server, r_avg, r_min, r_max, r_stddev, r_lost_percent), flush=True)
 
     except Exception as e:
         print('error: %s' % e)
