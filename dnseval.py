@@ -26,8 +26,10 @@
 
 
 import getopt
+import ipaddress
 import os
 import signal
+import socket
 import sys
 import time
 from statistics import stdev
@@ -173,14 +175,26 @@ def main():
         print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
         print((60 + width) * '-')
         for server in f:
-            if not server:
-                continue
-            (server, r_avg, r_min, r_max, r_stddev, r_lost_percent) = dnsping(hostname, server, dnsrecord, waittime,
-                                                                              count)
+            # check if we have a valid dns server address
+            try:
+                ipaddress.ip_address(server)
+            except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
+                try:
+                    s = socket.getaddrinfo(server, port=None)[1][4][0]
+                except OSError:
+                    print('Error: cannot resolve hostname:', server)
+                    s = None
+            else:
+                s = server
 
-            server = server.ljust(width + 1)
+            if not s:
+                continue
+            (s, r_avg, r_min, r_max, r_stddev, r_lost_percent) = dnsping(hostname, s, dnsrecord, waittime,
+                                                                         count)
+
+            s = server.ljust(width + 1)
             print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d" % (
-                server, r_avg, r_min, r_max, r_stddev, r_lost_percent), flush=True)
+                s, r_avg, r_min, r_max, r_stddev, r_lost_percent), flush=True)
 
     except Exception as e:
         print('error: %s' % e)
