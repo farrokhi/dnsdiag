@@ -71,7 +71,7 @@ class Colors(object):
 
 
 # Globarl Variables
-should_stop = False
+shutdown = False
 
 
 def whoisrecord(ip):
@@ -119,7 +119,7 @@ def usage():
 
 
 def signal_handler(sig, frame):
-    global should_stop
+    global shutdown
     if should_stop:  # pressed twice, so exit immediately
         exit(0)
     should_stop = True  # pressed once, exit gracefully
@@ -270,7 +270,7 @@ def main():
         print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
 
     while True:
-        if should_stop:
+        if shutdown:
             break
 
         # some platforms permit opening a DGRAM socket for ICMP without root permission
@@ -336,7 +336,7 @@ def main():
                     if ASN and ASN.asn != "NA":
                         as_name = "[%s %s] " % (ASN.asn, ASN.owner)
                 except AttributeError:
-                    if should_stop:
+                    if shutdown:
                         exit(0)
                     pass
 
@@ -361,7 +361,7 @@ def main():
         if (hops >= count) or (curr_addr == dnsserver) or reached:
             break
 
-    if expert_mode and not should_stop:
+    if expert_mode and not shutdown:
         expert_report(trace_path, color_mode)
 
 

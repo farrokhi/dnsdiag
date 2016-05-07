@@ -39,7 +39,7 @@ import dns.resolver
 
 __VERSION__ = 1.1
 __PROGNAME__ = os.path.basename(sys.argv[0])
-should_stop = False
+shutdown = False
 
 
 def usage():
@@ -63,7 +63,7 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
 
 
 def signal_handler(sig, frame):
-    global should_stop
+    global shutdown
     if should_stop:  # pressed twice, so exit immediately
         exit(0)
     should_stop = True  # pressed once, exit gracefully
@@ -163,7 +163,7 @@ def main():
     print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dst_port, hostname, dnsrecord))
 
     for i in range(count):
-        if should_stop:
+        if shutdown:
             break
         try:
             stime = time.time()
