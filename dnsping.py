@@ -90,7 +90,7 @@ def main():
     src_port = 0
     src_ip = None
     use_tcp = False
-    af = None
+    af = socket.AF_INET
     hostname = 'wikipedia.org'
 
     try:
