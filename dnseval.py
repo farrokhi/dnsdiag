@@ -54,13 +54,13 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -w  --wait      maximum wait time for a reply (default: 5)
   -t  --type      DNS request record type (default: A)
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
-    exit()
+    sys.exit()
 
 
 def signal_handler(sig, frame):
     global shutdown
     if shutdown:  # pressed twice, so exit immediately
-        exit(0)
+        sys.exit(0)
     shutdown = True  # pressed once, exit gracefully
 
 
@@ -198,7 +198,7 @@ def main():
 
     except Exception as e:
         print('error: %s' % e)
-        exit(1)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
