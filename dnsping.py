@@ -59,13 +59,13 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
   -w  --wait      Maximum wait time for a reply (default: 5)
   -t  --type      DNS request record type (default: A)
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
-    exit()
+    sys.exit(0)
 
 
 def signal_handler(sig, frame):
     global shutdown
     if shutdown:  # pressed twice, so exit immediately
-        exit(0)
+        sys.exit(0)
     shutdown = True  # pressed once, exit gracefully
 
 
@@ -148,7 +148,7 @@ def main():
             dnsserver = socket.getaddrinfo(dnsserver, port=None)[1][4][0]
         except OSError:
             print('Error: cannot resolve hostname:', dnsserver)
-            exit(1)
+            sys.exit(1)
 
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [dnsserver]
@@ -174,13 +174,13 @@ def main():
                 print("No response to dns request")
                 if verbose:
                     print("error:", e)
-            exit(1)
+            sys.exit(1)
         except dns.resolver.NXDOMAIN as e:
             if not quiet:
                 print("Hostname does not exist")
             if verbose:
                 print("Error:", e)
-            exit(1)
+            sys.exit(1)
         except dns.resolver.Timeout:
             if not quiet:
                 print("Request timeout")
