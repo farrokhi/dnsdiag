@@ -145,7 +145,7 @@ def main():
         ipaddress.ip_address(dnsserver)
     except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
         try:
-            dnsserver = socket.getaddrinfo(dnsserver, port=None)[1][4][0]
+            dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af)[1][4][0]
         except OSError:
             print('Error: cannot resolve hostname:', dnsserver)
             sys.exit(1)
