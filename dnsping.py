@@ -64,9 +64,9 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
 
 def signal_handler(sig, frame):
     global shutdown
-    if should_stop:  # pressed twice, so exit immediately
+    if shutdown:  # pressed twice, so exit immediately
         exit(0)
-    should_stop = True  # pressed once, exit gracefully
+    shutdown = True  # pressed once, exit gracefully
 
 
 def main():
