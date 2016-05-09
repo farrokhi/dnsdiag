@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name = "dnsdiag",
-    version = "1.3.3",
+    version = "1.3.4",
 	packages = find_packages(),
     scripts = ['dnsping.py', 'dnstraceroute.py', 'dnseval.py'],
     classifiers=[
