@@ -115,13 +115,13 @@ def usage():
     print('  -t  --type      DNS request record type (default: A)')
     print('  -C  --color     Print colorful output')
     print('  ')
-    exit()
+    sys.exit()
 
 
 def signal_handler(sig, frame):
     global shutdown
     if shutdown:  # pressed twice, so exit immediately
-        exit(0)
+        sys.exit(0)
     shutdown = True  # pressed once, exit gracefully
 
 
@@ -166,11 +166,11 @@ def ping(resolver, hostname, dnsrecord, ttl):
     except dns.resolver.NoNameservers as e:
         if not quiet:
             print("no or bad response:", e)
-        exit(1)
+        sys.exit(1)
     except dns.resolver.NXDOMAIN as e:
         if not quiet:
             print("Invalid hostname:", e)
-        exit(1)
+        sys.exit(1)
     except dns.resolver.Timeout:
         pass
     except dns.resolver.NoAnswer:
@@ -181,7 +181,7 @@ def ping(resolver, hostname, dnsrecord, ttl):
         pass
     except:
         print("unxpected error: ", sys.exc_info()[0])
-        exit(1)
+        sys.exit(1)
     else:
         reached = True
 
@@ -282,7 +282,7 @@ def main():
                 icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, icmp)
             except OSError:
                 print("Error: Unable to create ICMP socket with unprivileged user. Please run as root.")
-                exit(1)
+                sys.exit(1)
 
         icmp_socket.bind(("", dest_port))
         icmp_socket.settimeout(timeout)
@@ -337,7 +337,7 @@ def main():
                         as_name = "[%s %s] " % (ASN.asn, ASN.owner)
                 except AttributeError:
                     if shutdown:
-                        exit(0)
+                        sys.exit(0)
                     pass
 
             c = color.N  # default
