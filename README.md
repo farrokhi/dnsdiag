@@ -35,6 +35,10 @@ submodule update --init` and project directory to pull the required code.
 
 # installation
 
+There are several ways that you can use this toolset. However using the sourcecode is always recommended.
+
+## From Source Code
+
 1. You can checkout this git repo and its submodules
 
 ```
@@ -48,6 +52,10 @@ git submodule update --init
 ```
 pip3 install --process-dependency-links dnsdiag
 ```
+
+## From Binary
+
+From time to time, binary version will be released for Windows, Mac OS X and Linux platforms. You can grab the latest release from [releases page](https://github.com/farrokhi/dnsdiag/releases).
 
 # dnsping
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number
