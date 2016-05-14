@@ -36,6 +36,7 @@ from statistics import stdev
 
 import dns.rdatatype
 import dns.resolver
+import dns.flags
 
 __VERSION__ = 1.1
 __PROGNAME__ = os.path.basename(sys.argv[0])
@@ -198,6 +199,7 @@ def main():
                         len(str(answers.rrset)), dnsserver, i, elapsed))
             if verbose:
                 print(answers.rrset)
+                print("flags:", dns.flags.to_text(answers.response.flags))
 
     r_sent = i + 1
     r_received = len(response_time)
