@@ -168,7 +168,7 @@ def main():
             break
         try:
             stime = time.time()
-            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp, af=af)
+            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp, af=af, raise_on_no_answer=False)
             etime = time.time()
         except dns.resolver.NoNameservers as e:
             if not quiet:
