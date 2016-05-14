@@ -36,6 +36,7 @@ from statistics import stdev
 
 import dns.rdatatype
 import dns.resolver
+import dns.flags
 
 __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
@@ -75,6 +76,7 @@ def dnsping(host, server, dnsrecord, timeout, count):
     resolver.timeout = timeout
     resolver.lifetime = timeout
     resolver.retry_servfail = 0
+    flags = ""
 
     response_time = []
     i = 0
@@ -93,6 +95,7 @@ def dnsping(host, server, dnsrecord, timeout, count):
         else:
             elapsed = (etime - stime) * 1000  # convert to milliseconds
             response_time.append(elapsed)
+            flags = dns.flags.to_text(answers.response.flags)
 
     r_sent = i + 1
     r_received = len(response_time)
@@ -112,7 +115,7 @@ def dnsping(host, server, dnsrecord, timeout, count):
         r_avg = 0
         r_stddev = 0
 
-    return (server, r_avg, r_min, r_max, r_stddev, r_lost_percent)
+    return (server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags)
 
 
 def main():
@@ -172,8 +175,8 @@ def main():
         f = [name.strip() for name in f]
         width = maxlen(f)
         blanks = (width - 5) * ' '
-        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)')
-        print((60 + width) * '-')
+        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  flags')
+        print((70 + width) * '-')
         for server in f:
             # check if we have a valid dns server address
             try:
@@ -189,12 +192,12 @@ def main():
 
             if not s:
                 continue
-            (s, r_avg, r_min, r_max, r_stddev, r_lost_percent) = dnsping(hostname, s, dnsrecord, waittime,
+            (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags) = dnsping(hostname, s, dnsrecord, waittime,
                                                                          count)
 
             s = server.ljust(width + 1)
-            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d" % (
-                s, r_avg, r_min, r_max, r_stddev, r_lost_percent), flush=True)
+            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d  %13s" % (
+                s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags), flush=True)
 
     except Exception as e:
         print('error: %s' % e)
