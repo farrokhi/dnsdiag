@@ -34,9 +34,9 @@ import sys
 import time
 from statistics import stdev
 
+import dns.flags
 import dns.rdatatype
 import dns.resolver
-import dns.flags
 
 __VERSION__ = 1.0
 __PROGNAME__ = os.path.basename(sys.argv[0])
@@ -179,6 +179,9 @@ def main():
         print((70 + width) * '-')
         for server in f:
             # check if we have a valid dns server address
+            if server.lstrip() == '':  # deal with empty lines
+                continue
+
             try:
                 ipaddress.ip_address(server)
             except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
@@ -193,7 +196,7 @@ def main():
             if not s:
                 continue
             (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags) = dnsping(hostname, s, dnsrecord, waittime,
-                                                                         count)
+                                                                                count)
 
             s = server.ljust(width + 1)
             print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d  %13s" % (
