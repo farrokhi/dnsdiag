@@ -106,7 +106,8 @@ Using `--expert` will instruct dnstraceroute to print expert hints (such as warn
 dnseval is a bulk ping utility that sends an arbitrary DNS query to a give list
 of DNS servers. This script is meant for comparing response time of multiple
 DNS servers at once:
-```% ./dnseval.py -f public-v4.txt -c3 ripe.net
+```
+% ./dnseval.py -f public-v4.txt -c3 ripe.net
 server           avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  flags
 ----------------------------------------------------------------------------------
 8.8.8.8          210.225     109.864     407.420     170.785     %0       QR RD RA

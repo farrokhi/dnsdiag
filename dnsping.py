@@ -34,9 +34,9 @@ import sys
 import time
 from statistics import stdev
 
+import dns.flags
 import dns.rdatatype
 import dns.resolver
-import dns.flags
 
 __VERSION__ = 1.1
 __PROGNAME__ = os.path.basename(sys.argv[0])
@@ -168,7 +168,8 @@ def main():
             break
         try:
             stime = time.time()
-            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp, af=af, raise_on_no_answer=False)
+            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp, af=af,
+                                     raise_on_no_answer=False)
             etime = time.time()
         except dns.resolver.NoNameservers as e:
             if not quiet:
