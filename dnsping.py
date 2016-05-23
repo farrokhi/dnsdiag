@@ -97,7 +97,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:T46",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "verbose",
-                                    "port", "dstport=", "srcip=", "tcp", "ipv4", "ipv6"])
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
