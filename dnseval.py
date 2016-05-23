@@ -181,7 +181,7 @@ def main():
             # check if we have a valid dns server address
             if server.lstrip() == '':  # deal with empty lines
                 continue
-
+            server = server.replace(' ', '')
             try:
                 ipaddress.ip_address(server)
             except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
@@ -190,6 +190,8 @@ def main():
                 except OSError:
                     print('Error: cannot resolve hostname:', server)
                     s = None
+                except:
+                    pass
             else:
                 s = server
 
