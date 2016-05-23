@@ -96,7 +96,7 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:T46",
-                                   ["help", "output=", "count=", "server=", "quiet", "type=", "wait=", "verbose",
+                                   ["help", "count=", "server=", "quiet", "type=", "wait=", "verbose",
                                     "port", "dstport=", "srcip=", "tcp", "ipv4", "ipv6"])
     except getopt.GetoptError as err:
         # print help information and exit:
