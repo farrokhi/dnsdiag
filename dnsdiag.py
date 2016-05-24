@@ -57,11 +57,30 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
 
 
 class myResolver(dns.resolver.Resolver):
-    def __init__(self, *args, **kwargs):
-        super(myResolver, self).__init__(*args, **kwargs)
+    def __init__(self, nameservers=None, port=53, af=socket.AF_INET, use_tcp=False):
+        super(myResolver, self).__init__()
+        self.use_tcp = use_tcp
+        self.port = port
+        self.default_af = af
+        self.port = port
+        self.retry_servfail = 0
+        resolved_nameservers = []
+        for n in nameservers:
+            try:
+                ipaddress.ip_address(n)
+            except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
+                try:
+                    r = socket.getaddrinfo(n, port=None, family=self.default_af)[1][4][0]
+                except OSError:
+                    print('Error: cannot resolve hostname:', n)
+                    sys.exit(1)
+                else:
+                    resolved_nameservers.append(r)
 
-        self.use_tcp = False
-        self.default_af = socket.AF_INET
+            else:
+                resolved_nameservers.append(n)
+
+        self.nameservers = resolved_nameservers
 
     def lookupA(self, hostname):
         try:
@@ -105,10 +124,7 @@ class myResolver(dns.resolver.Resolver):
             pass
 
         else:
-            for a in answers:
-                A = self.lookupA(a.target)
-                AAAA = self.lookupAAAA(a.target)
-                print("%s\t%s\t%s" % (a.target, '\t'.join(A), '\t'.join(AAAA)))
+            return answers
 
 
 def signal_handler(sig, frame):
@@ -116,6 +132,11 @@ def signal_handler(sig, frame):
     if shutdown:  # pressed twice, so exit immediately
         sys.exit(0)
     shutdown = True  # pressed once, exit gracefully
+
+
+def printHeader(title):
+    print("\n>> %s" % title)
+    print('=' * 65)
 
 
 def validHostname(hostname):
@@ -133,13 +154,13 @@ def main():
         usage()
 
     # defaults
-    timeout = 5
     quiet = False
     verbose = False
     dnsserver = dns.resolver.get_default_resolver().nameservers[0]
     dst_port = 53
     use_tcp = False
     address_family = socket.AF_INET
+    default_parent = 'a.gtld-servers.net'
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "qhs:vp:T46",
@@ -191,45 +212,43 @@ def main():
             print('Error: cannot resolve hostname:', dnsserver)
             sys.exit(1)
 
-    resolver = myResolver()
-    resolver.nameservers = [dnsserver]
-    resolver.timeout = timeout
-    resolver.lifetime = timeout
-    resolver.port = dst_port
-    resolver.retry_servfail = 0
-    resolver.use_tcp = use_tcp
-    resolver.default_af = address_family
+    res = myResolver(nameservers=[default_parent], port=dst_port, af=address_family, use_tcp=use_tcp)
 
-    resolver.lookupNSRecords(hostname)
+    printHeader("Domain NS Records (from parent: %s)" % default_parent)
+    answers = res.lookupNSRecords(hostname)
+    for a in answers:
+        A = res.lookupA(a.target)
+        AAAA = res.lookupAAAA(a.target)
+        print("%-25s\t%s\t%s" % (a.target, '\t'.join(A), '\t'.join(AAAA)))
 
 
-    # try:
-    #     answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp, af=address_family,
-    #                              raise_on_no_answer=False)
-    # except dns.resolver.NoNameservers as e:
-    #     if not quiet:
-    #         print("No response to dns request")
-    #         if verbose:
-    #             print("error:", e)
-    #     sys.exit(1)
-    # except dns.resolver.NXDOMAIN as e:
-    #     if not quiet:
-    #         print("Hostname does not exist")
-    #     if verbose:
-    #         print("Error:", e)
-    #     sys.exit(1)
-    # except dns.resolver.Timeout:
-    #     if not quiet:
-    #         print("Request timeout")
-    #     pass
-    # except dns.resolver.NoAnswer:
-    #     if not quiet:
-    #         print("No answer")
-    #     pass
-    # else:
-    #     if verbose:
-    #         print(answers.rrset)
-    #         print("flags:", dns.flags.to_text(answers.response.flags))
+        # try:
+        #     answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp, af=address_family,
+        #                              raise_on_no_answer=False)
+        # except dns.resolver.NoNameservers as e:
+        #     if not quiet:
+        #         print("No response to dns request")
+        #         if verbose:
+        #             print("error:", e)
+        #     sys.exit(1)
+        # except dns.resolver.NXDOMAIN as e:
+        #     if not quiet:
+        #         print("Hostname does not exist")
+        #     if verbose:
+        #         print("Error:", e)
+        #     sys.exit(1)
+        # except dns.resolver.Timeout:
+        #     if not quiet:
+        #         print("Request timeout")
+        #     pass
+        # except dns.resolver.NoAnswer:
+        #     if not quiet:
+        #         print("No answer")
+        #     pass
+        # else:
+        #     if verbose:
+        #         print(answers.rrset)
+        #         print("flags:", dns.flags.to_text(answers.response.flags))
 
 
 if __name__ == '__main__':
