@@ -73,7 +73,8 @@ class myResolver(dns.resolver.Resolver):
                     r = socket.getaddrinfo(n, port=None, family=self.default_af)[1][4][0]
                 except OSError:
                     print('Error: cannot resolve hostname:', n)
-                    sys.exit(1)
+                    # sys.exit(1)
+                    return  # todo: to be handled gracefully
                 else:
                     resolved_nameservers.append(r)
 
@@ -116,7 +117,7 @@ class myResolver(dns.resolver.Resolver):
 
         return []
 
-    def lookupNSRecords(self, hostname):
+    def lookupNS(self, hostname):
         try:
             answers = self.query(hostname, 'NS', tcp=self.use_tcp, af=self.default_af,
                                  raise_on_no_answer=False)
@@ -181,6 +182,7 @@ def main():
             usage()
         elif o in ("-v", "--verbose"):
             verbose = True
+            quiet = False
         elif o in ("-s", "--server"):
             dnsserver = a
         elif o in ("-p", "--port"):
@@ -212,43 +214,24 @@ def main():
             print('Error: cannot resolve hostname:', dnsserver)
             sys.exit(1)
 
+    # Lookup from master parent
     res = myResolver(nameservers=[default_parent], port=dst_port, af=address_family, use_tcp=use_tcp)
-
     printHeader("Domain NS Records (from parent: %s)" % default_parent)
-    answers = res.lookupNSRecords(hostname)
+    answers = res.lookupNS(hostname)
     for a in answers:
         A = res.lookupA(a.target)
         AAAA = res.lookupAAAA(a.target)
         print("%-25s\t%s\t%s" % (a.target, '\t'.join(A), '\t'.join(AAAA)))
 
-
-        # try:
-        #     answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp, af=address_family,
-        #                              raise_on_no_answer=False)
-        # except dns.resolver.NoNameservers as e:
-        #     if not quiet:
-        #         print("No response to dns request")
-        #         if verbose:
-        #             print("error:", e)
-        #     sys.exit(1)
-        # except dns.resolver.NXDOMAIN as e:
-        #     if not quiet:
-        #         print("Hostname does not exist")
-        #     if verbose:
-        #         print("Error:", e)
-        #     sys.exit(1)
-        # except dns.resolver.Timeout:
-        #     if not quiet:
-        #         print("Request timeout")
-        #     pass
-        # except dns.resolver.NoAnswer:
-        #     if not quiet:
-        #         print("No answer")
-        #     pass
-        # else:
-        #     if verbose:
-        #         print(answers.rrset)
-        #         print("flags:", dns.flags.to_text(answers.response.flags))
+    # Lookup from your DNS server
+    yourdns = str(a.target)
+    res = myResolver(nameservers=[yourdns], port=dst_port, af=address_family, use_tcp=use_tcp)
+    printHeader("Domain NS Records (from your DNS: %s)" % a.target)
+    answers = res.lookupNS(hostname)
+    for a in answers:
+        A = res.lookupA(a.target)
+        AAAA = res.lookupAAAA(a.target)
+        print("%-25s\t%s\t%s" % (a.target, '\t'.join(A), '\t'.join(AAAA)))
 
 
 if __name__ == '__main__':
