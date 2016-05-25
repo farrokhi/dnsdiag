@@ -34,7 +34,6 @@ import sys
 import time
 from statistics import stdev
 
-import dns.flags
 import dns.rdatatype
 import dns.resolver
 
@@ -70,13 +69,59 @@ def maxlen(names):
     return len(sn[-1])
 
 
+def _order_flags(table):
+    return sorted(table.items(), reverse=True)
+
+
+def flags_to_text(flags):
+    # Standard DNS flags
+
+    QR = 0x8000
+    AA = 0x0400
+    TC = 0x0200
+    RD = 0x0100
+    RA = 0x0080
+    AD = 0x0020
+    CD = 0x0010
+
+    # EDNS flags
+
+    DO = 0x8000
+
+    _by_text = {
+        'QR': QR,
+        'AA': AA,
+        'TC': TC,
+        'RD': RD,
+        'RA': RA,
+        'AD': AD,
+        'CD': CD
+    }
+
+    _by_value = dict([(y, x) for x, y in _by_text.items()])
+    _flags_order = _order_flags(_by_value)
+
+    _by_value = dict([(y, x) for x, y in _by_text.items()])
+
+    order = sorted(_by_value.items(), reverse=True)
+    text_flags = []
+    for k, v in order:
+        if flags & k != 0:
+            text_flags.append(v)
+        else:
+            text_flags.append('--')
+
+    return (' '.join(text_flags))
+
+
 def dnsping(host, server, dnsrecord, timeout, count):
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [server]
     resolver.timeout = timeout
     resolver.lifetime = timeout
     resolver.retry_servfail = 0
-    flags = ""
+    flags = 0
+    answers = None
 
     response_time = []
     i = 0
@@ -95,7 +140,6 @@ def dnsping(host, server, dnsrecord, timeout, count):
         else:
             elapsed = (etime - stime) * 1000  # convert to milliseconds
             response_time.append(elapsed)
-            flags = dns.flags.to_text(answers.response.flags)
 
     r_sent = i + 1
     r_received = len(response_time)
@@ -114,6 +158,9 @@ def dnsping(host, server, dnsrecord, timeout, count):
         r_max = 0
         r_avg = 0
         r_stddev = 0
+
+    if answers:
+        flags = answers.response.flags
 
     return (server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags)
 
@@ -176,7 +223,7 @@ def main():
         width = maxlen(f)
         blanks = (width - 5) * ' '
         print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  flags')
-        print((70 + width) * '-')
+        print((82 + width) * '-')
         for server in f:
             # check if we have a valid dns server address
             if server.lstrip() == '':  # deal with empty lines
@@ -201,8 +248,9 @@ def main():
                                                                                 count)
 
             s = server.ljust(width + 1)
-            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d  %13s" % (
-                s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags), flush=True)
+            text_flags = flags_to_text(flags)
+            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d  %25s" % (
+                s, r_avg, r_min, r_max, r_stddev, r_lost_percent, text_flags), flush=True)
 
     except Exception as e:
         print('error: %s' % e)
