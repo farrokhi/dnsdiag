@@ -122,6 +122,7 @@ def dnsping(host, server, dnsrecord, timeout, count):
     resolver.retry_servfail = 0
     flags = 0
     answers = None
+    resolver.use_edns(edns=True, payload=0, ednsflags=8)
 
     response_time = []
     i = 0
@@ -222,8 +223,8 @@ def main():
         f = [name.strip() for name in f]
         width = maxlen(f)
         blanks = (width - 5) * ' '
-        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  flags')
-        print((82 + width) * '-')
+        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)    flags')
+        print((84 + width) * '-')
         for server in f:
             # check if we have a valid dns server address
             if server.lstrip() == '':  # deal with empty lines
@@ -249,7 +250,7 @@ def main():
 
             s = server.ljust(width + 1)
             text_flags = flags_to_text(flags)
-            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%d  %25s" % (
+            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%-3d  %25s" % (
                 s, r_avg, r_min, r_max, r_stddev, r_lost_percent, text_flags), flush=True)
 
     except Exception as e:
