@@ -1,7 +1,3 @@
-[submodule "dnspython"]
-	path = dnspython
-	url = https://github.com/farrokhi/dnspython.git
-	branch = python3
 [submodule "cymruwhois"]
 	path = cymruwhois
 	url = https://github.com/JustinAzoff/python-cymruwhois.git
