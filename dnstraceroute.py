@@ -35,13 +35,26 @@ import socket
 import sys
 import time
 
+import dns.query
 import dns.rdatatype
 import dns.resolver
 from cymruwhois import cymruwhois
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = 1.3
+__version__ = 1.4
+_ttl = None
+
+
+class custom_socket(socket.socket):
+    def __init__(self, *args, **kwargs):
+        super(custom_socket, self).__init__(*args, **kwargs)
+
+    def sendto(self, *args, **kwargs):
+        global _ttl
+        if _ttl:
+            self.setsockopt(socket.SOL_IP, socket.IP_TTL, _ttl)
+        super(custom_socket, self).sendto(*args, **kwargs)
 
 
 def test_import():
@@ -158,10 +171,15 @@ def expert_report(trace_path, color_mode):
 
 
 def ping(resolver, hostname, dnsrecord, ttl):
+    global _ttl
+
     reached = False
 
+    dns.query.socket_factory = custom_socket
+    _ttl = ttl
+
     try:
-        resolver.query(hostname, dnsrecord, ipttl=ttl)
+        resolver.query(hostname, dnsrecord)
 
     except dns.resolver.NoNameservers as e:
         if not quiet:
