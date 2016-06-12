@@ -37,7 +37,7 @@ from statistics import stdev
 import dns.rdatatype
 import dns.resolver
 
-__VERSION__ = 1.0
+__VERSION__ = 1.4
 __PROGNAME__ = os.path.basename(sys.argv[0])
 shutdown = False
 
