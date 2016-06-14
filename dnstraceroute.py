@@ -38,23 +38,25 @@ import time
 import dns.query
 import dns.rdatatype
 import dns.resolver
+
 from cymruwhois import cymruwhois
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __version__ = 1.4
 _ttl = None
+quiet = False
 
 
-class custom_socket(socket.socket):
+class CustomSocket(socket.socket):
     def __init__(self, *args, **kwargs):
-        super(custom_socket, self).__init__(*args, **kwargs)
+        super(CustomSocket, self).__init__(*args, **kwargs)
 
     def sendto(self, *args, **kwargs):
         global _ttl
         if _ttl:
             self.setsockopt(socket.SOL_IP, socket.IP_TTL, _ttl)
-        super(custom_socket, self).sendto(*args, **kwargs)
+        super(CustomSocket, self).sendto(*args, **kwargs)
 
 
 def test_import():
@@ -92,14 +94,14 @@ def whoisrecord(ip):
         currenttime = time.time()
         ts = currenttime
         if ip in whois:
-            ASN, ts = whois[ip]
+            asn, ts = whois[ip]
         else:
             ts = 0
-        if ((currenttime - ts) > 36000):
+        if (currenttime - ts) > 36000:
             c = cymruwhois.Client()
-            ASN = c.lookup(ip)
-            whois[ip] = (ASN, currenttime)
-        return ASN
+            asn = c.lookup(ip)
+            whois[ip] = (asn, currenttime)
+        return asn
     except Exception as e:
         return e
 
@@ -166,7 +168,7 @@ def expert_report(trace_path, color_mode):
         print(" %s[*]%s public DNS server is next to a reserved IP address (possible hijacking)" % (color.R, color.N))
         return
 
-    ## no expert info available
+    # no expert info available
     print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
@@ -175,7 +177,7 @@ def ping(resolver, hostname, dnsrecord, ttl):
 
     reached = False
 
-    dns.query.socket_factory = custom_socket
+    dns.query.socket_factory = CustomSocket
     _ttl = ttl
 
     try:
@@ -221,7 +223,6 @@ def main():
     dnsrecord = 'A'
     count = 30
     timeout = 1
-    quiet = False
     dnsserver = dns.resolver.get_default_resolver().nameservers[0]
     dest_port = 53
     hops = 0
@@ -348,11 +349,11 @@ def main():
         if curr_addr:
             as_name = ""
             if as_lookup:
-                ASN = whoisrecord(curr_addr)
+                asn = whoisrecord(curr_addr)
                 as_name = ''
                 try:
-                    if ASN and ASN.asn != "NA":
-                        as_name = "[%s %s] " % (ASN.asn, ASN.owner)
+                    if asn and asn.asn != "NA":
+                        as_name = "[%s %s] " % (asn.asn, asn.owner)
                 except AttributeError:
                     if shutdown:
                         sys.exit(0)
