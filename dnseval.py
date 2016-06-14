@@ -122,7 +122,7 @@ def dnsping(host, server, dnsrecord, timeout, count):
     resolver.retry_servfail = 0
     flags = 0
     answers = None
-    resolver.use_edns(edns=True, payload=0, ednsflags=8)
+    resolver.use_edns(edns=0, payload=4096, ednsflags=dns.flags.edns_from_text('DO'))
 
     response_times = []
     i = 0
