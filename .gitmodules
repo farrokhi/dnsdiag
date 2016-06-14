@@ -1,3 +1,6 @@
 [submodule "cymruwhois"]
 	path = cymruwhois
 	url = https://github.com/JustinAzoff/python-cymruwhois.git
+[submodule "dnspython-orig"]
+	path = dnspython
+	url = https://github.com/rthalley/dnspython/
