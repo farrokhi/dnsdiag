@@ -53,6 +53,7 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -c  --count     number of requests to send (default: 10)
   -w  --wait      maximum wait time for a reply (default: 5)
   -t  --type      DNS request record type (default: A)
+  -T  --tcp       Use TCP instead of UDP
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
     sys.exit()
 
@@ -114,7 +115,7 @@ def flags_to_text(flags):
     return ' '.join(text_flags)
 
 
-def dnsping(host, server, dnsrecord, timeout, count):
+def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False):
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [server]
     resolver.timeout = timeout
@@ -132,7 +133,7 @@ def dnsping(host, server, dnsrecord, timeout, count):
             break
         try:
             stime = time.time()
-            answers = resolver.query(host, dnsrecord)  # todo: response validation in future
+            answers = resolver.query(host, dnsrecord, tcp=use_tcp)  # todo: response validation in future
             etime = time.time()
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
             break
@@ -182,11 +183,12 @@ def main():
     waittime = 5
     inputfilename = None
     fromfile = False
+    use_tcp = False
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:",
-                                   ["help", "file=", "count=", "type=", "wait="])
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:T",
+                                   ["help", "file=", "count=", "type=", "wait=", "tcp"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -208,6 +210,8 @@ def main():
             waittime = int(a)
         elif o in ("-t", "--type"):
             dnsrecord = a
+        elif o in ("-T", "--tcp"):
+            use_tcp = True
         else:
             print("Invalid option: %s" % o)
             usage()
@@ -247,7 +251,7 @@ def main():
             if not s:
                 continue
             (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags) = dnsping(hostname, s, dnsrecord, waittime,
-                                                                                count)
+                                                                                count, use_tcp=use_tcp)
 
             s = server.ljust(width + 1)
             text_flags = flags_to_text(flags)
