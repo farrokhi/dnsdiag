@@ -229,7 +229,7 @@ def main():
         width = maxlen(f)
         blanks = (width - 5) * ' '
         print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)    flags')
-        print((84 + width) * '-')
+        print((84 + width) * '─')
         for server in f:
             # check if we have a valid dns server address
             if server.lstrip() == '':  # deal with empty lines
