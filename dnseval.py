@@ -111,7 +111,7 @@ def flags_to_text(flags):
         else:
             text_flags.append('--')
 
-    return (' '.join(text_flags))
+    return ' '.join(text_flags)
 
 
 def dnsping(host, server, dnsrecord, timeout, count):
@@ -124,11 +124,11 @@ def dnsping(host, server, dnsrecord, timeout, count):
     answers = None
     resolver.use_edns(edns=True, payload=0, ednsflags=8)
 
-    response_time = []
+    response_times = []
     i = 0
 
     for i in range(count):
-        if shutdown:
+        if shutdown:  # user pressed CTRL+C
             break
         try:
             stime = time.time()
@@ -140,18 +140,18 @@ def dnsping(host, server, dnsrecord, timeout, count):
             pass
         else:
             elapsed = (etime - stime) * 1000  # convert to milliseconds
-            response_time.append(elapsed)
+            response_times.append(elapsed)
 
     r_sent = i + 1
-    r_received = len(response_time)
+    r_received = len(response_times)
     r_lost = r_sent - r_received
     r_lost_percent = (100 * r_lost) / r_sent
-    if response_time:
-        r_min = min(response_time)
-        r_max = max(response_time)
-        r_avg = sum(response_time) / r_received
-        if len(response_time) > 1:
-            r_stddev = stdev(response_time)
+    if response_times:
+        r_min = min(response_times)
+        r_max = max(response_times)
+        r_avg = sum(response_times) / r_received
+        if len(response_times) > 1:
+            r_stddev = stdev(response_times)
         else:
             r_stddev = 0
     else:
@@ -163,19 +163,20 @@ def dnsping(host, server, dnsrecord, timeout, count):
     if answers:
         flags = answers.response.flags
 
-    return (server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags)
+    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags
 
 
 def main():
     try:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # ignore CTRL+C
-    except AttributeError:  # Some systems may not support all signals
+        signal.signal(signal.SIGINT, signal_handler)  # catch CTRL+C
+    except AttributeError:  # Some systems (e.g. Windows) may not support all signals
         pass
 
     if len(sys.argv) == 1:
         usage()
 
+    # defaults
     dnsrecord = 'A'
     count = 10
     waittime = 5
