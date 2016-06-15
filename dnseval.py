@@ -133,7 +133,7 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False):
             break
         try:
             stime = time.time()
-            answers = resolver.query(host, dnsrecord, tcp=use_tcp)  # todo: response validation in future
+            answers = resolver.query(host, dnsrecord, tcp=use_tcp, raise_on_no_answer=False)  # todo: response validation in future
             etime = time.time()
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
             break
@@ -161,7 +161,7 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False):
         r_avg = 0
         r_stddev = 0
 
-    if answers:
+    if answers is not None:
         flags = answers.response.flags
 
     return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags
