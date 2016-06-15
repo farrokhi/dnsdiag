@@ -38,7 +38,6 @@ import time
 import dns.query
 import dns.rdatatype
 import dns.resolver
-
 from cymruwhois import cymruwhois
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -181,7 +180,7 @@ def ping(resolver, hostname, dnsrecord, ttl):
     _ttl = ttl
 
     try:
-        resolver.query(hostname, dnsrecord)
+        resolver.query(hostname, dnsrecord, raise_on_no_answer=False)
 
     except dns.resolver.NoNameservers as e:
         if not quiet:
@@ -199,8 +198,8 @@ def ping(resolver, hostname, dnsrecord, ttl):
         pass
     except SystemExit:
         pass
-    except:
-        print("unxpected error: ", sys.exc_info()[0])
+    except Exception as e:
+        print("unxpected error: ", e)
         sys.exit(1)
     else:
         reached = True
@@ -222,7 +221,7 @@ def main():
 
     dnsrecord = 'A'
     count = 30
-    timeout = 1
+    timeout = 2
     dnsserver = dns.resolver.get_default_resolver().nameservers[0]
     dest_port = 53
     hops = 0
@@ -273,6 +272,16 @@ def main():
 
     color = Colors(color_mode)
 
+    # check if we have a valid dns server address
+    try:
+        ipaddress.ip_address(dnsserver)
+    except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
+        try:
+            dnsserver = socket.getaddrinfo(dnsserver, port=None, family=socket.AF_INET)[1][4][0]
+        except OSError:
+            print('Error: cannot resolve hostname:', dnsserver)
+            sys.exit(1)
+
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [dnsserver]
     resolver.timeout = timeout
@@ -286,7 +295,8 @@ def main():
     trace_path = []
 
     if not quiet:
-        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord))
+        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord),
+              flush=True)
 
     while True:
         if shutdown:
