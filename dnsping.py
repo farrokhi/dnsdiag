@@ -59,6 +59,7 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
   -c  --count     Number of requests to send (default: 10)
   -w  --wait      Maximum wait time for a reply (default: 5)
   -t  --type      DNS request record type (default: A)
+  -e  --edns      Use EDNS0
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
     sys.exit(0)
 

@@ -117,7 +117,7 @@ except IOError:
 
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __version__))
-    print('usage: %s [-h] [-q] [-a] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname' % __PROGNAME__)
+    print('usage: %s [-aeqhC] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname' % __PROGNAME__)
     print('  -h  --help      Show this help')
     print('  -q  --quiet     Quiet')
     print('  -e  --expert    Print expert hints if available')
@@ -128,6 +128,7 @@ def usage():
     print('  -w  --wait      Maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
     print('  -C  --color     Print colorful output')
+    print('  -e  --edns      Use EDNS0')
     print('  ')
     sys.exit()
 
@@ -171,13 +172,16 @@ def expert_report(trace_path, color_mode):
     print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
-def ping(resolver, hostname, dnsrecord, ttl):
+def ping(resolver, hostname, dnsrecord, ttl, use_edns= False):
     global _ttl
 
     reached = False
 
     dns.query.socket_factory = CustomSocket
     _ttl = ttl
+    if use_edns:
+        resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
+
 
     try:
         resolver.query(hostname, dnsrecord, raise_on_no_answer=False)
@@ -228,6 +232,7 @@ def main():
     as_lookup = False
     expert_mode = False
     should_resolve = True
+    use_edns = False
     color_mode = False
 
     try:
@@ -267,6 +272,8 @@ def main():
             should_resolve = False
         elif o in ("-a", "--asn"):
             as_lookup = True
+        elif o in ("-e", "--edns"):
+            use_edns = True
         else:
             usage()
 
@@ -321,7 +328,7 @@ def main():
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
             stime = time.time()
-            thr = pool.submit(ping, resolver, hostname, dnsrecord, ttl)
+            thr = pool.submit(ping, resolver, hostname, dnsrecord, ttl, use_edns=use_edns)
 
             try:  # expect ICMP response
                 _, curr_addr = icmp_socket.recvfrom(512)
@@ -338,7 +345,7 @@ def main():
         if reached:
             curr_addr = dnsserver
             stime = time.time()  # need to recalculate elapsed time for last hop without waiting for an icmp error reply
-            ping(resolver, hostname, dnsrecord, ttl)
+            ping(resolver, hostname, dnsrecord, ttl, use_edns=use_edns)
             etime = time.time()
 
         elapsed = abs(etime - stime) * 1000  # convert to milliseconds

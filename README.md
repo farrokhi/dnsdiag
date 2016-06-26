@@ -81,13 +81,13 @@ it to your actual network traceroute and make sure your DNS traffic is not
 routed to any unwanted path.
 
 ```
-% ./dnstraceroute.py --expert -t A -s 8.8.4.4 facebook.com
+% ./dnstraceroute.py --expert -C -e -t A -s 8.8.4.4 facebook.com
 dnstraceroute.py DNS: 8.8.4.4:53, hostname: facebook.com, rdatatype: A
-1	192.168.0.1 (192.168.0.1) 2 ms
-2	192.168.28.177 (192.168.28.177) 11 ms
-3	 *
-4	172.19.4.17 (172.19.4.17) 7 ms
-5	google-public-dns-b.google.com (8.8.4.4) 14 ms
+1	192.168.0.1 (192.168.0.1) 1 ms
+2	192.168.28.177 (192.168.28.177) 4 ms
+3	192.168.0.1 (192.168.0.1) 693 ms
+4	172.19.4.17 (172.19.4.17) 3 ms
+5	google-public-dns-b.google.com (8.8.4.4) 8 ms
 
 === Expert Hints ===
  [*] public DNS server is next to a private IP address (possible hijacking)
