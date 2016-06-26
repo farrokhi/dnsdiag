@@ -91,13 +91,14 @@ def main():
     src_port = 0
     src_ip = None
     use_tcp = False
+    use_edns = False
     af = socket.AF_INET
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:T46",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:T46e",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "verbose",
-                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport="])
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -132,6 +133,8 @@ def main():
             af = socket.AF_INET
         elif o in ("-6", "--ipv6"):
             af = socket.AF_INET6
+        elif o in ("-e", "--edns"):
+            use_edns = True
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
@@ -157,6 +160,9 @@ def main():
     resolver.lifetime = timeout
     resolver.port = dst_port
     resolver.retry_servfail = 0
+
+    if use_edns:
+        resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
 
     response_time = []
     i = 0
