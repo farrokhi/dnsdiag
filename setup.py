@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dnsdiag",
-    version="1.4.3",
+    version="1.5.0",
     packages=find_packages(),
     classifiers=[
         "Topic :: System :: Networking",

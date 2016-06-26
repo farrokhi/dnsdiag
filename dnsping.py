@@ -38,7 +38,7 @@ import dns.flags
 import dns.rdatatype
 import dns.resolver
 
-__VERSION__ = 1.4
+__VERSION__ = 1.5
 __PROGNAME__ = os.path.basename(sys.argv[0])
 shutdown = False
 

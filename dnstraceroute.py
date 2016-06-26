@@ -42,7 +42,7 @@ from cymruwhois import cymruwhois
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = 1.4
+__version__ = 1.5
 _ttl = None
 quiet = False
 
