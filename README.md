@@ -61,15 +61,15 @@ From time to time, binary version will be released for Windows, Mac OS X and Lin
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number
 of times:
 ```
-% ./dnsping.py -c 3 -s 8.8.8.8 -t MX wikipedia.org
-dnsping.py DNS: 8.8.8.8:53, hostname: wikipedia.org, rdatatype: MX
-101 bytes from 8.8.8.8: seq=0   time=262.896 ms
-101 bytes from 8.8.8.8: seq=1   time=305.608 ms
-101 bytes from 8.8.8.8: seq=2   time=307.221 ms
+% ./dnsping.py -e -c 3 -t AAAA -s 8.8.8.8 dnsdiag.org
+dnsping.py DNS: 8.8.8.8:53, hostname: dnsdiag.org, rdatatype: AAAA
+4 bytes from 8.8.8.8: seq=0   time=123.509 ms
+4 bytes from 8.8.8.8: seq=1   time=115.726 ms
+4 bytes from 8.8.8.8: seq=2   time=117.351 ms
 
 --- 8.8.8.8 dnsping statistics ---
 3 requests transmitted, 3 responses received,   0% lost
-min=262.896 ms, avg=291.908 ms, max=307.221 ms, stddev=25.138 ms
+min=115.726 ms, avg=118.862 ms, max=123.509 ms, stddev=4.105 ms
 ```
 This script calculates minimum, maximum and average response time as well as
 jitter (stddev)
