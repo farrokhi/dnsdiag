@@ -54,6 +54,7 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -w  --wait      maximum wait time for a reply (default: 5)
   -t  --type      DNS request record type (default: A)
   -T  --tcp       Use TCP instead of UDP
+  -e  --edns      Use EDNS0
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
     sys.exit()
 
@@ -115,7 +116,7 @@ def flags_to_text(flags):
     return ' '.join(text_flags)
 
 
-def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False):
+def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=False):
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [server]
     resolver.timeout = timeout
@@ -123,7 +124,8 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False):
     resolver.retry_servfail = 0
     flags = 0
     answers = None
-    resolver.use_edns(edns=0, payload=4096, ednsflags=dns.flags.edns_from_text('DO'))
+    if use_edns:
+        resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
 
     response_times = []
     i = 0
@@ -133,7 +135,8 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False):
             break
         try:
             stime = time.time()
-            answers = resolver.query(host, dnsrecord, tcp=use_tcp, raise_on_no_answer=False)  # todo: response validation in future
+            answers = resolver.query(host, dnsrecord, tcp=use_tcp,
+                                     raise_on_no_answer=False)  # todo: response validation in future
             etime = time.time()
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
             break
@@ -184,11 +187,12 @@ def main():
     inputfilename = None
     fromfile = False
     use_tcp = False
+    use_edns = False
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:T",
-                                   ["help", "file=", "count=", "type=", "wait=", "tcp"])
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:Te",
+                                   ["help", "file=", "count=", "type=", "wait=", "tcp", "edns"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -212,6 +216,8 @@ def main():
             dnsrecord = a
         elif o in ("-T", "--tcp"):
             use_tcp = True
+        elif o in ("-e", "--edns"):
+            use_edns = True
         else:
             print("Invalid option: %s" % o)
             usage()
@@ -251,7 +257,8 @@ def main():
             if not s:
                 continue
             (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags) = dnsping(hostname, s, dnsrecord, waittime,
-                                                                                count, use_tcp=use_tcp)
+                                                                                count, use_tcp=use_tcp,
+                                                                                use_edns=use_edns)
 
             s = server.ljust(width + 1)
             text_flags = flags_to_text(flags)

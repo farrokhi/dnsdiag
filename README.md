@@ -107,17 +107,21 @@ dnseval is a bulk ping utility that sends an arbitrary DNS query to a give list
 of DNS servers. This script is meant for comparing response time of multiple
 DNS servers at once:
 ```
-% ./dnseval.py -f public-v4.txt -c3 ripe.net
-server           avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  flags
-----------------------------------------------------------------------------------
-8.8.8.8          210.225     109.864     407.420     170.785     %0       QR RD RA
-8.8.4.4          107.850     93.134      120.578     13.830      %0       QR RD RA
-ns.ripe.net      118.911     114.874     123.389     4.275       %0       QR AA RD
-4.2.2.1          104.380     102.449     106.588     2.083       %0       QR RD RA
-4.2.2.2          131.056     99.143      193.711     54.264      %0       QR RD RA
-4.2.2.3          98.956      97.463      100.310     1.429       %0       QR RD RA
-4.2.2.4          223.173     97.418      463.728     208.398     %0       QR RD RA
-4.2.2.5          104.290     97.264      117.878     11.770      %0       QR RD RA
+% ./dnseval.py -e -t AAAA -f public-v4.txt -c10 fg.weberdns.de
+server           avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)    flags
+────────────────────────────────────────────────────────────────────────────────────────────────
+8.8.8.8          94.556      90.488      112.209     6.322       %0         QR -- -- RD RA AD --
+8.8.4.4          92.599      90.265      94.338      1.086       %0         QR -- -- RD RA AD --
+ns.ripe.net      92.754      91.632      93.980      0.900       %0         QR -- -- RD RA AD --
+4.2.2.1          92.703      91.869      93.298      0.482       %0         QR -- -- RD RA AD --
+4.2.2.2          93.195      91.667      94.919      1.065       %0         QR -- -- RD RA AD --
+4.2.2.3          93.118      92.076      94.835      0.835       %0         QR -- -- RD RA AD --
+4.2.2.4          94.308      92.175      103.318     3.261       %0         QR -- -- RD RA AD --
+4.2.2.5          92.650      91.643      94.460      1.002       %0         QR -- -- RD RA AD --
+209.244.0.3      92.810      89.961      94.807      1.266       %0         QR -- -- RD RA AD --
+209.244.0.4      93.127      91.962      95.970      1.227       %0         QR -- -- RD RA AD --
+195.46.39.39     92.770      90.777      93.656      0.914       %0         QR -- -- RD RA AD --
+195.46.39.40     92.903      91.280      94.914      1.147       %0         QR -- -- RD RA AD --
 ```
 
 ### Author
