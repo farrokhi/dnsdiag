@@ -81,23 +81,16 @@ it to your actual network traceroute and make sure your DNS traffic is not
 routed to any unwanted path.
 
 ```
-% ./dnstraceroute.py --expert -s 8.8.4.4 yahoo.com
-dnstraceroute.py DNS: 8.8.4.4:53, hostname: yahoo.com, rdatatype: A
-1       204.109.58.53 (204.109.58.53) 1 ms
-2       208.79.80.5 (208.79.80.5) 1 ms
-3       162.223.13.177 (162.223.13.177) 1 ms
-4       208.79.80.254 (208.79.80.254) 7 ms
-5       eqixva-google-gige.google.com (206.126.236.21) 7 ms
-6       209.85.242.142 (209.85.242.142) 7 ms
-7       72.14.236.148 (72.14.236.148) 8 ms
-8       209.85.250.70 (209.85.250.70) 16 ms
-9       74.125.37.222 (74.125.37.222) 16 ms
-10       *
-11      google-public-dns-b.google.com (8.8.4.4) 15 ms
- 
-=== Expert Hints ===
- [*] public DNS server is next to an invisible hop (probably a firewall)
+% ./dnstraceroute.py --expert -t A -s 8.8.4.4 facebook.com
+dnstraceroute.py DNS: 8.8.4.4:53, hostname: facebook.com, rdatatype: A
+1	192.168.0.1 (192.168.0.1) 2 ms
+2	192.168.28.177 (192.168.28.177) 11 ms
+3	 *
+4	172.19.4.17 (172.19.4.17) 7 ms
+5	google-public-dns-b.google.com (8.8.4.4) 14 ms
 
+=== Expert Hints ===
+ [*] public DNS server is next to a private IP address (possible hijacking)
 ```
 
 Using `--expert` will instruct dnstraceroute to print expert hints (such as warnings of possible DNS traffic hijacking).
