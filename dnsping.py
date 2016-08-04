@@ -58,6 +58,7 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
   -S  --srcip     Query source IP address (default: default interface address)
   -c  --count     Number of requests to send (default: 10)
   -w  --wait      Maximum wait time for a reply (default: 5)
+  -i  --interval  Time between each request (default: 0)
   -t  --type      DNS request record type (default: A)
   -e  --edns      Use EDNS0
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
@@ -85,6 +86,7 @@ def main():
     dnsrecord = 'A'
     count = 10
     timeout = 5
+    interval = 0
     quiet = False
     verbose = False
     dnsserver = dns.resolver.get_default_resolver().nameservers[0]
@@ -97,8 +99,8 @@ def main():
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:vp:P:S:T46e",
-                                   ["help", "count=", "server=", "quiet", "type=", "wait=", "verbose",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46e",
+                                   ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns"])
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -126,6 +128,8 @@ def main():
             verbose = False
         elif o in ("-w", "--wait"):
             timeout = int(a)
+        elif o in ("-i", "--interval"):
+            interval = int(a)
         elif o in ("-t", "--type"):
             dnsrecord = a
         elif o in ("-T", "--tcp"):
@@ -208,6 +212,10 @@ def main():
             if verbose:
                 print(answers.rrset)
                 print("flags:", dns.flags.to_text(answers.response.flags))
+
+            time_to_next = (stime + interval) - etime
+            if time_to_next > 0:
+                time.sleep(time_to_next)
 
     r_sent = i + 1
     r_received = len(response_time)
