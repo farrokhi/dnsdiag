@@ -117,10 +117,10 @@ except IOError:
 
 def usage():
     print('%s version %1.1f\n' % (__PROGNAME__, __version__))
-    print('usage: %s [-aeqhC] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname' % __PROGNAME__)
+    print('usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname' % __PROGNAME__)
     print('  -h  --help      Show this help')
     print('  -q  --quiet     Quiet')
-    print('  -e  --expert    Print expert hints if available')
+    print('  -x  --expert    Print expert hints if available')
     print('  -a  --asn       Turn on AS# lookups for each hop encountered')
     print('  -s  --server    DNS server to use (default: first system resolver)')
     print('  -p  --port      DNS server port number (default: 53)')
@@ -128,7 +128,7 @@ def usage():
     print('  -w  --wait      Maximum wait time for a reply (default: 5)')
     print('  -t  --type      DNS request record type (default: A)')
     print('  -C  --color     Print colorful output')
-    print('  -e  --edns      Use EDNS0')
+    print('  -e  --edns      Disable EDNS0 (Default: Enabled)')
     print('  ')
     sys.exit()
 
@@ -232,11 +232,11 @@ def main():
     as_lookup = False
     expert_mode = False
     should_resolve = True
-    use_edns = False
+    use_edns = True
     color_mode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:p:neC",
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:p:nexC",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port", "expert",
                                     "color"])
     except getopt.GetoptError as err:
@@ -254,7 +254,7 @@ def main():
             usage()
         elif o in ("-c", "--count"):
             count = int(a)
-        elif o in ("-e", "--expert"):
+        elif o in ("-x", "--expert"):
             expert_mode = True
         elif o in ("-s", "--server"):
             dnsserver = a
@@ -273,7 +273,7 @@ def main():
         elif o in ("-a", "--asn"):
             as_lookup = True
         elif o in ("-e", "--edns"):
-            use_edns = True
+            use_edns = False
         else:
             usage()
 
