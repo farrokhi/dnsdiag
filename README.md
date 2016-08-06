@@ -61,7 +61,7 @@ From time to time, binary version will be released for Windows, Mac OS X and Lin
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number
 of times:
 ```
-% ./dnsping.py -x -c 3 -t AAAA -s 8.8.8.8 dnsdiag.org
+% ./dnsping.py -c 3 -t AAAA -s 8.8.8.8 dnsdiag.org
 dnsping.py DNS: 8.8.8.8:53, hostname: dnsdiag.org, rdatatype: AAAA
 4 bytes from 8.8.8.8: seq=0   time=123.509 ms
 4 bytes from 8.8.8.8: seq=1   time=115.726 ms
@@ -81,7 +81,7 @@ it to your actual network traceroute and make sure your DNS traffic is not
 routed to any unwanted path.
 
 ```
-% ./dnstraceroute.py --expert -C -e -t A -s 8.8.4.4 facebook.com
+% ./dnstraceroute.py --expert -C -t A -s 8.8.4.4 facebook.com
 dnstraceroute.py DNS: 8.8.4.4:53, hostname: facebook.com, rdatatype: A
 1	192.168.0.1 (192.168.0.1) 1 ms
 2	192.168.28.177 (192.168.28.177) 4 ms
@@ -100,7 +100,7 @@ dnseval is a bulk ping utility that sends an arbitrary DNS query to a give list
 of DNS servers. This script is meant for comparing response time of multiple
 DNS servers at once:
 ```
-% ./dnseval.py -e -t AAAA -f public-v4.txt -c10 fg.weberdns.de
+% ./dnseval.py -t AAAA -f public-v4.txt -c10 fg.weberdns.de
 server           avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)    flags
 ------------------------------------------------------------------------------------------------
 8.8.8.8          94.556      90.488      112.209     6.322       %0         QR -- -- RD RA AD --
