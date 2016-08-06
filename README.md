@@ -61,7 +61,7 @@ From time to time, binary version will be released for Windows, Mac OS X and Lin
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number
 of times:
 ```
-% ./dnsping.py -e -c 3 -t AAAA -s 8.8.8.8 dnsdiag.org
+% ./dnsping.py -x -c 3 -t AAAA -s 8.8.8.8 dnsdiag.org
 dnsping.py DNS: 8.8.8.8:53, hostname: dnsdiag.org, rdatatype: AAAA
 4 bytes from 8.8.8.8: seq=0   time=123.509 ms
 4 bytes from 8.8.8.8: seq=1   time=115.726 ms
