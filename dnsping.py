@@ -45,7 +45,7 @@ shutdown = False
 
 def usage():
     print("""%s version %1.1f
-usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
   -h  --help      Show this help
   -q  --quiet     Quiet
   -v  --verbose   Print actual dns response
@@ -60,7 +60,7 @@ usage: %s [-h] [-q] [-v] [-s server] [-p port] [-P port] [-S address] [-c count]
   -w  --wait      Maximum wait time for a reply (default: 5)
   -i  --interval  Time between each request (default: 0)
   -t  --type      DNS request record type (default: A)
-  -e  --edns      Use EDNS0
+  -e  --edns      Disable EDNS0 (default: Enabled)
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
     sys.exit(0)
 
@@ -94,7 +94,7 @@ def main():
     src_port = 0
     src_ip = None
     use_tcp = False
-    use_edns = False
+    use_edns = True
     af = socket.AF_INET
     hostname = 'wikipedia.org'
 
@@ -139,7 +139,7 @@ def main():
         elif o in ("-6", "--ipv6"):
             af = socket.AF_INET6
         elif o in ("-e", "--edns"):
-            use_edns = True
+            use_edns = False
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
