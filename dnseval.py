@@ -54,7 +54,7 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -w  --wait      maximum wait time for a reply (default: 5)
   -t  --type      DNS request record type (default: A)
   -T  --tcp       Use TCP instead of UDP
-  -e  --edns      Use EDNS0
+  -e  --edns      Disable EDNS0 (Default: Enabled)
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
     sys.exit()
 
@@ -187,7 +187,7 @@ def main():
     inputfilename = None
     fromfile = False
     use_tcp = False
-    use_edns = False
+    use_edns = True
     hostname = 'wikipedia.org'
 
     try:
@@ -217,7 +217,7 @@ def main():
         elif o in ("-T", "--tcp"):
             use_tcp = True
         elif o in ("-e", "--edns"):
-            use_edns = True
+            use_edns = False
         else:
             print("Invalid option: %s" % o)
             usage()
