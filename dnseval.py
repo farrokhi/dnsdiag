@@ -256,9 +256,17 @@ def main():
 
             if not s:
                 continue
-            (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags) = dnsping(hostname, s, dnsrecord, waittime,
-                                                                                count, use_tcp=use_tcp,
-                                                                                use_edns=use_edns)
+
+            try:
+                (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags) = dnsping(hostname, s, dnsrecord, waittime,
+                                                                                    count, use_tcp=use_tcp,
+                                                                                    use_edns=use_edns)
+            except dns.resolver.NXDOMAIN:
+                print('%s: NXDOMAIN' % (server))
+                continue
+            except Exception as e:
+                print('%s: %s' % (server, e))
+                continue
 
             s = server.ljust(width + 1)
             text_flags = flags_to_text(flags)
@@ -266,7 +274,7 @@ def main():
                 s, r_avg, r_min, r_max, r_stddev, r_lost_percent, text_flags), flush=True)
 
     except Exception as e:
-        print('error: %s' % e)
+        print('%s: %s' % (server, e))
         sys.exit(1)
 
 
