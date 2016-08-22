@@ -25,9 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import os
+
 import getopt
 import ipaddress
-import os
 import signal
 import socket
 import sys
@@ -167,7 +168,8 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=Fal
 
     if answers is not None:
         flags = answers.response.flags
-        ttl = answers.rrset.ttl
+        if answers.rrset is not None:
+            ttl = answers.rrset.ttl
 
     return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl
 
@@ -225,55 +227,61 @@ def main():
             usage()
 
     try:
-	    if fromfile:
-	        with open(inputfilename, 'rt') as flist:
-	            f = flist.read().splitlines()
-	    else:
-	        f = resolvers
-	    if len(f) == 0:
-	        print("No nameserver specified")
+        if fromfile:
+            with open(inputfilename, 'rt') as flist:
+                f = flist.read().splitlines()
+        else:
+            f = resolvers
+        if len(f) == 0:
+            print("No nameserver specified")
 
-	    f = [name.strip() for name in f]
-	    width = maxlen(f)
-	    blanks = (width - 5) * ' '
-	    print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl     flags')
-	    print((90 + width) * '-')
-	    for server in f:
-	        # check if we have a valid dns server address
-	        if server.lstrip() == '':  # deal with empty lines
-	            continue
-	        server = server.replace(' ', '')
-	        try:
-	            ipaddress.ip_address(server)
-	        except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
-	            try:
-	                s = socket.getaddrinfo(server, port=None)[1][4][0]
-	            except OSError:
-	                print('Error: cannot resolve hostname:', server)
-	                s = None
-	            except:
-	                pass
-	        else:
-	            s = server
+        f = [name.strip() for name in f]
+        width = maxlen(f)
+        blanks = (width - 5) * ' '
+        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags')
+        print((93 + width) * '-')
+        for server in f:
+            # check if we have a valid dns server address
+            if server.lstrip() == '':  # deal with empty lines
+                continue
+            server = server.replace(' ', '')
+            try:
+                ipaddress.ip_address(server)
+            except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
+                try:
+                    s = socket.getaddrinfo(server, port=None)[1][4][0]
+                except OSError:
+                    print('Error: cannot resolve hostname:', server)
+                    s = None
+                except:
+                    pass
+            else:
+                s = server
 
-	        if not s:
-	            continue
+            if not s:
+                continue
 
-	        try:
-	            (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl) = dnsping(hostname, s, dnsrecord, waittime,
-	                                                                                count, use_tcp=use_tcp,
-	                                                                                use_edns=use_edns)
-	        except dns.resolver.NXDOMAIN:
-	            print('%s: NXDOMAIN' % (server))
-	            continue
-	        except Exception as e:
-	            print('%s: %s' % (server, e))
-	            continue
+            try:
+                (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl) = dnsping(hostname, s, dnsrecord,
+                                                                                         waittime,
+                                                                                         count, use_tcp=use_tcp,
+                                                                                         use_edns=use_edns)
+            except dns.resolver.NXDOMAIN:
+                print('%-15s  NXDOMAIN' % (server))
+                continue
+            except Exception as e:
+                print('%s: %s' % (server, e))
+                continue
 
-	        s = server.ljust(width + 1)
-	        text_flags = flags_to_text(flags)
-	        print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%-3d     %-5.0f  %21s" % (
-	            s, r_avg, r_min, r_max, r_stddev, r_lost_percent, ttl, text_flags), flush=True)
+            s = server.ljust(width + 1)
+            text_flags = flags_to_text(flags)
+
+            s_ttl = str(ttl)
+            if s_ttl == "None":
+                s_ttl = "N/A"
+
+            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%-3d     %-8s  %21s" % (
+                s, r_avg, r_min, r_max, r_stddev, r_lost_percent, s_ttl, text_flags), flush=True)
 
     except Exception as e:
         print('%s' % (server, e))
