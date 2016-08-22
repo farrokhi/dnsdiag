@@ -52,7 +52,7 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -h  --help      show this help
   -f  --file      dns server list to use (default: system resolvers)
   -c  --count     number of requests to send (default: 10)
-  -w  --wait      maximum wait time for a reply (default: 5)
+  -w  --wait      maximum wait time for a reply (default: 2)
   -t  --type      DNS request record type (default: A)
   -T  --tcp       Use TCP instead of UDP
   -e  --edns      Disable EDNS0 (Default: Enabled)
@@ -187,7 +187,7 @@ def main():
     # defaults
     dnsrecord = 'A'
     count = 10
-    waittime = 5
+    waittime = 2
     inputfilename = None
     fromfile = False
     use_tcp = False

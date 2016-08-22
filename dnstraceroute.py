@@ -125,7 +125,7 @@ def usage():
     print('  -s  --server    DNS server to use (default: first system resolver)')
     print('  -p  --port      DNS server port number (default: 53)')
     print('  -c  --count     Maximum number of hops (default: 30)')
-    print('  -w  --wait      Maximum wait time for a reply (default: 5)')
+    print('  -w  --wait      Maximum wait time for a reply (default: 2)')
     print('  -t  --type      DNS request record type (default: A)')
     print('  -C  --color     Print colorful output')
     print('  -e  --edns      Disable EDNS0 (Default: Enabled)')
