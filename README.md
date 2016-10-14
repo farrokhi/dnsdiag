@@ -130,8 +130,3 @@ Babak Farrokhi
 
 dnsdiag is released under a 2 clause BSD license.
 
-### Credits
-
-- [@rthalley](https://github.com/rthalley) for invaluable [dnspython](https://github.com/rthalley/dnspython) library
-- [@JustinAzoff](https://github.com/JustinAzoff) for [python-cymruwhois](https://github.com/JustinAzoff/python-cymruwhois) library
-- [@bortzmeyer](https://github.com/bortzmeyer) for his feedback and patches
