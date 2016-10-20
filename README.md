@@ -122,7 +122,7 @@ ns.ripe.net      174.855     160.949     187.458     10.099      %0       289   
 Babak Farrokhi 
 
 - twitter: [@farrokhi](https://twitter.com/farrokhi)
-- github: [/farrokhi](https://github.com/farrokhi/)
+- github: [github.com/farrokhi](https://github.com/farrokhi/)
 - website: [farrokhi.net](https://farrokhi.net/)
 
 
