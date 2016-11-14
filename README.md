@@ -28,10 +28,9 @@ of view.
 # prerequisites
 This script requires python3 as well as latest
 [dnspython](http://www.dnspython.org/) and
-[cymruwhois](https://pythonhosted.org/cymruwhois/). Please note that
-"dnstraceroute" requires a modified version of dnspython module. All required
-third-party modules are included as GIT submodules. You just need to run `git
-submodule update --init` and project directory to pull the required code.
+[cymruwhois](https://pythonhosted.org/cymruwhois/).
+All required third-party modules are included as GIT submodules. You just need 
+to run `git submodule update --init` and project directory to pull the required code.
 
 # installation
 
