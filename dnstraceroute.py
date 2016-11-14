@@ -38,6 +38,7 @@ import time
 import dns.query
 import dns.rdatatype
 import dns.resolver
+
 from cymruwhois import cymruwhois
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -147,6 +148,7 @@ def expert_report(trace_path, color_mode):
         print(" [*] empty trace - should not happen")
         return
 
+    private_network_radius = 4  # number of hops we assume we are still inside our local network
     prev_hop = None
     if len(trace_path) > 1:
         prev_hop = trace_path[-2]
@@ -156,15 +158,15 @@ def expert_report(trace_path, color_mode):
             " %s[*]%s path too short (possible DNS hijacking, unless it is a local DNS resolver)" % (color.R, color.N))
         return
 
-    if prev_hop == '*':
+    if prev_hop == '*' and len(trace_path) > private_network_radius:
         print(" %s[*]%s public DNS server is next to an invisible hop (probably a firewall)" % (color.R, color.N))
         return
 
-    if prev_hop and ipaddress.ip_address(prev_hop).is_private:
+    if prev_hop and len(trace_path) > private_network_radius and ipaddress.ip_address(prev_hop).is_private:
         print(" %s[*]%s public DNS server is next to a private IP address (possible hijacking)" % (color.R, color.N))
         return
 
-    if prev_hop and ipaddress.ip_address(prev_hop).is_reserved:
+    if prev_hop and len(trace_path) > private_network_radius and ipaddress.ip_address(prev_hop).is_reserved:
         print(" %s[*]%s public DNS server is next to a reserved IP address (possible hijacking)" % (color.R, color.N))
         return
 
@@ -172,7 +174,7 @@ def expert_report(trace_path, color_mode):
     print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
-def ping(resolver, hostname, dnsrecord, ttl, use_edns= False):
+def ping(resolver, hostname, dnsrecord, ttl, use_edns=False):
     global _ttl
 
     reached = False
@@ -181,7 +183,6 @@ def ping(resolver, hostname, dnsrecord, ttl, use_edns= False):
     _ttl = ttl
     if use_edns:
         resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
-
 
     try:
         resolver.query(hostname, dnsrecord, raise_on_no_answer=False)
