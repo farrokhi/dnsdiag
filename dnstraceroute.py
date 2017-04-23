@@ -91,7 +91,7 @@ shutdown = False
 
 def whoisrecord(ip):
     try:
-        currenttime = time.time()
+        currenttime = time.perf_counter()
         ts = currenttime
         if ip in whois:
             asn, ts = whois[ip]
@@ -328,26 +328,26 @@ def main():
         curr_host = None
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
-            stime = time.time()
+            stime = time.perf_counter()
             thr = pool.submit(ping, resolver, hostname, dnsrecord, ttl, use_edns=use_edns)
 
             try:  # expect ICMP response
                 _, curr_addr = icmp_socket.recvfrom(512)
                 curr_addr = curr_addr[0]
             except socket.error:
-                etime = time.time()
+                etime = time.perf_counter()
                 pass
             finally:
-                etime = time.time()
+                etime = time.perf_counter()
                 icmp_socket.close()
 
         reached = thr.result()
 
         if reached:
             curr_addr = dnsserver
-            stime = time.time()  # need to recalculate elapsed time for last hop without waiting for an icmp error reply
+            stime = time.perf_counter()  # need to recalculate elapsed time for last hop without waiting for an icmp error reply
             ping(resolver, hostname, dnsrecord, ttl, use_edns=use_edns)
-            etime = time.time()
+            etime = time.perf_counter()
 
         elapsed = abs(etime - stime) * 1000  # convert to milliseconds
 
@@ -387,7 +387,7 @@ def main():
                 if curr_addr == dnsserver:
                     c = color.G
 
-            print("%d\t%s (%s%s%s) %s%d ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
+            print("%d\t%s (%s%s%s) %s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
             trace_path.append(curr_addr)
         else:
             print("%d\t *" % ttl, flush=True)

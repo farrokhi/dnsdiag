@@ -178,10 +178,10 @@ def main():
         if shutdown:
             break
         try:
-            stime = time.time()
+            stime = time.perf_counter()
             answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp,
                                      raise_on_no_answer=False)
-            etime = time.time()
+            etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
             if not quiet:
                 print("No response to dns request")
@@ -207,7 +207,7 @@ def main():
             response_time.append(elapsed)
             if not quiet:
                 print(
-                    "%d bytes from %s: seq=%-3d time=%3.3f ms" % (
+                    "%d bytes from %s: seq=%-3d time=%.3f ms" % (
                         len(str(answers.rrset)), dnsserver, i, elapsed))
             if verbose:
                 print(answers.rrset)
@@ -236,8 +236,8 @@ def main():
         r_stddev = 0
 
     print('\n--- %s dnsping statistics ---' % dnsserver)
-    print('%d requests transmitted, %d responses received, %3.0f%% lost' % (r_sent, r_received, r_lost_percent))
-    print('min=%3.3f ms, avg=%3.3f ms, max=%3.3f ms, stddev=%3.3f ms' % (r_min, r_avg, r_max, r_stddev))
+    print('%d requests transmitted, %d responses received, %.0f%% lost' % (r_sent, r_received, r_lost_percent))
+    print('min=%.3f ms, avg=%.3f ms, max=%.3f ms, stddev=%.3f ms' % (r_min, r_avg, r_max, r_stddev))
 
 
 if __name__ == '__main__':
