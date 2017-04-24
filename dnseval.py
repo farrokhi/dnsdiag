@@ -296,7 +296,7 @@ def main():
                 print("")
 
     except Exception as e:
-        print('%s' % (server, e))
+        print('%s: %s' % (server, e))
         sys.exit(1)
 
 
