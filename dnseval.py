@@ -56,6 +56,7 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -t  --type      DNS request record type (default: A)
   -T  --tcp       Use TCP instead of UDP
   -e  --edns      Disable EDNS0 (Default: Enabled)
+  -v  --verbose   Print actual dns response
 """ % (__PROGNAME__, __VERSION__, __PROGNAME__))
     sys.exit()
 
@@ -171,7 +172,7 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=Fal
         if len(answers.response.answer) > 0:
             ttl = answers.response.answer[0].ttl
 
-    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl
+    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, answers
 
 
 def main():
@@ -192,11 +193,12 @@ def main():
     fromfile = False
     use_tcp = False
     use_edns = True
+    verbose = False
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:Te",
-                                   ["help", "file=", "count=", "type=", "wait=", "tcp", "edns"])
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:Tev",
+                                   ["help", "file=", "count=", "type=", "wait=", "tcp", "edns", "verbose"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -222,6 +224,8 @@ def main():
             use_tcp = True
         elif o in ("-e", "--edns"):
             use_edns = False
+        elif o in ("-v", "--verbose"):
+            verbose = True
         else:
             print("Invalid option: %s" % o)
             usage()
@@ -262,12 +266,14 @@ def main():
                 continue
 
             try:
-                (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl) = dnsping(hostname, s, dnsrecord,
-                                                                                         waittime,
-                                                                                         count, use_tcp=use_tcp,
-                                                                                         use_edns=use_edns)
+                (s, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, answers) = dnsping(hostname, s,
+                                                                                                  dnsrecord,
+                                                                                                  waittime,
+                                                                                                  count,
+                                                                                                  use_tcp=use_tcp,
+                                                                                                  use_edns=use_edns)
             except dns.resolver.NXDOMAIN:
-                print('%-15s  NXDOMAIN' % (server))
+                print('%-15s  NXDOMAIN' % server)
                 continue
             except Exception as e:
                 print('%s: %s' % (server, e))
@@ -282,6 +288,12 @@ def main():
 
             print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%-3d     %-8s  %21s" % (
                 s, r_avg, r_min, r_max, r_stddev, r_lost_percent, s_ttl, text_flags), flush=True)
+            if verbose:
+                ans_index = 1
+                for answer in answers.response.answer:
+                    print("Answer %d [ %s ]" % (ans_index, answer))
+                    ans_index += 1
+                print("")
 
     except Exception as e:
         print('%s' % (server, e))
