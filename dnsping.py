@@ -38,13 +38,15 @@ import dns.flags
 import dns.rdatatype
 import dns.resolver
 
-__VERSION__ = 1.6
-__PROGNAME__ = os.path.basename(sys.argv[0])
+__author__ = 'Babak Farrokhi (babak@farrokhi.net)'
+__license__ = 'BSD'
+__version__ = "1.6.0"
+__progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
 
 def usage():
-    print("""%s version %1.1f
+    print("""%s version %s
 usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
   -h  --help      Show this help
   -q  --quiet     Quiet
@@ -61,7 +63,7 @@ usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t ty
   -i  --interval  Time between each request (default: 0 seconds)
   -t  --type      DNS request record type (default: A)
   -e  --edns      Disable EDNS0 (default: Enabled)
-""" % (__PROGNAME__, __VERSION__, __PROGNAME__))
+""" % (__progname__, __version__, __progname__))
     sys.exit(0)
 
 
@@ -172,7 +174,7 @@ def main():
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dst_port, hostname, dnsrecord))
+    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dst_port, hostname, dnsrecord))
 
     for i in range(count):
         if shutdown:

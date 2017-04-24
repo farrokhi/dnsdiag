@@ -38,15 +38,17 @@ from statistics import stdev
 import dns.rdatatype
 import dns.resolver
 
-__VERSION__ = 1.6
-__PROGNAME__ = os.path.basename(sys.argv[0])
+__author__ = 'Babak Farrokhi (babak@farrokhi.net)'
+__license__ = 'BSD'
+__version__ = "1.6.0"
+__progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
 resolvers = dns.resolver.get_default_resolver().nameservers
 
 
 def usage():
-    print("""%s version %1.1f
+    print("""%s version %s
 
 usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -h  --help      show this help
@@ -57,7 +59,7 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -T  --tcp       Use TCP instead of UDP
   -e  --edns      Disable EDNS0 (Default: Enabled)
   -v  --verbose   Print actual dns response
-""" % (__PROGNAME__, __VERSION__, __PROGNAME__))
+""" % (__progname__, __version__, __progname__))
     sys.exit()
 
 

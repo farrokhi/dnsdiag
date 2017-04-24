@@ -43,7 +43,7 @@ from cymruwhois import cymruwhois
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = 1.6
+__version__ = "1.6.0"
 _ttl = None
 quiet = False
 
@@ -65,7 +65,7 @@ def test_import():
 
 
 # Constants
-__PROGNAME__ = os.path.basename(sys.argv[0])
+__progname__ = os.path.basename(sys.argv[0])
 WHOIS_CACHE = 'whois.cache'
 
 
@@ -117,8 +117,8 @@ except IOError:
 
 
 def usage():
-    print('%s version %1.1f\n' % (__PROGNAME__, __version__))
-    print('usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname' % __PROGNAME__)
+    print('%s version %s\n' % (__progname__, __version__))
+    print('usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname' % __progname__)
     print('  -h  --help      Show this help')
     print('  -q  --quiet     Quiet')
     print('  -x  --expert    Print expert hints if available')
@@ -303,7 +303,7 @@ def main():
     trace_path = []
 
     if not quiet:
-        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__PROGNAME__, dnsserver, dest_port, hostname, dnsrecord),
+        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dest_port, hostname, dnsrecord),
               flush=True)
 
     while True:
