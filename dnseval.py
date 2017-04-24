@@ -168,8 +168,8 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=Fal
 
     if answers is not None:
         flags = answers.response.flags
-        if answers.rrset is not None:
-            ttl = answers.rrset.ttl
+        if len(answers.response.answer) > 0:
+            ttl = answers.response.answer[0].ttl
 
     return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl
 
