@@ -290,7 +290,7 @@ def main():
 
             print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%-3d     %-8s  %21s" % (
                 s, r_avg, r_min, r_max, r_stddev, r_lost_percent, s_ttl, text_flags), flush=True)
-            if verbose:
+            if verbose and hasattr(answers, 'response'):
                 ans_index = 1
                 for answer in answers.response.answer:
                     print("Answer %d [ %s ]" % (ans_index, answer))
