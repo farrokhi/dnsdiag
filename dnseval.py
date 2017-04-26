@@ -47,6 +47,22 @@ shutdown = False
 resolvers = dns.resolver.get_default_resolver().nameservers
 
 
+class Colors(object):
+    N = '\033[m'  # native
+    R = '\033[31m'  # red
+    G = '\033[32m'  # green
+    O = '\033[33m'  # orange
+    B = '\033[34m'  # blue
+
+    def __init__(self, mode):
+        if not mode:
+            self.N = ''
+            self.R = ''
+            self.G = ''
+            self.O = ''
+            self.B = ''
+
+
 def usage():
     print("""%s version %s
 
@@ -58,6 +74,7 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -t  --type      DNS request record type (default: A)
   -T  --tcp       Use TCP instead of UDP
   -e  --edns      Disable EDNS0 (Default: Enabled)
+  -C  --color     Print colorful output
   -v  --verbose   Print actual dns response
 """ % (__progname__, __version__, __progname__))
     sys.exit()
@@ -196,11 +213,12 @@ def main():
     use_tcp = False
     use_edns = True
     verbose = False
+    color_mode = False
     hostname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:Tev",
-                                   ["help", "file=", "count=", "type=", "wait=", "tcp", "edns", "verbose"])
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:TevC",
+                                   ["help", "file=", "count=", "type=", "wait=", "tcp", "edns", "verbose", "color"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -226,11 +244,15 @@ def main():
             use_tcp = True
         elif o in ("-e", "--edns"):
             use_edns = False
+        elif o in ("-C", "--color"):
+            color_mode = True
         elif o in ("-v", "--verbose"):
             verbose = True
         else:
             print("Invalid option: %s" % o)
             usage()
+
+    color = Colors(color_mode)
 
     try:
         if fromfile:
@@ -288,12 +310,16 @@ def main():
             if s_ttl == "None":
                 s_ttl = "N/A"
 
-            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %%%-3d     %-8s  %21s" % (
-                s, r_avg, r_min, r_max, r_stddev, r_lost_percent, s_ttl, text_flags), flush=True)
+            if r_lost_percent > 0:
+                l_color = color.O
+            else:
+                l_color = color.N
+            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s" % (
+                s, r_avg, r_min, r_max, r_stddev, l_color, r_lost_percent, color.N, s_ttl, text_flags), flush=True)
             if verbose and hasattr(answers, 'response'):
                 ans_index = 1
                 for answer in answers.response.answer:
-                    print("Answer %d [ %s ]" % (ans_index, answer))
+                    print("Answer %d [ %s%s%s ]" % (ans_index, color.B, answer, color.N))
                     ans_index += 1
                 print("")
 
