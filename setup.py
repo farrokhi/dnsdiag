@@ -2,8 +2,11 @@ from setuptools import setup, find_packages
 
 setup(
     name="dnsdiag",
-    version="1.6.0",
+    version="1.6.1",
     packages=find_packages(),
+    scripts=["dnseval.py", "dnsping.py", "dnstraceroute.py"],
+    install_requires=['dnspython>=1.15.0'],
+
     classifiers=[
         "Topic :: System :: Networking",
         "Environment :: Console",
