@@ -40,7 +40,7 @@ import dns.resolver
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = "1.6.0"
+__version__ = "1.6.1"
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
