@@ -49,7 +49,7 @@ git submodule update --init
 2. You can alternatively install the package using pip:
 
 ```
-pip3 install --process-dependency-links dnsdiag
+pip3 install dnsdiag
 ```
 
 ## From Binary
