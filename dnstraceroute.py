@@ -39,13 +39,20 @@ import dns.query
 import dns.rdatatype
 import dns.resolver
 
-from cymruwhois import cymruwhois
+import cymruwhois
 
+# Global Variables
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = "1.6.2"
+__version__ = "1.6.3"
 _ttl = None
 quiet = False
+whois_cache = {}
+shutdown = False
+
+# Constants
+__progname__ = os.path.basename(sys.argv[0])
+WHOIS_CACHE = 'whois.cache'
 
 
 class CustomSocket(socket.socket):
@@ -64,11 +71,6 @@ def test_import():
     pass
 
 
-# Constants
-__progname__ = os.path.basename(sys.argv[0])
-WHOIS_CACHE = 'whois.cache'
-
-
 class Colors(object):
     N = '\033[m'  # native
     R = '\033[31m'  # red
@@ -85,35 +87,41 @@ class Colors(object):
             self.B = ''
 
 
-# Globarl Variables
-shutdown = False
-
-
-def whoisrecord(ip):
+def whois_lookup(ip):
     try:
-        currenttime = time.perf_counter()
+        global whois_cache
+        currenttime = time.time()
         ts = currenttime
-        if ip in whois:
-            asn, ts = whois[ip]
+        if ip in whois_cache:
+            asn, ts = whois_cache[ip]
         else:
             ts = 0
         if (currenttime - ts) > 36000:
             c = cymruwhois.Client()
             asn = c.lookup(ip)
-            whois[ip] = (asn, currenttime)
+            whois_cache[ip] = (asn, currenttime)
         return asn
     except Exception as e:
         return e
 
 
-try:
-    pkl_file = open(WHOIS_CACHE, 'rb')
+def load_whois_cache(cachefile):
     try:
-        whois = pickle.load(pkl_file)
-    except EOFError:
+        pkl_file = open(cachefile, 'rb')
+        try:
+            whois = pickle.load(pkl_file)
+            pkl_file.close()
+        except Exception:
+            whois = {}
+    except IOError:
         whois = {}
-except IOError:
-    whois = {}
+    return whois
+
+
+def save_whois_cache(cachefile, whois_data):
+    pkl_file = open(cachefile, 'wb')
+    pickle.dump(whois_data, pkl_file)
+    pkl_file.close()
 
 
 def usage():
@@ -367,11 +375,11 @@ def main():
         if curr_addr:
             as_name = ""
             if as_lookup:
-                asn = whoisrecord(curr_addr)
+                asn = whois_lookup(curr_addr)
                 as_name = ''
                 try:
                     if asn and asn.asn != "NA":
-                        as_name = "[%s %s] " % (asn.asn, asn.owner)
+                        as_name = "[AS%s %s] " % (asn.asn, asn.owner)
                 except AttributeError:
                     if shutdown:
                         sys.exit(0)
@@ -404,7 +412,7 @@ def main():
 
 if __name__ == '__main__':
     try:
+        whois_cache = load_whois_cache(WHOIS_CACHE)
         main()
     finally:
-        pkl_file = open(WHOIS_CACHE, 'wb')
-        pickle.dump(whois, pkl_file)
+        save_whois_cache(WHOIS_CACHE, whois_cache)

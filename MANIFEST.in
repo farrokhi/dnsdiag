@@ -1,2 +1,1 @@
 include LICENSE README.md TODO.md public-servers.txt
-include cymruwhois/*.py
