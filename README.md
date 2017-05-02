@@ -29,8 +29,6 @@ of view.
 This script requires python3 as well as latest
 [dnspython](http://www.dnspython.org/) and
 [cymruwhois](https://pythonhosted.org/cymruwhois/).
-All required third-party modules are included as GIT submodules. You just need 
-to run `git submodule update --init` and project directory to pull the required code.
 
 # installation
 
@@ -43,7 +41,7 @@ There are several ways that you can use this toolset. However using the sourceco
 ```
 git clone https://github.com/farrokhi/dnsdiag.git
 cd dnsdiag
-git submodule update --init
+pip3 install -r requirements.txt
 ```
 
 2. You can alternatively install the package using pip:
