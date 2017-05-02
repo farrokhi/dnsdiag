@@ -319,7 +319,7 @@ def main():
             if verbose and hasattr(answers, 'response'):
                 ans_index = 1
                 for answer in answers.response.answer:
-                    print("Answer %d [ %s%s%s ]" % (ans_index, color.B, answer, color.N))
+                    print("Answer %d [ %s%s%s ]" % (ans_index, color.G, answer, color.N))
                     ans_index += 1
                 print("")
 
