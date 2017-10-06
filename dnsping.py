@@ -60,7 +60,7 @@ usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t ty
   -S  --srcip     Query source IP address (default: default interface address)
   -c  --count     Number of requests to send (default: 10)
   -w  --wait      Maximum wait time for a reply (default: 2 seconds)
-  -i  --interval  Time between each request (default: 0 seconds)
+  -i  --interval  Time between each request (default: 1 seconds)
   -t  --type      DNS request record type (default: A)
   -e  --edns      Disable EDNS0 (default: Enabled)
 """ % (__progname__, __version__, __progname__))
@@ -88,7 +88,7 @@ def main():
     dnsrecord = 'A'
     count = 10
     timeout = 2
-    interval = 0
+    interval = 1
     quiet = False
     verbose = False
     dnsserver = dns.resolver.get_default_resolver().nameservers[0]
