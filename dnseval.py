@@ -256,8 +256,13 @@ def main():
 
     try:
         if fromfile:
-            with open(inputfilename, 'rt') as flist:
-                f = flist.read().splitlines()
+            if inputfilename == '-':
+                # read from stdin
+                with sys.stdin as flist:
+                    f = flist.read().splitlines()
+            else:
+                with open(inputfilename, 'rt') as flist:
+                    f = flist.read().splitlines()
         else:
             f = resolvers
         if len(f) == 0:
