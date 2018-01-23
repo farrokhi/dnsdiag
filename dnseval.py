@@ -167,7 +167,6 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=Fal
         try:
             if force_miss:
                 fqdn = "_dnseval_%s_.%s" % (random_string(), host)
-                print(fqdn)
             else:
                 fqdn = host
 
