@@ -205,7 +205,7 @@ def main():
                 print("No answer")
             pass
         else:
-            elapsed = (etime - stime) * 1000  # convert to milliseconds
+            elapsed = answers.response.time * 1000  # convert to milliseconds
             response_time.append(elapsed)
             if not quiet:
                 print(
