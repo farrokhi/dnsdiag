@@ -156,16 +156,14 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=Fal
         if shutdown:  # user pressed CTRL+C
             break
         try:
-            stime = time.perf_counter()
             answers = resolver.query(host, dnsrecord, tcp=use_tcp,
                                      raise_on_no_answer=False)  # todo: response validation in future
-            etime = time.perf_counter()
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
             break
         except dns.resolver.Timeout:
             pass
         else:
-            elapsed = (etime - stime) * 1000  # convert to milliseconds
+            elapsed = answers.response.time * 1000  # convert to milliseconds
             response_times.append(elapsed)
 
     r_sent = i + 1
