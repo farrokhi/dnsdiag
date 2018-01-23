@@ -133,6 +133,7 @@ def usage():
     print('  -a  --asn       Turn on AS# lookups for each hop encountered')
     print('  -s  --server    DNS server to use (default: first system resolver)')
     print('  -p  --port      DNS server port number (default: 53)')
+    print('  -S  --srcip     Query source IP address (default: default interface address)')
     print('  -c  --count     Maximum number of hops (default: 30)')
     print('  -w  --wait      Maximum wait time for a reply (default: 2)')
     print('  -t  --type      DNS request record type (default: A)')
@@ -182,7 +183,7 @@ def expert_report(trace_path, color_mode):
     print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
-def ping(resolver, hostname, dnsrecord, ttl, use_edns=False):
+def ping(resolver, hostname, dnsrecord, ttl, src_ip, use_edns=False):
     global _ttl
 
     reached = False
@@ -193,7 +194,7 @@ def ping(resolver, hostname, dnsrecord, ttl, use_edns=False):
         resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
 
     try:
-        resolver.query(hostname, dnsrecord, raise_on_no_answer=False)
+        resolver.query(hostname, dnsrecord, source=src_ip, raise_on_no_answer=False)
 
     except dns.resolver.NoNameservers as e:
         if not quiet:
@@ -237,6 +238,7 @@ def main():
     timeout = 2
     dnsserver = dns.resolver.get_default_resolver().nameservers[0]
     dest_port = 53
+    src_ip = None
     hops = 0
     as_lookup = False
     expert_mode = False
@@ -245,9 +247,9 @@ def main():
     color_mode = False
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:t:w:p:nexC",
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexC",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port", "expert",
-                                    "color"])
+                                    "color", "srcip="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -269,6 +271,8 @@ def main():
             dnsserver = a
         elif o in ("-q", "--quiet"):
             quiet = True
+        elif o in ("-S", "--srcip"):
+            src_ip = a
         elif o in ("-w", "--wait"):
             timeout = int(a)
         elif o in ("-t", "--type"):
@@ -301,6 +305,7 @@ def main():
     resolver = dns.resolver.Resolver()
     resolver.nameservers = [dnsserver]
     resolver.timeout = timeout
+    resolver.port = dest_port
     resolver.lifetime = timeout
     resolver.retry_servfail = 0
 
@@ -337,7 +342,7 @@ def main():
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
             stime = time.perf_counter()
-            thr = pool.submit(ping, resolver, hostname, dnsrecord, ttl, use_edns=use_edns)
+            thr = pool.submit(ping, resolver, hostname, dnsrecord, ttl, src_ip=src_ip, use_edns=use_edns)
 
             try:  # expect ICMP response
                 _, curr_addr = icmp_socket.recvfrom(512)
@@ -353,8 +358,8 @@ def main():
 
         if reached:
             curr_addr = dnsserver
-            stime = time.perf_counter()  # need to recalculate elapsed time for last hop without waiting for an icmp error reply
-            ping(resolver, hostname, dnsrecord, ttl, use_edns=use_edns)
+            stime = time.perf_counter()  # need to recalculate elapsed time for last hop asynchronously
+            ping(resolver, hostname, dnsrecord, ttl, src_ip=src_ip, use_edns=use_edns)
             etime = time.perf_counter()
 
         elapsed = abs(etime - stime) * 1000  # convert to milliseconds
@@ -387,13 +392,16 @@ def main():
 
             c = color.N  # default
             if curr_addr != '*':
-                IP = ipaddress.ip_address(curr_addr)
-                if IP.is_private:
-                    c = color.R
-                if IP.is_reserved:
-                    c = color.B
-                if curr_addr == dnsserver:
-                    c = color.G
+                try:
+                    IP = ipaddress.ip_address(curr_addr)
+                    if IP.is_private:
+                        c = color.R
+                    if IP.is_reserved:
+                        c = color.B
+                    if curr_addr == dnsserver:
+                        c = color.G
+                except:
+                    pass
 
             print("%d\t%s (%s%s%s) %s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
             trace_path.append(curr_addr)
