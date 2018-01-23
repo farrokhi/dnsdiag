@@ -266,7 +266,9 @@ def main():
         if len(f) == 0:
             print("No nameserver specified")
 
-        f = [name.strip() for name in f]
+        f = [name.strip() for name in f]  # remove annoying blanks
+        f = [x for x in f if not x.startswith('#') and len(x)]  # remove comments and empty entries
+
         width = maxlen(f)
         blanks = (width - 5) * ' '
         print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags')
