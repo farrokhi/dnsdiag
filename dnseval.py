@@ -284,8 +284,12 @@ def main():
                 with sys.stdin as flist:
                     f = flist.read().splitlines()
             else:
-                with open(inputfilename, 'rt') as flist:
-                    f = flist.read().splitlines()
+                try:
+                    with open(inputfilename, 'rt') as flist:
+                        f = flist.read().splitlines()
+                except Exception as e:
+                    print(e)
+                    sys.exit(1)
         else:
             f = resolvers
         if len(f) == 0:
