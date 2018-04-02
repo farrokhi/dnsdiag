@@ -97,7 +97,7 @@ dnseval is a bulk ping utility that sends an arbitrary DNS query to a give list
 of DNS servers. This script is meant for comparing response time of multiple
 DNS servers at once:
 ```
-% ./dnseval.py -t AAAA -f public-v4.txt -c10 yahoo.com
+% ./dnseval.py -t AAAA -f public-servers.txt -c10 yahoo.com
 server           avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl     flags
 ------------------------------------------------------------------------------------------------------
 8.8.8.8          270.791     215.599     307.498     40.630      %0       298     QR -- -- RD RA -- --
