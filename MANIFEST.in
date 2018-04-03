@@ -1,1 +1,1 @@
-include LICENSE README.md TODO.md public-servers.txt
+include LICENSE README.md TODO.md public-servers.txt public-v4.txt rootservers.txt
