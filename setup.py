@@ -28,7 +28,7 @@ you can measure your DNS response quality from delay and loss perspective
 as well as tracing the path your DNS query takes to get to DNS server.
 """,
     license="BSD",
-    keywords="dns traceroute ping",
+    keywords="dns traceroute ping performance",
     url="https://dnsdiag.org/",
     entry_points={
         'console_scripts': [
