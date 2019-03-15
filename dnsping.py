@@ -58,7 +58,7 @@ usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t ty
   -6  --ipv6      Use IPv6 as default network protocol
   -P  --srcport   Query source port number (default: 0)
   -S  --srcip     Query source IP address (default: default interface address)
-  -c  --count     Number of requests to send (default: 10)
+  -c  --count     Number of requests to send (default: 10, 0 for infinity)
   -w  --wait      Maximum wait time for a reply (default: 2 seconds)
   -i  --interval  Time between each request (default: 1 seconds)
   -t  --type      DNS request record type (default: A)
@@ -118,7 +118,7 @@ def main():
         if o in ("-h", "--help"):
             usage()
         elif o in ("-c", "--count"):
-            count = int(a)
+            count = abs(int(a))
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-s", "--server"):
@@ -176,9 +176,13 @@ def main():
 
     print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dst_port, hostname, dnsrecord))
 
-    for i in range(count):
-        if shutdown:
+    while not shutdown:
+
+        if 0 < count <= i:
             break
+        else:
+            i += 1
+
         try:
             stime = time.perf_counter()
             answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp,
