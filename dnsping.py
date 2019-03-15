@@ -106,7 +106,7 @@ def main():
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns"])
     except getopt.GetoptError as err:
         # print help information and exit:
-        print(err)  # will print something like "option -a not recognized"
+        print(err, file=sys.stderr)  # will print something like "option -a not recognized"
         usage()
 
     if args and len(args) == 1:
@@ -145,7 +145,7 @@ def main():
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
-                print("WARNING: Source ports below 1024 are only available to superuser")
+                print("WARNING: Source ports below 1024 are only available to superuser", flush=True)
         elif o in ("-S", "--srcip"):
             src_ip = a
         else:
@@ -158,7 +158,7 @@ def main():
         try:
             dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af)[1][4][0]
         except OSError:
-            print('Error: cannot resolve hostname:', dnsserver)
+            print('Error: cannot resolve hostname:', dnsserver, file=sys.stderr, flush=True)
             sys.exit(1)
 
     resolver = dns.resolver.Resolver()
@@ -174,7 +174,8 @@ def main():
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dst_port, hostname, dnsrecord))
+    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dst_port, hostname, dnsrecord),
+          flush=True)
 
     while not shutdown:
 
@@ -190,23 +191,23 @@ def main():
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
             if not quiet:
-                print("No response to dns request")
+                print("No response to dns request", file=sys.stderr, flush=True)
                 if verbose:
-                    print("error:", e)
+                    print("error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
         except dns.resolver.NXDOMAIN as e:
             if not quiet:
-                print("Hostname does not exist")
+                print("Hostname does not exist", file=sys.stderr, flush=True)
             if verbose:
-                print("Error:", e)
+                print("Error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
         except dns.resolver.Timeout:
             if not quiet:
-                print("Request timeout")
+                print("Request timeout", flush=True)
             pass
         except dns.resolver.NoAnswer:
             if not quiet:
-                print("No answer")
+                print("No answer", flush=True)
             pass
         else:
             elapsed = answers.response.time * 1000  # convert to milliseconds
@@ -214,10 +215,10 @@ def main():
             if not quiet:
                 print(
                     "%d bytes from %s: seq=%-3d time=%.3f ms" % (
-                        len(str(answers.rrset)), dnsserver, i, elapsed))
+                        len(str(answers.rrset)), dnsserver, i, elapsed), flush=True)
             if verbose:
-                print(answers.rrset)
-                print("flags:", dns.flags.to_text(answers.response.flags))
+                print(answers.rrset, flush=True)
+                print("flags:", dns.flags.to_text(answers.response.flags), flush=True)
 
             time_to_next = (stime + interval) - etime
             if time_to_next > 0:
@@ -241,9 +242,10 @@ def main():
         r_avg = 0
         r_stddev = 0
 
-    print('\n--- %s dnsping statistics ---' % dnsserver)
-    print('%d requests transmitted, %d responses received, %.0f%% lost' % (r_sent, r_received, r_lost_percent))
-    print('min=%.3f ms, avg=%.3f ms, max=%.3f ms, stddev=%.3f ms' % (r_min, r_avg, r_max, r_stddev))
+    print('\n--- %s dnsping statistics ---' % dnsserver, flush=True)
+    print('%d requests transmitted, %d responses received, %.0f%% lost' % (r_sent, r_received, r_lost_percent),
+          flush=True)
+    print('min=%.3f ms, avg=%.3f ms, max=%.3f ms, stddev=%.3f ms' % (r_min, r_avg, r_max, r_stddev), flush=True)
 
 
 if __name__ == '__main__':
