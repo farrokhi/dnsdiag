@@ -88,6 +88,7 @@ class Colors(object):
 
 
 def whois_lookup(ip):
+    asn = None
     try:
         global whois_cache
         currenttime = time.time()
@@ -100,9 +101,9 @@ def whois_lookup(ip):
             c = cymruwhois.Client()
             asn = c.lookup(ip)
             whois_cache[ip] = (asn, currenttime)
-        return asn
     except Exception as e:
-        return e
+        pass
+    return asn
 
 
 def load_whois_cache(cachefile):
@@ -246,6 +247,7 @@ def main():
     use_edns = True
     color_mode = False
 
+    args = None
     try:
         opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexC",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port", "expert",
@@ -281,7 +283,7 @@ def main():
             dest_port = int(a)
         elif o in ("-C", "--color"):
             color_mode = True
-        elif o in ("-n"):
+        elif o in "-n":
             should_resolve = False
         elif o in ("-a", "--asn"):
             as_lookup = True
@@ -338,7 +340,6 @@ def main():
         icmp_socket.settimeout(timeout)
 
         curr_addr = None
-        curr_host = None
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
             stime = time.perf_counter()
