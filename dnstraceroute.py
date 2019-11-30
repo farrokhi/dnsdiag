@@ -351,6 +351,8 @@ def main():
                     udp_port = packet[50] << 8 | packet[51]
                     if icmp_type == 11 and udp_port == dest_port:
                         curr_addr = curr_addr[0]
+                    else:
+                        curr_addr = None
             except socket.error:
                 pass
             finally:
