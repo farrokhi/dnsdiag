@@ -1,2 +1,2 @@
-dnspython>=1.15.0
+dnspython>=1.16.0
 cymruwhois>=1.6
