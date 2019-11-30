@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2016, Babak Farrokhi
+# Copyright (c) 2019, Babak Farrokhi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -345,10 +345,13 @@ def main():
             thr = pool.submit(ping, resolver, hostname, dnsrecord, ttl, src_ip=src_ip, use_edns=use_edns)
 
             try:  # expect ICMP response
-                _, curr_addr = icmp_socket.recvfrom(512)
-                curr_addr = curr_addr[0]
+                packet, curr_addr = icmp_socket.recvfrom(512)
+                if len(packet) > 51:
+                    icmp_type = packet[20]
+                    udp_port = packet[50] << 8 | packet[51]
+                    if icmp_type == 11 and udp_port == dest_port:
+                        curr_addr = curr_addr[0]
             except socket.error:
-                etime = time.perf_counter()
                 pass
             finally:
                 etime = time.perf_counter()
