@@ -224,7 +224,7 @@ def main():
             if time_to_next > 0:
                 time.sleep(time_to_next)
 
-    r_sent = i + 1
+    r_sent = i
     r_received = len(response_time)
     r_lost = r_sent - r_received
     r_lost_percent = (100 * r_lost) / r_sent
