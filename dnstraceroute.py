@@ -44,7 +44,7 @@ import cymruwhois
 # Global Variables
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = "1.6.4"
+__version__ = "1.7.0"
 _ttl = None
 quiet = False
 whois_cache = {}

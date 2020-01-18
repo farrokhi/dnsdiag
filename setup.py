@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="dnsdiag",
-    version="1.6.4",
+    version="1.7.0",
     packages=find_packages(),
     scripts=["dnseval.py", "dnsping.py", "dnstraceroute.py"],
-    install_requires=['dnspython>=1.15.0', 'cymruwhois>=1.6'],
+    install_requires=['dnspython>=1.16.0', 'cymruwhois>=1.6'],
 
     classifiers=[
         "Topic :: System :: Networking",
