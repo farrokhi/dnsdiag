@@ -113,8 +113,7 @@ def flags_to_text(flags):
     CD = 0x0010
 
     # EDNS flags
-
-    DO = 0x8000
+    # DO = 0x8000
 
     _by_text = {
         'QR': QR,
@@ -241,8 +240,8 @@ def main():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:TevCm",
-                                   ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose", "color",
-                                    "force-miss"])
+                                   ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose",
+                                    "color", "force-miss"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -320,7 +319,7 @@ def main():
                 except OSError:
                     print('Error: cannot resolve hostname:', server)
                     resolver = None
-                except:
+                except Exception:
                     pass
             else:
                 resolver = server
@@ -361,19 +360,21 @@ def main():
                 resolver, r_avg, r_min, r_max, r_stddev, l_color, r_lost_percent, color.N, s_ttl, text_flags),
                   flush=True)
             if save_json:
-                dns_data = {}
-                dns_data['hostname'] = hostname
-                dns_data['timestamp'] = str(datetime.datetime.now())
-                dns_data['r_min'] = r_min
-                dns_data['r_avg'] = r_avg
-                dns_data['resolver'] = resolver
-                dns_data['r_max'] = r_max
-                dns_data['r_lost_percent'] = r_lost_percent
-                dns_data['s_ttl'] = s_ttl
-                dns_data['text_flags'] = text_flags
-                outer_data = {}
-                outer_data['hostname'] = hostname
-                outer_data['data'] = dns_data 
+                dns_data = {
+                    'hostname': hostname,
+                    'timestamp': str(datetime.datetime.now()),
+                    'r_min': r_min,
+                    'r_avg': r_avg,
+                    'resolver': resolver,
+                    'r_max': r_max,
+                    'r_lost_percent': r_lost_percent,
+                    's_ttl': s_ttl,
+                    'text_flags': text_flags
+                }
+                outer_data = {
+                    'hostname': hostname,
+                    'data': dns_data
+                }
                 with open('results.json', 'a+') as outfile:
                     json.dump(outer_data, outfile)
             if verbose and hasattr(answers, 'response'):

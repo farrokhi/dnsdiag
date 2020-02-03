@@ -204,11 +204,9 @@ def main():
         except dns.resolver.Timeout:
             if not quiet:
                 print("Request timeout", flush=True)
-            pass
         except dns.resolver.NoAnswer:
             if not quiet:
                 print("No answer", flush=True)
-            pass
         else:
             elapsed = answers.response.time * 1000  # convert to milliseconds
             response_time.append(elapsed)
