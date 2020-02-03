@@ -376,7 +376,7 @@ def main():
                 curr_name = curr_addr
             except SystemExit:
                 pass
-            except:
+            except Exception:
                 print("unxpected error: ", sys.exc_info()[0])
         else:
             curr_name = curr_addr
@@ -403,7 +403,7 @@ def main():
                         c = color.B
                     if curr_addr == dnsserver:
                         c = color.G
-                except:
+                except Exception:
                     pass
 
             print("%d\t%s (%s%s%s) %s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
