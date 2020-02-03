@@ -92,7 +92,6 @@ def whois_lookup(ip):
     try:
         global whois_cache
         currenttime = time.time()
-        ts = currenttime
         if ip in whois_cache:
             asn, ts = whois_cache[ip]
         else:
@@ -210,7 +209,6 @@ def ping(resolver, hostname, dnsrecord, ttl, src_ip, use_edns=False):
     except dns.resolver.NoAnswer:
         if not quiet:
             print("invalid answer")
-        pass
     except SystemExit:
         pass
     except Exception as e:
@@ -394,7 +392,6 @@ def main():
                 except AttributeError:
                     if shutdown:
                         sys.exit(0)
-                    pass
 
             c = color.N  # default
             if curr_addr != '*':
