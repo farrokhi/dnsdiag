@@ -186,8 +186,8 @@ def main():
 
         try:
             stime = time.perf_counter()
-            answers = resolver.query(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp,
-                                     raise_on_no_answer=False)
+            answers = resolver.resolve(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp,
+                                       raise_on_no_answer=False)
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
             if not quiet:

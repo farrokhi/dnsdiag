@@ -194,7 +194,7 @@ def ping(resolver, hostname, dnsrecord, ttl, src_ip, use_edns=False):
         resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
 
     try:
-        resolver.query(hostname, dnsrecord, source=src_ip, raise_on_no_answer=False)
+        resolver.resolve(hostname, dnsrecord, source=src_ip, raise_on_no_answer=False)
 
     except dns.resolver.NoNameservers as e:
         if not quiet:
