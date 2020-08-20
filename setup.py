@@ -5,7 +5,7 @@ setup(
     version="1.7.0",
     packages=find_packages(),
     scripts=["dnseval.py", "dnsping.py", "dnstraceroute.py"],
-    install_requires=['dnspython>=1.16.0', 'cymruwhois>=1.6'],
+    install_requires=['dnspython>=2.0.0', 'cymruwhois>=1.6'],
 
     classifiers=[
         "Topic :: System :: Networking",

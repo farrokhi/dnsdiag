@@ -172,8 +172,8 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=Fal
                 fqdn = host
 
             stime = time.perf_counter()
-            answers = resolver.query(fqdn, dnsrecord, tcp=use_tcp,
-                                     raise_on_no_answer=False)  # todo: response validation in future
+            answers = resolver.resolve(fqdn, dnsrecord, tcp=use_tcp,
+                                       raise_on_no_answer=False)  # todo: response validation in future
 
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
             break
