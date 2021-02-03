@@ -161,7 +161,7 @@ def main():
             print('Error: cannot resolve hostname:', dnsserver, file=sys.stderr, flush=True)
             sys.exit(1)
 
-    resolver = dns.resolver.Resolver()
+    resolver = dns.resolver.Resolver(configure=False)
     resolver.nameservers = [dnsserver]
     resolver.timeout = timeout
     resolver.lifetime = timeout
