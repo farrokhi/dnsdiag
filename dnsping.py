@@ -191,13 +191,13 @@ def main():
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
             if not quiet:
-                print("No response to dns request", file=sys.stderr, flush=True)
+                print("No response to DNS request", file=sys.stderr, flush=True)
                 if verbose:
                     print("error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
         except dns.resolver.NXDOMAIN as e:
             if not quiet:
-                print("Hostname does not exist", file=sys.stderr, flush=True)
+                print("Hostname does not exist (NXDOMAIN)", file=sys.stderr, flush=True)
             if verbose:
                 print("Error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
