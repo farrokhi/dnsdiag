@@ -226,14 +226,7 @@ def main():
                 print("%d bytes from %s: seq=%-3d time=%.3f ms%s" % (
                     len(answers.to_wire()), dnsserver, i, elapsed, flags), flush=True)
             if verbose:
-                rcode = answers.rcode()
-                if rcode > 0:
-                    print(dns.rcode.to_text(rcode), flush=True)
-                else:
-                    if answers.answer:
-                        print(answers.to_text(), flush=True)
-                    else:
-                        print('Empty answer')
+                print(answers.to_text(), flush=True)
 
             time_to_next = (stime + interval) - etime
             if time_to_next > 0:
