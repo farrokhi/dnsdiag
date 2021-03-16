@@ -176,13 +176,14 @@ def main():
                 ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
     else:
         query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
-                use_edns=False)
+                use_edns=False, want_dnssec=want_dnssec)
 
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dst_port, qname, rdatatype),
-          flush=True)
+    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s, flags: %s" %
+            (__progname__, dnsserver, dst_port, qname, rdatatype,
+                dns.flags.to_text(query.flags)), flush=True)
 
     while not shutdown:
 
