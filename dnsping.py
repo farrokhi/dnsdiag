@@ -35,7 +35,6 @@ import time
 from statistics import stdev
 
 import dns.flags
-import dns.rdatatype
 import dns.resolver
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -97,6 +96,7 @@ def main():
     src_ip = None
     use_tcp = False
     use_edns = True
+    want_dnssec = False
     af = socket.AF_INET
     qname = 'wikipedia.org'
 
@@ -166,16 +166,13 @@ def main():
             print('Error: cannot resolve hostname:', dnsserver, file=sys.stderr, flush=True)
             sys.exit(1)
 
-    resolver = dns.resolver.Resolver(configure=False)
-    resolver.nameservers = [dnsserver]
-    resolver.timeout = timeout
-    resolver.lifetime = timeout
-    resolver.port = dst_port
-    resolver.retry_servfail = 0
-
-    query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN, use_edns, )
     if use_edns:
-        resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
+        query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
+                use_edns=True, want_dnssec=want_dnssec,
+                ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
+    else:
+        query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
+                use_edns=False)
 
     response_time = []
     i = 0
@@ -192,8 +189,13 @@ def main():
 
         try:
             stime = time.perf_counter()
-            answers = resolver.resolve(qname, rdatatype, source_port=src_port, source=src_ip, tcp=use_tcp,
-                                       raise_on_no_answer=False)
+            if use_tcp:
+                answers = dns.query.tcp(query, dnsserver, timeout, dst_port,
+                        src_ip, src_port)
+            else:
+                answers = dns.query.udp(query, dnsserver, timeout, dst_port,
+                        src_ip, src_port, ignore_unexpected=True)
+
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
             if not quiet:
@@ -201,28 +203,26 @@ def main():
                 if verbose:
                     print("error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
-        except dns.resolver.NXDOMAIN as e:
-            if not quiet:
-                print("Hostname does not exist (NXDOMAIN)", file=sys.stderr, flush=True)
-            if verbose:
-                print("Error:", e, file=sys.stderr, flush=True)
-            sys.exit(1)
-        except dns.resolver.Timeout:
+       except dns.resolver.Timeout:
             if not quiet:
                 print("Request timeout", flush=True)
-        except dns.resolver.NoAnswer:
-            if not quiet:
-                print("No answer", flush=True)
         else:
-            elapsed = answers.response.time * 1000  # convert to milliseconds
+            elapsed = answers.time * 1000  # convert to milliseconds
             response_time.append(elapsed)
             if not quiet:
                 print(
                     "%d bytes from %s: seq=%-3d time=%.3f ms" % (
-                        len(str(answers.rrset)), dnsserver, i, elapsed), flush=True)
+                        len(answers.to_wire()), dnsserver, i, elapsed), flush=True)
             if verbose:
-                print(answers.rrset, flush=True)
-                print("flags:", dns.flags.to_text(answers.response.flags), flush=True)
+                rcode = answers.rcode()
+                if rcode > 0:
+                    print(dns.rcode.to_text(rcode), flush=True)
+                else:
+                    if answers.answer:
+                        print(str(answers.answer[0]), flush=True)
+                    else:
+                        print('Empty answer')
+                print("flags:", dns.flags.to_text(answers.flags), flush=True)
 
             time_to_next = (stime + interval) - etime
             if time_to_next > 0:
