@@ -204,7 +204,7 @@ def main():
                 if verbose:
                     print("error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
-       except dns.resolver.Timeout:
+        except dns.resolver.Timeout:
             if not quiet:
                 print("Request timeout", flush=True)
         else:
