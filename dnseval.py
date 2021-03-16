@@ -48,8 +48,6 @@ __version__ = "1.7.0"
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
-resolvers = dns.resolver.get_default_resolver().nameservers
-
 
 class Colors(object):
     N = '\033[m'  # native
@@ -295,7 +293,8 @@ def main():
                     print(e)
                     sys.exit(1)
         else:
-            f = resolvers
+            f = dns.resolver.get_default_resolver().nameservers
+
         if len(f) == 0:
             print("No nameserver specified")
 
