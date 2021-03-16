@@ -46,7 +46,7 @@ shutdown = False
 
 def usage():
     print("""%s version %s
-usage: %s [-46DehqTv] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+usage: %s [-46DeFhqTv] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
 
   -h  --help      Show this help
   -q  --quiet     Quiet
@@ -63,7 +63,8 @@ usage: %s [-46DehqTv] [-i interval] [-s server] [-p port] [-P port] [-S address]
   -i  --interval  Time between each request (default: 1 seconds)
   -t  --type      DNS request record type (default: A)
   -e  --edns      Disable EDNS0 (default: Enabled)
-  -D  --dnssec    Enable 'DNSSEC desired' flag in requests
+  -D  --dnssec    Enable 'DNSSEC desired' flag in requests. Implies EDNS.
+  -F  --flags     Display response flags
 """ % (__progname__, __version__, __progname__))
     sys.exit(0)
 
@@ -92,6 +93,7 @@ def main():
     interval = 1
     quiet = False
     verbose = False
+    show_flags = False
     dnsserver = None  # do not try to use system resolver by default
     dst_port = 53
     src_port = 0
@@ -103,9 +105,9 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eD",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eDF",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
-                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec"])
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec", "flags"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -146,6 +148,8 @@ def main():
             use_edns = False
         elif o in ("-D", "--dnssec"):
             want_dnssec = True
+        elif o in ("-F", "--flags"):
+            show_flags = True
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
@@ -215,9 +219,12 @@ def main():
             elapsed = answers.time * 1000  # convert to milliseconds
             response_time.append(elapsed)
             if not quiet:
-                print(
-                    "%d bytes from %s: seq=%-3d time=%.3f ms" % (
-                        len(answers.to_wire()), dnsserver, i, elapsed), flush=True)
+                if verbose or show_flags:
+                    flags = " [%s]" % dns.flags.to_text(answers.flags)
+                else:
+                    flags = ""
+                print("%d bytes from %s: seq=%-3d time=%.3f ms%s" % (
+                    len(answers.to_wire()), dnsserver, i, elapsed, flags), flush=True)
             if verbose:
                 rcode = answers.rcode()
                 if rcode > 0:
@@ -227,7 +234,6 @@ def main():
                         print(str(answers.answer[0]), flush=True)
                     else:
                         print('Empty answer')
-                print("flags:", dns.flags.to_text(answers.flags), flush=True)
 
             time_to_next = (stime + interval) - etime
             if time_to_next > 0:
