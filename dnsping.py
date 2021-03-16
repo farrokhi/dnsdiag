@@ -85,7 +85,7 @@ def main():
         usage()
 
     # defaults
-    dnsrecord = 'A'
+    rdatatype = 'A'
     count = 10
     timeout = 2
     interval = 1
@@ -98,7 +98,7 @@ def main():
     use_tcp = False
     use_edns = True
     af = socket.AF_INET
-    hostname = 'wikipedia.org'
+    qname = 'wikipedia.org'
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46e",
@@ -110,7 +110,7 @@ def main():
         usage()
 
     if args and len(args) == 1:
-        hostname = args[0]
+        qname = args[0]
     else:
         usage()
 
@@ -133,7 +133,7 @@ def main():
         elif o in ("-i", "--interval"):
             interval = int(a)
         elif o in ("-t", "--type"):
-            dnsrecord = a
+            rdatatype = a
         elif o in ("-T", "--tcp"):
             use_tcp = True
         elif o in ("-4", "--ipv4"):
@@ -168,13 +168,14 @@ def main():
     resolver.port = dst_port
     resolver.retry_servfail = 0
 
+    query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN, use_edns, )
     if use_edns:
         resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
 
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dst_port, hostname, dnsrecord),
+    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dst_port, qname, rdatatype),
           flush=True)
 
     while not shutdown:
@@ -186,7 +187,7 @@ def main():
 
         try:
             stime = time.perf_counter()
-            answers = resolver.resolve(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp,
+            answers = resolver.resolve(qname, rdatatype, source_port=src_port, source=src_ip, tcp=use_tcp,
                                        raise_on_no_answer=False)
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
