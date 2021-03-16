@@ -54,6 +54,14 @@ pip3 install dnsdiag
 
 From time to time, binary version will be released for Windows, Mac OS X and Linux platforms. You can grab the latest release from [releases page](https://github.com/farrokhi/dnsdiag/releases).
 
+## Docker
+
+If you don't want to install dnsdiags on your local machine, you may use the docker image and run programs in a container. For example:
+
+```
+docker run -it --rm farrokhi/dnsdiag ./dnsping.py
+```
+
 # dnsping
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number
 of times:
