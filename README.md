@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/farrokhi/dnsdiag.svg)](https://travis-ci.org/farrokhi/dnsdiag) [![PyPI](https://img.shields.io/pypi/v/dnsdiag.svg?maxAge=8600)](https://pypi.python.org/pypi/dnsdiag/) [![PyPI](https://img.shields.io/pypi/l/dnsdiag.svg?maxAge=8600)]() [![PyPI](https://img.shields.io/pypi/pyversions/dnsdiag.svg?maxAge=8600)]() [![Docker Pulls](https://img.shields.io/docker/pulls/farrokhi/dnsdiag)](https://hub.docker.com/r/farrokhi/dnsdiag) [![GitHub stars](https://img.shields.io/github/stars/farrokhi/dnsdiag.svg?style=social&label=Star&maxAge=8600)](https://github.com/farrokhi/dnsdiag/stargazers) 
 
-DNS Diagnostics and Performance Measurement Tools
-==================================================
+DNS Measurement, Troubleshooting and Security Auditing Toolset
+===============================================================
 
 Ever been wondering if your ISP is [hijacking your DNS traffic](https://medium.com/decentralize-today/is-your-isp-hijacking-your-dns-traffic-f3eb7ccb0ee7)? Ever observed any
 misbehavior with your DNS responses? Ever been redirected to wrong address and
@@ -25,12 +25,12 @@ choose the best DNS forwarder for your network, `dnseval` lets you compare
 different DNS servers from performance (latency) and reliability (loss) point
 of view.
 
-# prerequisites
+# Prerequisites
 This script requires python3 as well as latest
 [dnspython](http://www.dnspython.org/) and
 [cymruwhois](https://pythonhosted.org/cymruwhois/).
 
-# installation
+# Installation
 
 There are several ways that you can use this toolset. However using the sourcecode is always recommended.
 
@@ -134,4 +134,3 @@ Babak Farrokhi
 ### License
 
 dnsdiag is released under a 2 clause BSD license.
-
