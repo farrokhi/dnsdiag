@@ -46,7 +46,8 @@ shutdown = False
 
 def usage():
     print("""%s version %s
-usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+usage: %s [-46DehqTv] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+
   -h  --help      Show this help
   -q  --quiet     Quiet
   -v  --verbose   Print actual dns response
