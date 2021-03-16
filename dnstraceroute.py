@@ -235,7 +235,7 @@ def main():
     dnsrecord = 'A'
     count = 30
     timeout = 2
-    dnsserver = dns.resolver.get_default_resolver().nameservers[0]
+    dnsserver = None
     dest_port = 53
     src_ip = None
     hops = 0
@@ -291,6 +291,11 @@ def main():
             usage()
 
     color = Colors(color_mode)
+
+    # Use system DNS server if parameter is not specified
+    # remember not all systems have /etc/resolv.conf (i.e. Android)
+    if dnsserver is None:
+        dnsserver = dns.resolver.get_default_resolver().nameservers[0]
 
     # check if we have a valid dns server address
     try:

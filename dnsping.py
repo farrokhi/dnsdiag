@@ -91,7 +91,7 @@ def main():
     interval = 1
     quiet = False
     verbose = False
-    dnsserver = dns.resolver.get_default_resolver().nameservers[0]
+    dnsserver = None  # do not try to use system resolver by default
     dst_port = 53
     src_port = 0
     src_ip = None
@@ -150,6 +150,11 @@ def main():
             src_ip = a
         else:
             usage()
+
+    # Use system DNS server if parameter is not specified
+    # remember not all systems have /etc/resolv.conf (i.e. Android)
+    if dnsserver is None:
+        dnsserver = dns.resolver.get_default_resolver().nameservers[0]
 
     # check if we have a valid dns server address
     try:
