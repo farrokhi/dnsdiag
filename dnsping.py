@@ -219,7 +219,7 @@ def main():
             elapsed = answers.time * 1000  # convert to milliseconds
             response_time.append(elapsed)
             if not quiet:
-                if verbose or show_flags:
+                if show_flags:
                     flags = " [%s]" % dns.flags.to_text(answers.flags)
                 else:
                     flags = ""
@@ -231,7 +231,7 @@ def main():
                     print(dns.rcode.to_text(rcode), flush=True)
                 else:
                     if answers.answer:
-                        print(str(answers.answer[0]), flush=True)
+                        print(answers.to_text(), flush=True)
                     else:
                         print('Empty answer')
 
