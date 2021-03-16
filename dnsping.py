@@ -63,6 +63,7 @@ usage: %s [-46DehqTv] [-i interval] [-s server] [-p port] [-P port] [-S address]
   -i  --interval  Time between each request (default: 1 seconds)
   -t  --type      DNS request record type (default: A)
   -e  --edns      Disable EDNS0 (default: Enabled)
+  -D  --dnssec    Enable 'DNSSEC desired' flag in requests
 """ % (__progname__, __version__, __progname__))
     sys.exit(0)
 
@@ -102,9 +103,9 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46e",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eD",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
-                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns"])
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -143,6 +144,8 @@ def main():
             af = socket.AF_INET6
         elif o in ("-e", "--edns"):
             use_edns = False
+        elif o in ("-D", "--dnssec"):
+            want_dnssec = True
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
