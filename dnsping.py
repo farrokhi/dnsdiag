@@ -43,17 +43,34 @@ __version__ = "1.7.0"
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
+# Transport protocols
+PROTO_UDP = 0
+PROTO_TCP = 1
+PROTO_TLS = 2
+PROTO_HTTPS = 3
+
+_proto_name = {
+        PROTO_UDP: 'UDP',
+        PROTO_TCP: 'TCP',
+        PROTO_TLS: 'TLS',
+        PROTO_HTTPS: 'HTTPS',
+        }
+
+def proto_to_text (proto):
+    return _proto_name[proto]
+
 
 def usage():
     print("""%s version %s
-usage: %s [-46DeFhqTv] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
 
   -h  --help      Show this help
   -q  --quiet     Quiet
   -v  --verbose   Print actual dns response
   -s  --server    DNS server to use (default: first entry from /etc/resolv.conf)
-  -p  --port      DNS server port number (default: 53)
-  -T  --tcp       Use TCP instead of UDP
+  -p  --port      DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
+  -T  --tcp       Use TCP as transport protocol
+  -X  --tls       Use TLS as transport protocol
   -4  --ipv4      Use IPv4 as default network protocol
   -6  --ipv6      Use IPv6 as default network protocol
   -P  --srcport   Query source port number (default: 0)
@@ -95,19 +112,19 @@ def main():
     verbose = False
     show_flags = False
     dnsserver = None  # do not try to use system resolver by default
-    dst_port = 53
+    dst_port = 53  # default for UDP and TCP
     src_port = 0
     src_ip = None
-    use_tcp = False
+    proto = PROTO_UDP
     use_edns = True
     want_dnssec = False
     af = socket.AF_INET
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eDF",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eDFX",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
-                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec", "flags"])
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec", "flags", "tls"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -127,8 +144,6 @@ def main():
             verbose = True
         elif o in ("-s", "--server"):
             dnsserver = a
-        elif o in ("-p", "--port"):
-            dst_port = int(a)
         elif o in ("-q", "--quiet"):
             quiet = True
             verbose = False
@@ -139,7 +154,10 @@ def main():
         elif o in ("-t", "--type"):
             rdatatype = a
         elif o in ("-T", "--tcp"):
-            use_tcp = True
+            proto = PROTO_TCP
+        elif o in ("-X", "--tls"):
+            proto = PROTO_TLS
+            dst_port = 853  # default, unless otherwise specified using -p
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
         elif o in ("-6", "--ipv6"):
@@ -150,6 +168,8 @@ def main():
             want_dnssec = True
         elif o in ("-F", "--flags"):
             show_flags = True
+        elif o in ("-p", "--port"):
+            dst_port = int(a)
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
@@ -185,8 +205,8 @@ def main():
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s, flags: %s" %
-            (__progname__, dnsserver, dst_port, qname, rdatatype,
+    print("%s DNS: %s:%d, hostname: %s, proto: %s, rdatatype: %s, flags: %s" %
+            (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), rdatatype,
                 dns.flags.to_text(query.flags)), flush=True)
 
     while not shutdown:
@@ -198,12 +218,15 @@ def main():
 
         try:
             stime = time.perf_counter()
-            if use_tcp:
-                answers = dns.query.tcp(query, dnsserver, timeout, dst_port,
-                        src_ip, src_port)
-            else:
+            if proto is PROTO_UDP:
                 answers = dns.query.udp(query, dnsserver, timeout, dst_port,
                         src_ip, src_port, ignore_unexpected=True)
+            elif proto is PROTO_TCP:
+                answers = dns.query.tcp(query, dnsserver, timeout, dst_port,
+                        src_ip, src_port)
+            elif proto is PROTO_TLS:
+                answers = dns.query.tls(query, dnsserver, timeout, dst_port,
+                        src_ip, src_port)
 
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
