@@ -25,18 +25,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import os
-
+import datetime
 import getopt
 import ipaddress
-import datetime
 import json
+import os
+import random
 import signal
 import socket
+import string
 import sys
 import time
-import random
-import string
 from statistics import stdev
 
 import dns.rdatatype
@@ -47,6 +46,12 @@ __license__ = 'BSD'
 __version__ = "1.7.0"
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
+
+# Transport protocols
+PROTO_UDP = 0
+PROTO_TCP = 1
+PROTO_TLS = 2
+PROTO_HTTPS = 3
 
 
 class Colors(object):
@@ -76,6 +81,7 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -w  --wait        Maximum wait time for a reply (default: 2)
   -t  --type        DNS request record type (default: A)
   -T  --tcp         Use TCP instead of UDP
+  -S  --srcip       Query source IP address
   -e  --edns        Disable EDNS0 (Default: Enabled)
   -C  --color       Print colorful output
   -v  --verbose     Print actual dns response
@@ -145,17 +151,14 @@ def random_string(min_length=5, max_length=10):
     return ''.join(map(lambda unused: random.choice(char_set), range(length)))
 
 
-def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=False, force_miss=False):
-    resolver = dns.resolver.Resolver()
-    resolver.nameservers = [server]
-    resolver.timeout = timeout
-    resolver.lifetime = timeout
-    resolver.retry_servfail = 0
+def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False, want_dnssec=False):
     flags = 0
     ttl = None
-    answers = None
+    response = None
     if use_edns:
-        resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
+        query = dns.message.make_query(qname, rdtype, dns.rdataclass.IN, use_edns, want_dnssec, ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
+    else:
+        query = dns.message.make_query(qname, rdtype, dns.rdataclass.IN, use_edns, want_dnssec)
 
     response_times = []
     i = 0
@@ -165,25 +168,32 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=Fal
             break
         try:
             if force_miss:
-                fqdn = "_dnsdiag_%s_.%s" % (random_string(), host)
+                fqdn = "_dnsdiag_%s_.%s" % (random_string(), qname)
             else:
-                fqdn = host
+                fqdn = qname
 
             stime = time.perf_counter()
-            answers = resolver.resolve(fqdn, dnsrecord, tcp=use_tcp,
-                                       raise_on_no_answer=False)  # todo: response validation in future
+            if proto is PROTO_UDP:
+                response = dns.query.udp(query, server, timeout, dst_port, src_ip, ignore_unexpected=True)
+            elif proto is PROTO_TCP:
+                response = dns.query.tcp(query, server, timeout, dst_port, src_ip)
 
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
             break
         except dns.resolver.Timeout:
             pass
-        except dns.resolver.NXDOMAIN:
-            etime = time.perf_counter()
-            if force_miss:
-                elapsed = (etime - stime) * 1000  # convert to milliseconds
-                response_times.append(elapsed)
+        # except dns.resolver.NXDOMAIN:
+        #     etime = time.perf_counter()
+        #     if force_miss:
+        #         elapsed = (etime - stime) * 1000  # convert to milliseconds
+        #         response_times.append(elapsed)
         else:
-            elapsed = answers.response.time * 1000  # convert to milliseconds
+            # convert time to milliseconds, considering that
+            # time property is retruned differently by query.https
+            if type(response.time) is datetime.timedelta:
+                elapsed = response.time.total_seconds() * 1000
+            else:
+                elapsed = response.time * 1000
             response_times.append(elapsed)
 
     r_sent = i + 1
@@ -204,12 +214,12 @@ def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=Fal
         r_avg = 0
         r_stddev = 0
 
-    if answers is not None:
-        flags = answers.response.flags
-        if len(answers.response.answer) > 0:
-            ttl = answers.response.answer[0].ttl
+    if response is not None:
+        flags = response.flags
+        if len(response.answer) > 0:
+            ttl = response.answer[0].ttl
 
-    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, answers
+    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, response
 
 
 def main():
@@ -223,18 +233,20 @@ def main():
         usage()
 
     # defaults
-    dnsrecord = 'A'
+    rdatatype = 'A'
+    proto = PROTO_UDP
+    src_ip = None
+    dst_port = 53  # default for UDP and TCP
     count = 10
     waittime = 2
     inputfilename = None
     fromfile = False
     save_json = False
-    use_tcp = False
     use_edns = True
     force_miss = False
     verbose = False
     color_mode = False
-    hostname = 'wikipedia.org'
+    qname = 'wikipedia.org'
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:TevCm",
@@ -245,7 +257,7 @@ def main():
         usage()
 
     if args and len(args) == 1:
-        hostname = args[0]
+        qname = args[0]
     else:
         usage()
 
@@ -262,9 +274,11 @@ def main():
         elif o in ("-m", "--cache-miss"):
             force_miss = True
         elif o in ("-t", "--type"):
-            dnsrecord = a
+            rdatatype = a
         elif o in ("-T", "--tcp"):
-            use_tcp = True
+            proto = PROTO_TCP
+        elif o in ("-S", "--srcip"):
+            src_ip = a
         elif o in ("-j", "--json"):
             save_json = True
         elif o in ("-e", "--edns"):
@@ -328,14 +342,17 @@ def main():
 
             try:
                 (resolver, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, answers) = dnsping(
-                    hostname,
+                    qname,
                     resolver,
-                    dnsrecord,
+                    dst_port,
+                    rdatatype,
                     waittime,
                     count,
-                    use_tcp=use_tcp,
+                    proto,
+                    src_ip,
                     use_edns=use_edns,
-                    force_miss=force_miss
+                    force_miss=force_miss,
+                    want_dnssec=False
                 )
             except dns.resolver.NXDOMAIN:
                 print('%-15s  NXDOMAIN' % server)
@@ -360,7 +377,7 @@ def main():
                   flush=True)
             if save_json:
                 dns_data = {
-                    'hostname': hostname,
+                    'hostname': qname,
                     'timestamp': str(datetime.datetime.now()),
                     'r_min': r_min,
                     'r_avg': r_avg,
@@ -371,7 +388,7 @@ def main():
                     'text_flags': text_flags
                 }
                 outer_data = {
-                    'hostname': hostname,
+                    'hostname': qname,
                     'data': dns_data
                 }
                 with open('results.json', 'a+') as outfile:
