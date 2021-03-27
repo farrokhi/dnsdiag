@@ -38,6 +38,7 @@ import sys
 import time
 from statistics import stdev
 
+import dns.rcode
 import dns.rdatatype
 import dns.resolver
 
@@ -157,11 +158,7 @@ def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_
     flags = 0
     ttl = None
     response = None
-    if use_edns:
-        query = dns.message.make_query(qname, rdtype, dns.rdataclass.IN, use_edns, want_dnssec,
-                                       ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
-    else:
-        query = dns.message.make_query(qname, rdtype, dns.rdataclass.IN, use_edns, want_dnssec)
+    rcode_text = "No Response"
 
     response_times = []
     i = 0
@@ -175,18 +172,26 @@ def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_
             else:
                 fqdn = qname
 
-            stime = time.perf_counter()
+            if use_edns:
+                query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec,
+                                               ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
+            else:
+                query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec)
+
             if proto is PROTO_UDP:
                 response = dns.query.udp(query, server, timeout, dst_port, src_ip, ignore_unexpected=True)
             elif proto is PROTO_TCP:
                 response = dns.query.tcp(query, server, timeout, dst_port, src_ip)
             elif proto is PROTO_TLS:
                 response = dns.query.tls(query, server, timeout, dst_port, src_ip)
+            elif proto is PROTO_HTTPS:
+                response = dns.query.https(query, server, timeout, dst_port, src_ip)
 
-        except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
-            break
         except dns.resolver.Timeout:
             pass
+        except ValueError as e:
+            rcode_text = "Invalid Response"
+            continue
         else:
             # convert time to milliseconds, considering that
             # time property is retruned differently by query.https
@@ -216,10 +221,11 @@ def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_
 
     if response is not None:
         flags = response.flags
+        rcode_text = dns.rcode.to_text(response.rcode())
         if len(response.answer) > 0:
             ttl = response.answer[0].ttl
 
-    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, response
+    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, response, rcode_text
 
 
 def main():
@@ -249,9 +255,9 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmX",
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXH",
                                    ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose",
-                                    "color", "force-miss", "srcip=", "tls"])
+                                    "color", "force-miss", "srcip=", "tls", "doh"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -290,6 +296,9 @@ def main():
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
             dst_port = 853  # default for DoT, unless overriden using -p
+        elif o in ("-H", "--doh"):
+            proto = PROTO_HTTPS
+            dst_port = 443  # default for DoH, unless overriden using -p
         elif o in ("-p", "--port"):
             dst_port = int(a)
 
@@ -323,8 +332,8 @@ def main():
 
         width = maxlen(f)
         blanks = (width - 5) * ' '
-        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags')
-        print((93 + width) * '-')
+        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response')
+        print((104 + width) * '-')
         for server in f:
             # check if we have a valid dns server address
             if server.lstrip() == '':  # deal with empty lines
@@ -347,7 +356,7 @@ def main():
                 continue
 
             try:
-                (resolver, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, answers) = dnsping(
+                (resolver, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, response, rcode_text) = dnsping(
                     qname,
                     resolver,
                     dst_port,
@@ -360,9 +369,6 @@ def main():
                     force_miss=force_miss,
                     want_dnssec=False
                 )
-            except dns.resolver.NXDOMAIN:
-                print('%-15s  NXDOMAIN' % server)
-                continue
             except Exception as e:
                 print('%s: %s' % (server, e))
                 continue
@@ -378,9 +384,10 @@ def main():
                 l_color = color.O
             else:
                 l_color = color.N
-            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s" % (
-                resolver, r_avg, r_min, r_max, r_stddev, l_color, r_lost_percent, color.N, s_ttl, text_flags),
-                  flush=True)
+            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
+                resolver, r_avg, r_min, r_max, r_stddev, l_color, r_lost_percent, color.N, s_ttl, text_flags,
+                rcode_text), flush=True)
+
             if save_json:
                 dns_data = {
                     'hostname': qname,
@@ -399,9 +406,9 @@ def main():
                 }
                 with open('results.json', 'a+') as outfile:
                     json.dump(outer_data, outfile)
-            if verbose and hasattr(answers, 'response'):
+            if verbose and hasattr(response, 'answer'):
                 ans_index = 1
-                for answer in answers.response.answer:
+                for answer in response.answer:
                     print("Answer %d [ %s%s%s ]" % (ans_index, color.G, answer, color.N))
                     ans_index += 1
                 print("")
