@@ -249,9 +249,9 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:TevCm",
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCm",
                                    ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose",
-                                    "color", "force-miss"])
+                                    "color", "force-miss", "srcip="])
     except getopt.GetoptError as err:
         print(err)
         usage()
