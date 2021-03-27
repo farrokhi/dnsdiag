@@ -25,9 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import datetime
 import getopt
 import ipaddress
-import datetime
 import os
 import signal
 import socket
@@ -50,15 +50,14 @@ PROTO_TCP = 1
 PROTO_TLS = 2
 PROTO_HTTPS = 3
 
-_proto_name = {
-    PROTO_UDP: 'UDP',
-    PROTO_TCP: 'TCP',
-    PROTO_TLS: 'TLS',
-    PROTO_HTTPS: 'HTTPS',
-}
-
 
 def proto_to_text(proto):
+    _proto_name = {
+        PROTO_UDP: 'UDP',
+        PROTO_TCP: 'TCP',
+        PROTO_TLS: 'TLS',
+        PROTO_HTTPS: 'HTTPS',
+    }
     return _proto_name[proto]
 
 
