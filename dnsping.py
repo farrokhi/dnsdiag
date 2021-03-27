@@ -51,13 +51,14 @@ PROTO_TLS = 2
 PROTO_HTTPS = 3
 
 _proto_name = {
-        PROTO_UDP: 'UDP',
-        PROTO_TCP: 'TCP',
-        PROTO_TLS: 'TLS',
-        PROTO_HTTPS: 'HTTPS',
-        }
+    PROTO_UDP: 'UDP',
+    PROTO_TCP: 'TCP',
+    PROTO_TLS: 'TLS',
+    PROTO_HTTPS: 'HTTPS',
+}
 
-def proto_to_text (proto):
+
+def proto_to_text(proto):
     return _proto_name[proto]
 
 
@@ -202,18 +203,18 @@ def main():
 
     if use_edns:
         query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
-                use_edns=True, want_dnssec=want_dnssec,
-                ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
+                                       use_edns=True, want_dnssec=want_dnssec,
+                                       ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
     else:
         query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
-                use_edns=False, want_dnssec=want_dnssec)
+                                       use_edns=False, want_dnssec=want_dnssec)
 
     response_time = []
     i = 0
 
     print("%s DNS: %s:%d, hostname: %s, proto: %s, rdatatype: %s, flags: %s" %
-            (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), rdatatype,
-                dns.flags.to_text(query.flags)), flush=True)
+          (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), rdatatype,
+           dns.flags.to_text(query.flags)), flush=True)
 
     while not shutdown:
 
@@ -226,16 +227,16 @@ def main():
             stime = time.perf_counter()
             if proto is PROTO_UDP:
                 answers = dns.query.udp(query, dnsserver, timeout, dst_port,
-                        src_ip, src_port, ignore_unexpected=True)
+                                        src_ip, src_port, ignore_unexpected=True)
             elif proto is PROTO_TCP:
                 answers = dns.query.tcp(query, dnsserver, timeout, dst_port,
-                        src_ip, src_port)
+                                        src_ip, src_port)
             elif proto is PROTO_TLS:
                 answers = dns.query.tls(query, dnsserver, timeout, dst_port,
-                        src_ip, src_port)
+                                        src_ip, src_port)
             elif proto is PROTO_HTTPS:
                 answers = dns.query.https(query, dnsserver, timeout, dst_port,
-                        src_ip, src_port)
+                                          src_ip, src_port)
 
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
