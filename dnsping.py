@@ -29,6 +29,7 @@ import datetime
 import getopt
 import ipaddress
 import os
+import requests
 import signal
 import socket
 import sys
@@ -244,9 +245,13 @@ def main():
                 if verbose:
                     print("error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
-        except dns.resolver.Timeout:
+        except requests.exceptions.ConnectTimeout:
             if not quiet:
                 print("Request timeout", flush=True)
+        except ValueError as e:
+            if not quiet:
+                print("Invalid Response", flush=True)
+                continue
         else:
             # convert time to milliseconds, considering that
             # time property is retruned differently by query.https
