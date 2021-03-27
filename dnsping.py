@@ -27,6 +27,7 @@
 
 import getopt
 import ipaddress
+import datetime
 import os
 import signal
 import socket
@@ -71,6 +72,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -p  --port      DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
   -T  --tcp       Use TCP as transport protocol
   -X  --tls       Use TLS as transport protocol
+  -H  --doh       Use HTTPS as transport protols (DoH)
   -4  --ipv4      Use IPv4 as default network protocol
   -6  --ipv6      Use IPv6 as default network protocol
   -P  --srcport   Query source port number (default: 0)
@@ -122,9 +124,10 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eDFX",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eDFXH",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
-                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec", "flags", "tls"])
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec", "flags",
+                                    "tls", "doh"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -157,7 +160,10 @@ def main():
             proto = PROTO_TCP
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
-            dst_port = 853  # default, unless otherwise specified using -p
+            dst_port = 853  # default for DoT, unless overriden using -p
+        elif o in ("-H", "--doh"):
+            proto = PROTO_HTTPS
+            dst_port = 443  # default for DoH, unless overriden using -p
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
         elif o in ("-6", "--ipv6"):
@@ -227,6 +233,9 @@ def main():
             elif proto is PROTO_TLS:
                 answers = dns.query.tls(query, dnsserver, timeout, dst_port,
                         src_ip, src_port)
+            elif proto is PROTO_HTTPS:
+                answers = dns.query.https(query, dnsserver, timeout, dst_port,
+                        src_ip, src_port)
 
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
@@ -239,7 +248,12 @@ def main():
             if not quiet:
                 print("Request timeout", flush=True)
         else:
-            elapsed = answers.time * 1000  # convert to milliseconds
+            # convert time to milliseconds, considering that
+            # time property is retruned differently by query.https
+            if type(answers.time) is datetime.timedelta:
+                elapsed = answers.time.total_seconds() * 1000
+            else:
+                elapsed = answers.time * 1000
             response_time.append(elapsed)
             if not quiet:
                 if show_flags:
