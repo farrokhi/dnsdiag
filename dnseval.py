@@ -81,8 +81,9 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -w  --wait        Maximum wait time for a reply (default: 2)
   -t  --type        DNS request record type (default: A)
   -T  --tcp         Use TCP instead of UDP
+  -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
   -S  --srcip       Query source IP address
-  -e  --edns        Disable EDNS0 (Default: Enabled)
+  -e  --edns        Disable EDNS0 (default: Enabled)
   -C  --color       Print colorful output
   -v  --verbose     Print actual dns response
 """ % (__progname__, __version__, __progname__))
@@ -151,12 +152,14 @@ def random_string(min_length=5, max_length=10):
     return ''.join(map(lambda unused: random.choice(char_set), range(length)))
 
 
-def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False, want_dnssec=False):
+def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False,
+            want_dnssec=False):
     flags = 0
     ttl = None
     response = None
     if use_edns:
-        query = dns.message.make_query(qname, rdtype, dns.rdataclass.IN, use_edns, want_dnssec, ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
+        query = dns.message.make_query(qname, rdtype, dns.rdataclass.IN, use_edns, want_dnssec,
+                                       ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
     else:
         query = dns.message.make_query(qname, rdtype, dns.rdataclass.IN, use_edns, want_dnssec)
 
@@ -177,16 +180,13 @@ def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_
                 response = dns.query.udp(query, server, timeout, dst_port, src_ip, ignore_unexpected=True)
             elif proto is PROTO_TCP:
                 response = dns.query.tcp(query, server, timeout, dst_port, src_ip)
+            elif proto is PROTO_TLS:
+                response = dns.query.tls(query, server, timeout, dst_port, src_ip)
 
         except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
             break
         except dns.resolver.Timeout:
             pass
-        # except dns.resolver.NXDOMAIN:
-        #     etime = time.perf_counter()
-        #     if force_miss:
-        #         elapsed = (etime - stime) * 1000  # convert to milliseconds
-        #         response_times.append(elapsed)
         else:
             # convert time to milliseconds, considering that
             # time property is retruned differently by query.https
@@ -249,9 +249,9 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCm",
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmX",
                                    ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose",
-                                    "color", "force-miss", "srcip="])
+                                    "color", "force-miss", "srcip=", "tls"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -287,6 +287,12 @@ def main():
             color_mode = True
         elif o in ("-v", "--verbose"):
             verbose = True
+        elif o in ("-X", "--tls"):
+            proto = PROTO_TLS
+            dst_port = 853  # default for DoT, unless overriden using -p
+        elif o in ("-p", "--port"):
+            dst_port = int(a)
+
         else:
             print("Invalid option: %s" % o)
             usage()
