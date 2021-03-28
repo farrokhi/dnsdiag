@@ -43,7 +43,7 @@ from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, signal_handle
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = "1.7.0"
+__version__ = '2.0.0'
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
