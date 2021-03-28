@@ -46,7 +46,7 @@ def restore() -> dict:
     return whois
 
 
-def dump(whois_data: dict):
+def save(whois_data: dict):
     """
     Saves whois cache data to a file
     :param whois_data: whois data (dict)

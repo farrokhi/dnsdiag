@@ -29,7 +29,6 @@ import concurrent.futures
 import getopt
 import ipaddress
 import os
-import pickle
 import signal
 import socket
 import sys
@@ -39,36 +38,31 @@ import dns.query
 import dns.rdatatype
 import dns.resolver
 
-import cymruwhois
+import util.whois
+from util.dns import PROTO_UDP, PROTO_TCP, signal_handler
 
 # Global Variables
+quiet = False
+whois_cache = {}
+
+# Constants
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __version__ = "1.7.0"
-_ttl = None
-quiet = False
-whois_cache = {}
-shutdown = False
-
-# Constants
 __progname__ = os.path.basename(sys.argv[0])
-WHOIS_CACHE = 'whois.cache'
-
-
-class CustomSocket(socket.socket):
-    def __init__(self, *args, **kwargs):
-        super(CustomSocket, self).__init__(*args, **kwargs)
-
-    def sendto(self, *args, **kwargs):
-        global _ttl
-        if _ttl:
-            self.setsockopt(socket.SOL_IP, socket.IP_TTL, _ttl)
-        super(CustomSocket, self).sendto(*args, **kwargs)
 
 
 def test_import():
     #  passing this test means imports were successful
     pass
+
+
+def setup_signal_handler():
+    try:
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
+    except AttributeError:  # not all signals are supported on all platforms
+        pass
 
 
 class Colors(object):
@@ -87,67 +81,25 @@ class Colors(object):
             self.B = ''
 
 
-def whois_lookup(ip):
-    asn = None
-    try:
-        global whois_cache
-        currenttime = time.time()
-        if ip in whois_cache:
-            asn, ts = whois_cache[ip]
-        else:
-            ts = 0
-        if (currenttime - ts) > 36000:
-            c = cymruwhois.Client()
-            asn = c.lookup(ip)
-            whois_cache[ip] = (asn, currenttime)
-    except Exception as e:
-        pass
-    return asn
-
-
-def load_whois_cache(cachefile):
-    try:
-        pkl_file = open(cachefile, 'rb')
-        try:
-            whois = pickle.load(pkl_file)
-            pkl_file.close()
-        except Exception:
-            whois = {}
-    except IOError:
-        whois = {}
-    return whois
-
-
-def save_whois_cache(cachefile, whois_data):
-    pkl_file = open(cachefile, 'wb')
-    pickle.dump(whois_data, pkl_file)
-    pkl_file.close()
-
-
 def usage():
-    print('%s version %s\n' % (__progname__, __version__))
-    print('usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname' % __progname__)
-    print('  -h  --help      Show this help')
-    print('  -q  --quiet     Quiet')
-    print('  -x  --expert    Print expert hints if available')
-    print('  -a  --asn       Turn on AS# lookups for each hop encountered')
-    print('  -s  --server    DNS server to use (default: first system resolver)')
-    print('  -p  --port      DNS server port number (default: 53)')
-    print('  -S  --srcip     Query source IP address (default: default interface address)')
-    print('  -c  --count     Maximum number of hops (default: 30)')
-    print('  -w  --wait      Maximum wait time for a reply (default: 2)')
-    print('  -t  --type      DNS request record type (default: A)')
-    print('  -C  --color     Print colorful output')
-    print('  -e  --edns      Disable EDNS0 (Default: Enabled)')
-    print('  ')
+    print("""%s version %s
+usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname
+
+  -h  --help      Show this help
+  -q  --quiet     Quiet
+  -T  --tcp       Use TCP as transport protocol
+  -x  --expert    Print expert hints if available
+  -a  --asn       Turn on AS# lookups for each hop encountered
+  -s  --server    DNS server to use (default: first system resolver)
+  -p  --port      DNS server port number (default: 53)
+  -S  --srcip     Query source IP address (default: default interface address)
+  -c  --count     Maximum number of hops (default: 30)
+  -w  --wait      Maximum wait time for a reply (default: 2)
+  -t  --type      DNS request record type (default: A)
+  -C  --color     Print colorful output
+  -e  --edns      Disable EDNS0 (Default: Enabled)
+""" % (__progname__, __version__, __progname__))
     sys.exit()
-
-
-def signal_handler(sig, frame):
-    global shutdown
-    if shutdown:  # pressed twice, so exit immediately
-        sys.exit(0)
-    shutdown = True  # pressed once, exit gracefully
 
 
 def expert_report(trace_path, color_mode):
@@ -183,62 +135,44 @@ def expert_report(trace_path, color_mode):
     print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
-def ping(resolver, hostname, dnsrecord, ttl, src_ip, use_edns=False):
-    global _ttl
-
+def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns=False):
     reached = False
-
-    dns.query.socket_factory = CustomSocket
-    _ttl = ttl
-    if use_edns:
-        resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
+    resp_time = None
 
     try:
-        resolver.resolve(hostname, dnsrecord, source=src_ip, raise_on_no_answer=False)
+        resp = util.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
+                             want_dnssec=False, socket_ttl=ttl)
 
-    except dns.resolver.NoNameservers as e:
-        if not quiet:
-            print("no or bad response:", e)
-        sys.exit(1)
-    except dns.resolver.NXDOMAIN as e:
-        if not quiet:
-            print("Invalid hostname:", e)
-        sys.exit(1)
-    except dns.resolver.Timeout:
-        pass
-    except dns.resolver.NoAnswer:
-        if not quiet:
-            print("invalid answer")
     except SystemExit:
         pass
     except Exception as e:
         print("unxpected error: ", e)
         sys.exit(1)
     else:
-        reached = True
+        if resp.answer:
+            reached = True
+            resp_time = resp.r_max
 
-    return reached
+    return reached, resp_time
 
 
 def main():
     global quiet
+    shutdown = False
 
-    try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError:  # not all signals are supported on all platforms
-        pass
+    setup_signal_handler()
 
     if len(sys.argv) == 1:
         usage()
 
-    dnsrecord = 'A'
+    rdatatype = 'A'
     count = 30
     timeout = 2
     dnsserver = None
     dest_port = 53
     src_ip = None
     hops = 0
+    proto = PROTO_UDP
     as_lookup = False
     expert_mode = False
     should_resolve = True
@@ -247,16 +181,16 @@ def main():
 
     args = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexC",
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCT",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port", "expert",
-                                    "color", "srcip="])
+                                    "color", "srcip=", "tcp"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
         usage()
 
     if args and len(args) == 1:
-        hostname = args[0]
+        qname = args[0]
     else:
         usage()
 
@@ -276,13 +210,15 @@ def main():
         elif o in ("-w", "--wait"):
             timeout = int(a)
         elif o in ("-t", "--type"):
-            dnsrecord = a
+            rdatatype = a
         elif o in ("-p", "--port"):
             dest_port = int(a)
         elif o in ("-C", "--color"):
             color_mode = True
         elif o in "-n":
             should_resolve = False
+        elif o in ("-T", "--tcp"):
+            proto = PROTO_TCP
         elif o in ("-a", "--asn"):
             as_lookup = True
         elif o in ("-e", "--edns"):
@@ -307,13 +243,6 @@ def main():
             print('Error: cannot resolve hostname:', dnsserver)
             sys.exit(1)
 
-    resolver = dns.resolver.Resolver()
-    resolver.nameservers = [dnsserver]
-    resolver.timeout = timeout
-    resolver.port = dest_port
-    resolver.lifetime = timeout
-    resolver.retry_servfail = 0
-
     icmp = socket.getprotobyname('icmp')
 
     ttl = 1
@@ -321,12 +250,10 @@ def main():
     trace_path = []
 
     if not quiet:
-        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dest_port, hostname, dnsrecord),
+        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dest_port, qname, rdatatype),
               flush=True)
 
     while True:
-        if shutdown:
-            break
 
         # some platforms permit opening a DGRAM socket for ICMP without root permission
         # if not availble, we will fall back to RAW which explicitly requires root permission
@@ -346,32 +273,34 @@ def main():
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
             stime = time.perf_counter()
-            thr = pool.submit(ping, resolver, hostname, dnsrecord, ttl, src_ip=src_ip, use_edns=use_edns)
+            thr = pool.submit(ping, qname, dnsserver, rdatatype, proto, dest_port, ttl, timeout, src_ip=src_ip,
+                              use_edns=use_edns)
 
             try:  # expect ICMP response
                 packet, curr_addr = icmp_socket.recvfrom(512)
                 if len(packet) > 51:
                     icmp_type = packet[20]
-                    udp_port = packet[50] << 8 | packet[51]
-                    if icmp_type == 11 and udp_port == dest_port:
+                    l4_dst_port = packet[50] << 8 | packet[51]
+                    if icmp_type == 11 and l4_dst_port == dest_port:
                         curr_addr = curr_addr[0]
                     else:
                         curr_addr = None
             except socket.error:
                 pass
+            except SystemExit:
+                shutdown = True
+                break
             finally:
                 etime = time.perf_counter()
                 icmp_socket.close()
 
-        reached = thr.result()
+        reached, resp_time = thr.result()
 
         if reached:
             curr_addr = dnsserver
-            stime = time.perf_counter()  # need to recalculate elapsed time for last hop asynchronously
-            ping(resolver, hostname, dnsrecord, ttl, src_ip=src_ip, use_edns=use_edns)
-            etime = time.perf_counter()
-
-        elapsed = abs(etime - stime) * 1000  # convert to milliseconds
+            elapsed = resp_time
+        else:
+            elapsed = abs(etime - stime) * 1000  # convert to milliseconds
 
         if should_resolve:
             try:
@@ -386,10 +315,11 @@ def main():
         else:
             curr_name = curr_addr
 
+        global whois_cache
         if curr_addr:
             as_name = ""
             if as_lookup:
-                asn = whois_lookup(curr_addr)
+                asn, whois_cache = util.whois.asn_lookup(curr_addr, whois_cache)
                 as_name = ''
                 try:
                     if asn and asn.asn != "NA":
@@ -428,7 +358,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        whois_cache = load_whois_cache(WHOIS_CACHE)
+        whois_cache = util.whois.restore()
         main()
     finally:
-        save_whois_cache(WHOIS_CACHE, whois_cache)
+        util.whois.save(whois_cache)
