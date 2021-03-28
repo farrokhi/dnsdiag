@@ -45,12 +45,15 @@ def proto_to_text(proto):
 
 
 def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False,
-         want_dnssec=False):
+         want_dnssec=False, custome_socket = None):
     retval = PingResponse()
     retval.rcode_text = "No Response"
 
     response_times = []
     i = 0
+
+    if custome_socket:
+        dns.query.socket_factory = custome_socket
 
     for i in range(count):
 
@@ -81,7 +84,7 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
             raise ConnectionError('Connection failed')
         except ValueError as e:
-            retval.trcode_text = "Invalid Response"
+            retval.rcode_text = "Invalid Response"
             break
         except Exception as e:
             print(e)
