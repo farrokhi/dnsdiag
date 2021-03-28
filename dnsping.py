@@ -248,7 +248,10 @@ def main():
         except requests.exceptions.ConnectTimeout:
             if not quiet:
                 print("Request timeout", flush=True)
-        except ValueError as e:
+        except requests.exceptions.ReadTimeout:
+            if not quiet:
+                print("Read timeout", flush=True)
+        except ValueError:
             if not quiet:
                 print("Invalid Response", flush=True)
                 continue
