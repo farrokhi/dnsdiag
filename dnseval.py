@@ -369,8 +369,9 @@ def main():
                     force_miss=force_miss,
                     want_dnssec=False
                 )
+
             except Exception as e:
-                print('%s: %s' % (server, e))
+                print('%s: Connection error' % server)
                 continue
 
             resolver = server.ljust(width + 1)
