@@ -1,5 +1,6 @@
 import datetime
 import random
+import socket
 import string
 import sys
 from statistics import stdev
@@ -18,6 +19,8 @@ PROTO_UDP = 0
 PROTO_TCP = 1
 PROTO_TLS = 2
 PROTO_HTTPS = 3
+
+_TTL = None
 
 
 class PingResponse:
@@ -44,16 +47,28 @@ def proto_to_text(proto):
     return _proto_name[proto]
 
 
+class CustomSocket(socket.socket):
+    def __init__(self, *args, **kwargs):
+        super(CustomSocket, self).__init__(*args, **kwargs)
+
+    def sendto(self, *args, **kwargs):
+        if _TTL:
+            self.setsockopt(socket.SOL_IP, socket.IP_TTL, _TTL)
+        super(CustomSocket, self).sendto(*args, **kwargs)
+
+
 def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False,
-         want_dnssec=False, custome_socket = None):
+         want_dnssec=False, socket_ttl=None):
     retval = PingResponse()
     retval.rcode_text = "No Response"
 
     response_times = []
     i = 0
 
-    if custome_socket:
-        dns.query.socket_factory = custome_socket
+    if socket_ttl:
+        global _TTL
+        _TTL = socket_ttl
+        dns.query.socket_factory = CustomSocket
 
     for i in range(count):
 
@@ -81,10 +96,13 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
             elif proto is PROTO_HTTPS:
                 response = dns.query.https(query, server, timeout, dst_port, src_ip)
 
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,
+                requests.exceptions.ConnectionError):
             raise ConnectionError('Connection failed')
         except ValueError as e:
             retval.rcode_text = "Invalid Response"
+            break
+        except dns.exception.Timeout:
             break
         except Exception as e:
             print(e)
