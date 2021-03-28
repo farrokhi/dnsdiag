@@ -35,12 +35,12 @@ import signal
 import socket
 import string
 import sys
-import time
 from statistics import stdev
 
 import dns.rcode
 import dns.rdatatype
 import dns.resolver
+import requests.exceptions
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
@@ -187,11 +187,11 @@ def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_
             elif proto is PROTO_HTTPS:
                 response = dns.query.https(query, server, timeout, dst_port, src_ip)
 
-        except dns.resolver.Timeout:
-            pass
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
+            raise ConnectionError('Connection failed')
         except ValueError as e:
             rcode_text = "Invalid Response"
-            continue
+            break
         else:
             # convert time to milliseconds, considering that
             # time property is retruned differently by query.https
@@ -332,7 +332,8 @@ def main():
 
         width = maxlen(f)
         blanks = (width - 5) * ' '
-        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response')
+        print('server ', blanks,
+              ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response')
         print((104 + width) * '-')
         for server in f:
             # check if we have a valid dns server address
@@ -371,7 +372,7 @@ def main():
                 )
 
             except Exception as e:
-                print('%s: Connection error' % server)
+                print('%s: %s' % (server, e))
                 continue
 
             resolver = server.ljust(width + 1)
