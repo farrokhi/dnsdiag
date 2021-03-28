@@ -50,11 +50,8 @@ def proto_to_text(proto):
 class CustomSocket(socket.socket):
     def __init__(self, *args, **kwargs):
         super(CustomSocket, self).__init__(*args, **kwargs)
-
-    def sendto(self, *args, **kwargs):
         if _TTL:
             self.setsockopt(socket.SOL_IP, socket.IP_TTL, _TTL)
-        super(CustomSocket, self).sendto(*args, **kwargs)
 
 
 def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False,
@@ -104,6 +101,9 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
             break
         except dns.exception.Timeout:
             break
+        except OSError:
+            if socket_ttl: # this is an acceptable error while doing traceroute
+                break
         except Exception as e:
             print(e)
             break
