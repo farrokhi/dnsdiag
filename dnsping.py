@@ -39,27 +39,13 @@ from statistics import stdev
 import dns.flags
 import dns.resolver
 
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, signal_handler, proto_to_text
+
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __version__ = "1.7.0"
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
-
-# Transport protocols
-PROTO_UDP = 0
-PROTO_TCP = 1
-PROTO_TLS = 2
-PROTO_HTTPS = 3
-
-
-def proto_to_text(proto):
-    _proto_name = {
-        PROTO_UDP: 'UDP',
-        PROTO_TCP: 'TCP',
-        PROTO_TLS: 'TLS',
-        PROTO_HTTPS: 'HTTPS',
-    }
-    return _proto_name[proto]
 
 
 def usage():
@@ -245,7 +231,7 @@ def main():
                 if verbose:
                     print("error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
-        except requests.exceptions.ConnectTimeout:
+        except (requests.exceptions.ConnectTimeout, dns.exception.Timeout):
             if not quiet:
                 print("Request timeout", flush=True)
         except requests.exceptions.ReadTimeout:
