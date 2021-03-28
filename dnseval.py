@@ -30,29 +30,21 @@ import getopt
 import ipaddress
 import json
 import os
-import random
 import signal
 import socket
-import string
 import sys
-from statistics import stdev
 
 import dns.rcode
 import dns.rdatatype
 import dns.resolver
-import requests.exceptions
+import util.dns
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __version__ = "1.7.0"
 __progname__ = os.path.basename(sys.argv[0])
-shutdown = False
 
-# Transport protocols
-PROTO_UDP = 0
-PROTO_TCP = 1
-PROTO_TLS = 2
-PROTO_HTTPS = 3
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, signal_handler, flags_to_text
 
 
 class Colors(object):
@@ -91,141 +83,9 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
     sys.exit()
 
 
-def signal_handler(sig, frame):
-    global shutdown
-    if shutdown:  # pressed twice, so exit immediately
-        sys.exit(0)
-    shutdown = True  # pressed once, exit gracefully
-
-
 def maxlen(names):
     sn = sorted(names, key=len)
     return len(sn[-1])
-
-
-def _order_flags(table):
-    return sorted(table.items(), reverse=True)
-
-
-def flags_to_text(flags):
-    # Standard DNS flags
-
-    QR = 0x8000
-    AA = 0x0400
-    TC = 0x0200
-    RD = 0x0100
-    RA = 0x0080
-    AD = 0x0020
-    CD = 0x0010
-
-    # EDNS flags
-    # DO = 0x8000
-
-    _by_text = {
-        'QR': QR,
-        'AA': AA,
-        'TC': TC,
-        'RD': RD,
-        'RA': RA,
-        'AD': AD,
-        'CD': CD
-    }
-
-    _by_value = dict([(y, x) for x, y in _by_text.items()])
-    _flags_order = _order_flags(_by_value)
-
-    _by_value = dict([(y, x) for x, y in _by_text.items()])
-
-    order = sorted(_by_value.items(), reverse=True)
-    text_flags = []
-    for k, v in order:
-        if flags & k != 0:
-            text_flags.append(v)
-        else:
-            text_flags.append('--')
-
-    return ' '.join(text_flags)
-
-
-def random_string(min_length=5, max_length=10):
-    char_set = string.ascii_letters + string.digits
-    length = random.randint(min_length, max_length)
-    return ''.join(map(lambda unused: random.choice(char_set), range(length)))
-
-
-def dnsping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False,
-            want_dnssec=False):
-    flags = 0
-    ttl = None
-    response = None
-    rcode_text = "No Response"
-
-    response_times = []
-    i = 0
-
-    for i in range(count):
-        if shutdown:  # user pressed CTRL+C
-            break
-        try:
-            if force_miss:
-                fqdn = "_dnsdiag_%s_.%s" % (random_string(), qname)
-            else:
-                fqdn = qname
-
-            if use_edns:
-                query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec,
-                                               ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
-            else:
-                query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec)
-
-            if proto is PROTO_UDP:
-                response = dns.query.udp(query, server, timeout, dst_port, src_ip, ignore_unexpected=True)
-            elif proto is PROTO_TCP:
-                response = dns.query.tcp(query, server, timeout, dst_port, src_ip)
-            elif proto is PROTO_TLS:
-                response = dns.query.tls(query, server, timeout, dst_port, src_ip)
-            elif proto is PROTO_HTTPS:
-                response = dns.query.https(query, server, timeout, dst_port, src_ip)
-
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
-            raise ConnectionError('Connection failed')
-        except ValueError as e:
-            rcode_text = "Invalid Response"
-            break
-        else:
-            # convert time to milliseconds, considering that
-            # time property is retruned differently by query.https
-            if type(response.time) is datetime.timedelta:
-                elapsed = response.time.total_seconds() * 1000
-            else:
-                elapsed = response.time * 1000
-            response_times.append(elapsed)
-
-    r_sent = i + 1
-    r_received = len(response_times)
-    r_lost = r_sent - r_received
-    r_lost_percent = (100 * r_lost) / r_sent
-    if response_times:
-        r_min = min(response_times)
-        r_max = max(response_times)
-        r_avg = sum(response_times) / r_received
-        if len(response_times) > 1:
-            r_stddev = stdev(response_times)
-        else:
-            r_stddev = 0
-    else:
-        r_min = 0
-        r_max = 0
-        r_avg = 0
-        r_stddev = 0
-
-    if response is not None:
-        flags = response.flags
-        rcode_text = dns.rcode.to_text(response.rcode())
-        if len(response.answer) > 0:
-            ttl = response.answer[0].ttl
-
-    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, response, rcode_text
 
 
 def main():
@@ -335,6 +195,7 @@ def main():
         print('server ', blanks,
               ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response')
         print((104 + width) * '-')
+
         for server in f:
             # check if we have a valid dns server address
             if server.lstrip() == '':  # deal with empty lines
@@ -357,48 +218,39 @@ def main():
                 continue
 
             try:
-                (resolver, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, response, rcode_text) = dnsping(
-                    qname,
-                    resolver,
-                    dst_port,
-                    rdatatype,
-                    waittime,
-                    count,
-                    proto,
-                    src_ip,
-                    use_edns=use_edns,
-                    force_miss=force_miss,
-                    want_dnssec=False
-                )
+                retval = util.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
+                                       use_edns=use_edns, force_miss=force_miss, want_dnssec=False)
 
+            except SystemExit:
+                break
             except Exception as e:
                 print('%s: %s' % (server, e))
                 continue
 
             resolver = server.ljust(width + 1)
-            text_flags = flags_to_text(flags)
+            text_flags = flags_to_text(retval.flags)
 
-            s_ttl = str(ttl)
+            s_ttl = str(retval.ttl)
             if s_ttl == "None":
                 s_ttl = "N/A"
 
-            if r_lost_percent > 0:
+            if retval.r_lost_percent > 0:
                 l_color = color.O
             else:
                 l_color = color.N
             print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
-                resolver, r_avg, r_min, r_max, r_stddev, l_color, r_lost_percent, color.N, s_ttl, text_flags,
-                rcode_text), flush=True)
+                resolver, retval.r_avg, retval.r_min, retval.r_max, retval.r_stddev, l_color, retval.r_lost_percent,
+                color.N, s_ttl, text_flags, retval.rcode_text), flush=True)
 
             if save_json:
                 dns_data = {
                     'hostname': qname,
                     'timestamp': str(datetime.datetime.now()),
-                    'r_min': r_min,
-                    'r_avg': r_avg,
+                    'r_min': retval.r_min,
+                    'r_avg': retval.r_avg,
                     'resolver': resolver,
-                    'r_max': r_max,
-                    'r_lost_percent': r_lost_percent,
+                    'r_max': retval.r_max,
+                    'r_lost_percent': retval.r_lost_percent,
                     's_ttl': s_ttl,
                     'text_flags': text_flags
                 }
@@ -408,9 +260,9 @@ def main():
                 }
                 with open('results.json', 'a+') as outfile:
                     json.dump(outer_data, outfile)
-            if verbose and hasattr(response, 'answer'):
+            if verbose and retval.answer:
                 ans_index = 1
-                for answer in response.answer:
+                for answer in retval.answer:
                     print("Answer %d [ %s%s%s ]" % (ans_index, color.G, answer, color.N))
                     ans_index += 1
                 print("")
