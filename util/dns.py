@@ -26,6 +26,7 @@
 
 import datetime
 import random
+import signal
 import socket
 import string
 import sys
@@ -221,3 +222,11 @@ def flags_to_text(flags):
             text_flags.append('--')
 
     return ' '.join(text_flags)
+
+
+def setup_signal_handler():
+    try:
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
+    except AttributeError:  # not all signals are supported on all platforms
+        pass

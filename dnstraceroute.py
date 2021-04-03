@@ -29,7 +29,6 @@ import concurrent.futures
 import getopt
 import ipaddress
 import os
-import signal
 import socket
 import sys
 import time
@@ -39,7 +38,7 @@ import dns.rdatatype
 import dns.resolver
 
 import util.whois
-from util.dns import PROTO_UDP, PROTO_TCP, signal_handler
+from util.dns import PROTO_UDP, PROTO_TCP, setup_signal_handler
 
 # Global Variables
 quiet = False
@@ -55,14 +54,6 @@ __progname__ = os.path.basename(sys.argv[0])
 def test_import():
     #  passing this test means imports were successful
     pass
-
-
-def setup_signal_handler():
-    try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError:  # not all signals are supported on all platforms
-        pass
 
 
 class Colors(object):

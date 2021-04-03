@@ -30,7 +30,6 @@ import getopt
 import ipaddress
 import json
 import os
-import signal
 import socket
 import sys
 
@@ -44,7 +43,7 @@ __license__ = 'BSD'
 __version__ = '2.0.0'
 __progname__ = os.path.basename(sys.argv[0])
 
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, signal_handler, flags_to_text
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, setup_signal_handler, flags_to_text
 
 
 class Colors(object):
@@ -89,11 +88,7 @@ def maxlen(names):
 
 
 def main():
-    try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # catch CTRL+C
-    except AttributeError:  # Some systems (e.g. Windows) may not support all signals
-        pass
+    setup_signal_handler()
 
     if len(sys.argv) == 1:
         usage()
