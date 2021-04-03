@@ -19,24 +19,19 @@ DNS queries being sent to the same DNS server using `dnstraceroute` and observe
 if there is any difference between the path.
 
 `dnseval` evaluates multiple DNS resolvers and helps you choose the best DNS
-server for your network. While it is highly recommended to use your own DNS
+server for your network. While it is highly recommended using your own DNS
 resolver and never trust any third-party DNS server, but in case you need to
 choose the best DNS forwarder for your network, `dnseval` lets you compare
 different DNS servers from performance (latency) and reliability (loss) point
 of view.
 
-# Prerequisites
-This script requires python3 as well as latest
-[dnspython](http://www.dnspython.org/) and
-[cymruwhois](https://pythonhosted.org/cymruwhois/).
-
 # Installation
 
-There are several ways that you can use this toolset. However using the sourcecode is always recommended.
+There are several ways that you can use this toolset. However, using the source code is always recommended.
 
-## From Source Code
+## Source Code
 
-1. You can checkout this git repo and its submodules
+1. Check out the git repository and install dependencies:
 
 ```
 git clone https://github.com/farrokhi/dnsdiag.git
@@ -50,9 +45,9 @@ pip3 install -r requirements.txt
 pip3 install dnsdiag
 ```
 
-## From Binary
+## Binary Package
 
-From time to time, binary version will be released for Windows, Mac OS X and Linux platforms. You can grab the latest release from [releases page](https://github.com/farrokhi/dnsdiag/releases).
+From time to time, binary packages will be released for Windows, Mac OS X and Linux. You can grab the latest release from [releases page](https://github.com/farrokhi/dnsdiag/releases).
 
 ## Docker
 
@@ -63,21 +58,22 @@ docker run -it --rm farrokhi/dnsdiag ./dnsping.py
 ```
 
 # dnsping
-dnsping pings a DNS resolver by sending an arbitrary DNS query for given number
-of times:
+dnsping pings a DNS resolver by sending an arbitrary DNS query for given number of times.
+In addition to UDP, you can ping using TCP, DoT (DNS over TLS) and DoH (DNS over HTTPS) using `--tcp`, `--tls` and `--doh` respectively.
+
 ```
-% ./dnsping.py -c 3 -t AAAA -s 8.8.8.8 dnsdiag.org
-dnsping.py DNS: 8.8.8.8:53, hostname: dnsdiag.org, proto: UDP, rdatatype: AAAA, flags: RD
-110 bytes from 8.8.8.8: seq=1   time=126.660 ms
-110 bytes from 8.8.8.8: seq=2   time=207.487 ms
-110 bytes from 8.8.8.8: seq=3   time=127.856 ms
+./dnsping.py -c 3 --tls -t AAAA -s 8.8.8.8 dnsdiag.org                                                                                                                      (eliminate-stub-resolver *!)
+dnsping.py DNS: 8.8.8.8:853, hostname: dnsdiag.org, proto: TLS, rdatatype: AAAA, flags: RD
+110 bytes from 8.8.8.8: seq=1   time=396.299 ms
+110 bytes from 8.8.8.8: seq=2   time=314.991 ms
+110 bytes from 8.8.8.8: seq=3   time=106.758 ms
 
 --- 8.8.8.8 dnsping statistics ---
 3 requests transmitted, 3 responses received, 0% lost
-min=126.660 ms, avg=154.001 ms, max=207.487 ms, stddev=46.324 ms
+min=106.758 ms, avg=272.683 ms, max=396.299 ms, stddev=149.335 ms
 ```
-This script calculates minimum, maximum and average response time as well as
-jitter (stddev)
+It also displays statistics such as minimum, maximum and average response time as well as
+jitter (stddev) and lost packets
 
 # dnstraceroute
 dnstraceroute is a traceroute utility to figure out the path that your DNS
