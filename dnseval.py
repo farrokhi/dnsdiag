@@ -65,7 +65,7 @@ class Colors(object):
 def usage():
     print("""%s version %s
 
-usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
+usage: %s [-ehmvCTXH] [-f server-list] [-c count] [-t type] [-p port] [-w wait] hostname
   -h  --help        Show this help
   -f  --file        DNS server list to use (default: system resolvers)
   -c  --count       Number of requests to send (default: 10)
@@ -73,6 +73,8 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -w  --wait        Maximum wait time for a reply (default: 2)
   -t  --type        DNS request record type (default: A)
   -T  --tcp         Use TCP instead of UDP
+  -X  --tls         Use TLS as transport protocol
+  -H  --doh         Use HTTPS as transport protols (DoH)
   -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
   -S  --srcip       Query source IP address
   -e  --edns        Disable EDNS0 (default: Enabled)
