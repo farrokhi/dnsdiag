@@ -111,12 +111,18 @@ dnstraceroute.py DNS: 8.8.4.4:53, hostname: facebook.com, rdatatype: A
  [*] public DNS server is next to a private IP address (possible hijacking)
 ```
 
-Using `--expert` will instruct dnstraceroute to print expert hints (such as warnings of possible DNS traffic hijacking).
+Using `--expert` will instruct dnstraceroute to print expert hints (such as 
+warnings of possible DNS traffic hijacking).
 
 # dnseval
 dnseval is a bulk ping utility that sends an arbitrary DNS query to a give list
 of DNS servers. This script is meant for comparing response time of multiple
-DNS servers at once:
+DNS servers at once.
+
+You can use `dnseval` to compare response times using different transport 
+protocols such as UDP (default), TCP, DoT and DoH using `--tcp`, `--tls` and
+`--doh` respectively.
+
 ```
 % ./dnseval.py -t AAAA -f public-servers.txt -c10 yahoo.com
 server                   avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response
