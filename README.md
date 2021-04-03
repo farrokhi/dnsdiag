@@ -59,21 +59,36 @@ docker run -it --rm farrokhi/dnsdiag ./dnsping.py
 
 # dnsping
 dnsping pings a DNS resolver by sending an arbitrary DNS query for given number of times.
+A complete explanation of supported command line flags is shown by using `--help`. Here are a few useful flags:
+
+- Using `--tcp`, `--tls` and `--doh` to select transport protocol. Default is UDP.
+- Using `--flags` to display reponse flags for each response
+- Using `--dnssec` to request DNSSEC if available
+
 In addition to UDP, you can ping using TCP, DoT (DNS over TLS) and DoH (DNS over HTTPS) using `--tcp`, `--tls` and `--doh` respectively.
 
 ```
-./dnsping.py -c 3 --tls -t AAAA -s 8.8.8.8 dnsdiag.org                                                                                                                      (eliminate-stub-resolver *!)
-dnsping.py DNS: 8.8.8.8:853, hostname: dnsdiag.org, proto: TLS, rdatatype: AAAA, flags: RD
-110 bytes from 8.8.8.8: seq=1   time=396.299 ms
-110 bytes from 8.8.8.8: seq=2   time=314.991 ms
-110 bytes from 8.8.8.8: seq=3   time=106.758 ms
+% ./dnsping.py -c 5 --dnssec --flags --tls -t AAAA -s 9.9.9.9 ripe.net
+dnsping.py DNS: 9.9.9.9:853, hostname: ripe.net, proto: TLS, rdatatype: AAAA, flags: RD
+233 bytes from 9.9.9.9: seq=1   time=186.202 ms [QR RD RA AD]
+233 bytes from 9.9.9.9: seq=2   time=191.233 ms [QR RD RA AD]
+233 bytes from 9.9.9.9: seq=3   time=105.455 ms [QR RD RA AD]
+233 bytes from 9.9.9.9: seq=4   time=111.053 ms [QR RD RA AD]
+233 bytes from 9.9.9.9: seq=5   time=110.329 ms [QR RD RA AD]
 
---- 8.8.8.8 dnsping statistics ---
-3 requests transmitted, 3 responses received, 0% lost
-min=106.758 ms, avg=272.683 ms, max=396.299 ms, stddev=149.335 ms
+--- 9.9.9.9 dnsping statistics ---
+5 requests transmitted, 5 responses received, 0% lost
+min=105.455 ms, avg=140.854 ms, max=191.233 ms, stddev=43.782 ms
 ```
+
 It also displays statistics such as minimum, maximum and average response time as well as
-jitter (stddev) and lost packets
+jitter (stddev) and lost packets.
+
+There are several interesting use cases for dnsping, including:
+
+- Compaing response times using different transport protocols (e.g. UDP vs DoH)
+- Measuring how reliable your DNS server is, by measring Jitter and packet loss
+- Measuring responses times when DNSSEC is enabled using `--dnssec`
 
 # dnstraceroute
 dnstraceroute is a traceroute utility to figure out the path that your DNS
