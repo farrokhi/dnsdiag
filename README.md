@@ -62,7 +62,7 @@ dnsping pings a DNS resolver by sending an arbitrary DNS query for given number 
 A complete explanation of supported command line flags is shown by using `--help`. Here are a few useful flags:
 
 - Using `--tcp`, `--tls` and `--doh` to select transport protocol. Default is UDP.
-- Using `--flags` to display reponse flags for each response
+- Using `--flags` to display response flags for each response
 - Using `--dnssec` to request DNSSEC if available
 
 In addition to UDP, you can ping using TCP, DoT (DNS over TLS) and DoH (DNS over HTTPS) using `--tcp`, `--tls` and `--doh` respectively.
@@ -86,8 +86,8 @@ jitter (stddev) and lost packets.
 
 There are several interesting use cases for dnsping, including:
 
-- Compaing response times using different transport protocols (e.g. UDP vs DoH)
-- Measuring how reliable your DNS server is, by measring Jitter and packet loss
+- Comparing response times using different transport protocols (e.g. UDP vs DoH)
+- Measuring how reliable your DNS server is, by measuring Jitter and packet loss
 - Measuring responses times when DNSSEC is enabled using `--dnssec`
 
 # dnstraceroute
@@ -124,36 +124,36 @@ protocols such as UDP (default), TCP, DoT and DoH using `--tcp`, `--tls` and
 `--doh` respectively.
 
 ```
-% ./dnseval.py -t AAAA -f public-servers.txt -c10 yahoo.com
+% ./dnseval.py --dnssec -t AAAA -f public-servers.txt -c10 ripe.net
 server                   avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response
 ----------------------------------------------------------------------------------------------------------------------------
-1.0.0.1                  7.228       7.047       7.527       0.150       %0       520        QR -- -- RD RA -- --   NOERROR
-1.1.1.1                  7.078       6.957       7.235       0.089       %0       533        QR -- -- RD RA -- --   NOERROR
-2606:4700:4700::1001     7.275       7.060       7.752       0.200       %0       1477       QR -- -- RD RA -- --   NOERROR
-2606:4700:4700::1111     7.253       7.051       7.434       0.123       %0       520        QR -- -- RD RA -- --   NOERROR
-195.46.39.39             7.200       7.036       7.410       0.124       %0       484        QR -- -- RD RA -- --   NOERROR
-195.46.39.40             7.243       7.074       7.930       0.254       %0       483        QR -- -- RD RA -- --   NOERROR
-208.67.220.220           6.699       6.656       6.773       0.033       %0       1019       QR -- -- RD RA -- --   NOERROR
-208.67.222.222           6.761       6.671       7.208       0.160       %0       1018       QR -- -- RD RA -- --   NOERROR
-2620:0:ccc::2            6.859       6.742       7.245       0.187       %0       1017       QR -- -- RD RA -- --   NOERROR
-2620:0:ccd::2            6.779       6.699       7.200       0.151       %0       1019       QR -- -- RD RA -- --   NOERROR
-216.146.35.35            6.827       6.675       7.066       0.130       %0       228        QR -- -- RD RA -- --   NOERROR
-216.146.36.36            77.712      72.345      80.162      3.339       %10      57         QR -- -- RD RA -- --   NOERROR
-209.244.0.3              7.062       6.965       7.254       0.083       %0       200        QR -- -- RD RA -- --   NOERROR
-209.244.0.4              7.036       6.922       7.183       0.072       %0       369        QR -- -- RD RA -- --   NOERROR
-4.2.2.1                  7.100       7.005       7.318       0.092       %0       475        QR -- -- RD RA -- --   NOERROR
-4.2.2.2                  7.063       7.027       7.127       0.031       %0       1231       QR -- -- RD RA -- --   NOERROR
-4.2.2.3                  7.068       6.996       7.116       0.035       %0       979        QR -- -- RD RA -- --   NOERROR
-4.2.2.4                  7.096       6.981       7.228       0.077       %0       979        QR -- -- RD RA -- --   NOERROR
-4.2.2.5                  7.097       6.999       7.241       0.083       %0       368        QR -- -- RD RA -- --   NOERROR
-80.80.80.80              149.838     53.340      348.011     111.651     %0       1798       QR -- -- RD RA -- --   NOERROR
-80.80.81.81              241.220     53.368      508.663     131.759     %0       1799       QR -- -- RD RA -- --   NOERROR
-8.8.4.4                  6.981       6.766       7.329       0.206       %0       440        QR -- -- RD RA -- --   NOERROR
-8.8.8.8                  7.029       6.773       7.331       0.212       %0       1317       QR -- -- RD RA -- --   NOERROR
-2001:4860:4860::8844     7.513       7.154       7.958       0.304       %0       710        QR -- -- RD RA -- --   NOERROR
-2001:4860:4860::8888     7.444       6.938       7.905       0.350       %0       1545       QR -- -- RD RA -- --   NOERROR
-9.9.9.9                  7.564       6.902       8.915       0.764       %0       1800       QR -- -- RD RA -- --   NOERROR
-2620:fe::fe              7.188       6.811       8.069       0.375       %0       1800       QR -- -- RD RA -- --   NOERROR
+1.0.0.1                  36.906      7.612       152.866     50.672      %0       300        QR -- -- RD RA AD --   NOERROR
+1.1.1.1                  7.752       7.512       8.132       0.183       %0       298        QR -- -- RD RA AD --   NOERROR
+2606:4700:4700::1001     7.661       7.169       8.102       0.240       %0       297        QR -- -- RD RA AD --   NOERROR
+2606:4700:4700::1111     7.802       7.000       8.128       0.312       %0       296        QR -- -- RD RA AD --   NOERROR
+195.46.39.39             14.723      7.024       78.239      22.362      %0       300        QR -- -- RD RA -- --   NOERROR
+195.46.39.40             7.524       6.972       10.897      1.191       %0       300        QR -- -- RD RA -- --   NOERROR
+208.67.220.220           70.519      6.694       180.229     66.516      %0       300        QR -- -- RD RA AD --   NOERROR
+208.67.222.222           37.868      6.663       107.601     41.178      %0       300        QR -- -- RD RA AD --   NOERROR
+2620:0:ccc::2            31.471      6.768       178.647     56.546      %0       299        QR -- -- RD RA AD --   NOERROR
+2620:0:ccd::2            20.651      6.699       145.029     43.702      %0       300        QR -- -- RD RA AD --   NOERROR
+216.146.35.35            19.338      6.713       131.198     39.306      %0       300        QR -- -- RD RA AD --   NOERROR
+216.146.36.36            107.741     73.421      266.969     58.003      %0       299        QR -- -- RD RA AD --   NOERROR
+209.244.0.3              14.717      7.015       80.329      23.058      %0       300        QR -- -- RD RA -- --   NOERROR
+209.244.0.4              7.184       7.003       8.197       0.361       %0       300        QR -- -- RD RA -- --   NOERROR
+4.2.2.1                  7.040       6.994       7.171       0.052       %0       299        QR -- -- RD RA -- --   NOERROR
+4.2.2.2                  14.358      6.968       79.964      23.052      %0       300        QR -- -- RD RA -- --   NOERROR
+4.2.2.3                  7.083       6.945       7.265       0.091       %0       299        QR -- -- RD RA -- --   NOERROR
+4.2.2.4                  7.103       6.990       7.238       0.086       %0       299        QR -- -- RD RA -- --   NOERROR
+4.2.2.5                  7.100       7.025       7.267       0.074       %0       299        QR -- -- RD RA -- --   NOERROR
+80.80.80.80              149.924     53.310      247.395     97.311      %0       299        QR -- -- RD RA AD --   NOERROR
+80.80.81.81              144.262     53.360      252.564     97.759      %0       298        QR -- -- RD RA AD --   NOERROR
+8.8.4.4                  9.196       7.160       10.974      1.484       %0       299        QR -- -- RD RA AD --   NOERROR
+8.8.8.8                  7.847       7.056       9.866       0.836       %0       299        QR -- -- RD RA AD --   NOERROR
+2001:4860:4860::8844     31.819      7.194       155.761     50.671      %0       299        QR -- -- RD RA AD --   NOERROR
+2001:4860:4860::8888     7.773       7.200       9.814       0.777       %0       298        QR -- -- RD RA AD --   NOERROR
+9.9.9.9                  21.894      6.670       81.434      30.299      %0       300        QR -- -- RD RA AD --   NOERROR
+2620:fe::fe              21.177      6.723       80.046      30.062      %0       300        QR -- -- RD RA AD --   NOERROR
 ```
 
 ### Author

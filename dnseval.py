@@ -78,6 +78,7 @@ usage: %s [-ehmvCTXH] [-f server-list] [-c count] [-t type] [-p port] [-w wait] 
   -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
   -S  --srcip       Query source IP address
   -e  --edns        Disable EDNS0 (default: Enabled)
+  -D  --dnssec      Enable 'DNSSEC desired' flag in requests.
   -C  --color       Print colorful output
   -v  --verbose     Print actual dns response
 """ % (__progname__, __version__, __progname__))
@@ -106,15 +107,16 @@ def main():
     fromfile = False
     save_json = False
     use_edns = True
+    want_dnssec = False
     force_miss = False
     verbose = False
     color_mode = False
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXH",
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHD",
                                    ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose",
-                                    "color", "force-miss", "srcip=", "tls", "doh"])
+                                    "color", "force-miss", "srcip=", "tls", "doh", "dnssec"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -146,6 +148,8 @@ def main():
             save_json = True
         elif o in ("-e", "--edns"):
             use_edns = False
+        elif o in ("-D", "--dnssec"):
+            want_dnssec = True
         elif o in ("-C", "--color"):
             color_mode = True
         elif o in ("-v", "--verbose"):
@@ -216,7 +220,7 @@ def main():
 
             try:
                 retval = util.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
-                                       use_edns=use_edns, force_miss=force_miss, want_dnssec=False)
+                                       use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
 
             except SystemExit:
                 break
