@@ -96,14 +96,16 @@ request is passing through to get to its destination. You may want to compare
 it to your actual network traceroute and make sure your DNS traffic is not
 routed to any unwanted path.
 
+In addition to UDP, it also supports TCP as transport protocol, using `--tcp` flag.
+
 ```
-% ./dnstraceroute.py --expert -C -t A -s 8.8.4.4 facebook.com
+% ./dnstraceroute.py --expert --asn -C -t A -s 8.8.4.4 facebook.com
 dnstraceroute.py DNS: 8.8.4.4:53, hostname: facebook.com, rdatatype: A
 1	192.168.0.1 (192.168.0.1) 1 ms
 2	192.168.28.177 (192.168.28.177) 4 ms
 3	192.168.0.1 (192.168.0.1) 693 ms
 4	172.19.4.17 (172.19.4.17) 3 ms
-5	dns.google (8.8.4.4) 8 ms
+5	dns.google (8.8.4.4) [AS15169 GOOGLE, US] 8 ms
 
 === Expert Hints ===
  [*] public DNS server is next to a private IP address (possible hijacking)
