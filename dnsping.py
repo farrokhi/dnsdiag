@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2020, Babak Farrokhi
+# Copyright (c) 2016-2021, Babak Farrokhi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,9 +25,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import datetime
 import getopt
 import ipaddress
 import os
+import requests
 import signal
 import socket
 import sys
@@ -35,25 +37,29 @@ import time
 from statistics import stdev
 
 import dns.flags
-import dns.rdatatype
 import dns.resolver
+
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, signal_handler, proto_to_text
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = "1.7.0"
+__version__ = '2.0.0'
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
 
 def usage():
     print("""%s version %s
-usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+
   -h  --help      Show this help
   -q  --quiet     Quiet
   -v  --verbose   Print actual dns response
   -s  --server    DNS server to use (default: first entry from /etc/resolv.conf)
-  -p  --port      DNS server port number (default: 53)
-  -T  --tcp       Use TCP instead of UDP
+  -p  --port      DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
+  -T  --tcp       Use TCP as transport protocol
+  -X  --tls       Use TLS as transport protocol
+  -H  --doh       Use HTTPS as transport protols (DoH)
   -4  --ipv4      Use IPv4 as default network protocol
   -6  --ipv6      Use IPv6 as default network protocol
   -P  --srcport   Query source port number (default: 0)
@@ -63,6 +69,8 @@ usage: %s [-ehqv] [-s server] [-p port] [-P port] [-S address] [-c count] [-t ty
   -i  --interval  Time between each request (default: 1 seconds)
   -t  --type      DNS request record type (default: A)
   -e  --edns      Disable EDNS0 (default: Enabled)
+  -D  --dnssec    Enable 'DNSSEC desired' flag in requests. Implies EDNS.
+  -F  --flags     Display response flags
 """ % (__progname__, __version__, __progname__))
     sys.exit(0)
 
@@ -85,32 +93,35 @@ def main():
         usage()
 
     # defaults
-    dnsrecord = 'A'
+    rdatatype = 'A'
     count = 10
     timeout = 2
     interval = 1
     quiet = False
     verbose = False
-    dnsserver = dns.resolver.get_default_resolver().nameservers[0]
-    dst_port = 53
+    show_flags = False
+    dnsserver = None  # do not try to use system resolver by default
+    dst_port = 53  # default for UDP and TCP
     src_port = 0
     src_ip = None
-    use_tcp = False
+    proto = PROTO_UDP
     use_edns = True
+    want_dnssec = False
     af = socket.AF_INET
-    hostname = 'wikipedia.org'
+    qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46e",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eDFXH",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
-                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns"])
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec", "flags",
+                                    "tls", "doh"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
         usage()
 
     if args and len(args) == 1:
-        hostname = args[0]
+        qname = args[0]
     else:
         usage()
 
@@ -123,8 +134,6 @@ def main():
             verbose = True
         elif o in ("-s", "--server"):
             dnsserver = a
-        elif o in ("-p", "--port"):
-            dst_port = int(a)
         elif o in ("-q", "--quiet"):
             quiet = True
             verbose = False
@@ -133,15 +142,27 @@ def main():
         elif o in ("-i", "--interval"):
             interval = int(a)
         elif o in ("-t", "--type"):
-            dnsrecord = a
+            rdatatype = a
         elif o in ("-T", "--tcp"):
-            use_tcp = True
+            proto = PROTO_TCP
+        elif o in ("-X", "--tls"):
+            proto = PROTO_TLS
+            dst_port = 853  # default for DoT, unless overriden using -p
+        elif o in ("-H", "--doh"):
+            proto = PROTO_HTTPS
+            dst_port = 443  # default for DoH, unless overriden using -p
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
         elif o in ("-6", "--ipv6"):
             af = socket.AF_INET6
         elif o in ("-e", "--edns"):
             use_edns = False
+        elif o in ("-D", "--dnssec"):
+            want_dnssec = True
+        elif o in ("-F", "--flags"):
+            show_flags = True
+        elif o in ("-p", "--port"):
+            dst_port = int(a)
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
@@ -150,6 +171,11 @@ def main():
             src_ip = a
         else:
             usage()
+
+    # Use system DNS server if parameter is not specified
+    # remember not all systems have /etc/resolv.conf (i.e. Android)
+    if dnsserver is None:
+        dnsserver = dns.resolver.get_default_resolver().nameservers[0]
 
     # check if we have a valid dns server address
     try:
@@ -161,21 +187,20 @@ def main():
             print('Error: cannot resolve hostname:', dnsserver, file=sys.stderr, flush=True)
             sys.exit(1)
 
-    resolver = dns.resolver.Resolver(configure=False)
-    resolver.nameservers = [dnsserver]
-    resolver.timeout = timeout
-    resolver.lifetime = timeout
-    resolver.port = dst_port
-    resolver.retry_servfail = 0
-
     if use_edns:
-        resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
+        query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
+                                       use_edns=True, want_dnssec=want_dnssec,
+                                       ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
+    else:
+        query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
+                                       use_edns=False, want_dnssec=want_dnssec)
 
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dst_port, hostname, dnsrecord),
-          flush=True)
+    print("%s DNS: %s:%d, hostname: %s, proto: %s, rdatatype: %s, flags: %s" %
+          (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), rdatatype,
+           dns.flags.to_text(query.flags)), flush=True)
 
     while not shutdown:
 
@@ -186,8 +211,19 @@ def main():
 
         try:
             stime = time.perf_counter()
-            answers = resolver.resolve(hostname, dnsrecord, source_port=src_port, source=src_ip, tcp=use_tcp,
-                                       raise_on_no_answer=False)
+            if proto is PROTO_UDP:
+                answers = dns.query.udp(query, dnsserver, timeout, dst_port,
+                                        src_ip, src_port, ignore_unexpected=True)
+            elif proto is PROTO_TCP:
+                answers = dns.query.tcp(query, dnsserver, timeout, dst_port,
+                                        src_ip, src_port)
+            elif proto is PROTO_TLS:
+                answers = dns.query.tls(query, dnsserver, timeout, dst_port,
+                                        src_ip, src_port)
+            elif proto is PROTO_HTTPS:
+                answers = dns.query.https(query, dnsserver, timeout, dst_port,
+                                          src_ip, src_port)
+
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
             if not quiet:
@@ -195,28 +231,33 @@ def main():
                 if verbose:
                     print("error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
-        except dns.resolver.NXDOMAIN as e:
-            if not quiet:
-                print("Hostname does not exist (NXDOMAIN)", file=sys.stderr, flush=True)
-            if verbose:
-                print("Error:", e, file=sys.stderr, flush=True)
-            sys.exit(1)
-        except dns.resolver.Timeout:
+        except (requests.exceptions.ConnectTimeout, dns.exception.Timeout):
             if not quiet:
                 print("Request timeout", flush=True)
-        except dns.resolver.NoAnswer:
+        except requests.exceptions.ReadTimeout:
             if not quiet:
-                print("No answer", flush=True)
+                print("Read timeout", flush=True)
+        except ValueError:
+            if not quiet:
+                print("Invalid Response", flush=True)
+                continue
         else:
-            elapsed = answers.response.time * 1000  # convert to milliseconds
+            # convert time to milliseconds, considering that
+            # time property is retruned differently by query.https
+            if type(answers.time) is datetime.timedelta:
+                elapsed = answers.time.total_seconds() * 1000
+            else:
+                elapsed = answers.time * 1000
             response_time.append(elapsed)
             if not quiet:
-                print(
-                    "%d bytes from %s: seq=%-3d time=%.3f ms" % (
-                        len(str(answers.rrset)), dnsserver, i, elapsed), flush=True)
+                if show_flags:
+                    flags = " [%s]" % dns.flags.to_text(answers.flags)
+                else:
+                    flags = ""
+                print("%d bytes from %s: seq=%-3d time=%.3f ms%s" % (
+                    len(answers.to_wire()), dnsserver, i, elapsed, flags), flush=True)
             if verbose:
-                print(answers.rrset, flush=True)
-                print("flags:", dns.flags.to_text(answers.response.flags), flush=True)
+                print(answers.to_text(), flush=True)
 
             time_to_next = (stime + interval) - etime
             if time_to_next > 0:

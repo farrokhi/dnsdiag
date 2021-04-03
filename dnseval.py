@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2020, Babak Farrokhi
+# Copyright (c) 2016-2021, Babak Farrokhi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,30 +25,25 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import os
-
+import datetime
 import getopt
 import ipaddress
-import datetime
 import json
-import signal
+import os
 import socket
 import sys
-import time
-import random
-import string
-from statistics import stdev
 
+import dns.rcode
 import dns.rdatatype
 import dns.resolver
+import util.dns
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = "1.7.0"
+__version__ = '2.0.0'
 __progname__ = os.path.basename(sys.argv[0])
-shutdown = False
 
-resolvers = dns.resolver.get_default_resolver().nameservers
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, setup_signal_handler, flags_to_text
 
 
 class Colors(object):
@@ -70,7 +65,7 @@ class Colors(object):
 def usage():
     print("""%s version %s
 
-usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
+usage: %s [-ehmvCTXH] [-f server-list] [-c count] [-t type] [-p port] [-w wait] hostname
   -h  --help        Show this help
   -f  --file        DNS server list to use (default: system resolvers)
   -c  --count       Number of requests to send (default: 10)
@@ -78,18 +73,15 @@ usage: %s [-h] [-f server-list] [-c count] [-t type] [-w wait] hostname
   -w  --wait        Maximum wait time for a reply (default: 2)
   -t  --type        DNS request record type (default: A)
   -T  --tcp         Use TCP instead of UDP
-  -e  --edns        Disable EDNS0 (Default: Enabled)
+  -X  --tls         Use TLS as transport protocol
+  -H  --doh         Use HTTPS as transport protols (DoH)
+  -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
+  -S  --srcip       Query source IP address
+  -e  --edns        Disable EDNS0 (default: Enabled)
   -C  --color       Print colorful output
   -v  --verbose     Print actual dns response
 """ % (__progname__, __version__, __progname__))
     sys.exit()
-
-
-def signal_handler(sig, frame):
-    global shutdown
-    if shutdown:  # pressed twice, so exit immediately
-        sys.exit(0)
-    shutdown = True  # pressed once, exit gracefully
 
 
 def maxlen(names):
@@ -97,157 +89,38 @@ def maxlen(names):
     return len(sn[-1])
 
 
-def _order_flags(table):
-    return sorted(table.items(), reverse=True)
-
-
-def flags_to_text(flags):
-    # Standard DNS flags
-
-    QR = 0x8000
-    AA = 0x0400
-    TC = 0x0200
-    RD = 0x0100
-    RA = 0x0080
-    AD = 0x0020
-    CD = 0x0010
-
-    # EDNS flags
-    # DO = 0x8000
-
-    _by_text = {
-        'QR': QR,
-        'AA': AA,
-        'TC': TC,
-        'RD': RD,
-        'RA': RA,
-        'AD': AD,
-        'CD': CD
-    }
-
-    _by_value = dict([(y, x) for x, y in _by_text.items()])
-    _flags_order = _order_flags(_by_value)
-
-    _by_value = dict([(y, x) for x, y in _by_text.items()])
-
-    order = sorted(_by_value.items(), reverse=True)
-    text_flags = []
-    for k, v in order:
-        if flags & k != 0:
-            text_flags.append(v)
-        else:
-            text_flags.append('--')
-
-    return ' '.join(text_flags)
-
-
-def random_string(min_length=5, max_length=10):
-    char_set = string.ascii_letters + string.digits
-    length = random.randint(min_length, max_length)
-    return ''.join(map(lambda unused: random.choice(char_set), range(length)))
-
-
-def dnsping(host, server, dnsrecord, timeout, count, use_tcp=False, use_edns=False, force_miss=False):
-    resolver = dns.resolver.Resolver()
-    resolver.nameservers = [server]
-    resolver.timeout = timeout
-    resolver.lifetime = timeout
-    resolver.retry_servfail = 0
-    flags = 0
-    ttl = None
-    answers = None
-    if use_edns:
-        resolver.use_edns(edns=0, payload=8192, ednsflags=dns.flags.edns_from_text('DO'))
-
-    response_times = []
-    i = 0
-
-    for i in range(count):
-        if shutdown:  # user pressed CTRL+C
-            break
-        try:
-            if force_miss:
-                fqdn = "_dnsdiag_%s_.%s" % (random_string(), host)
-            else:
-                fqdn = host
-
-            stime = time.perf_counter()
-            answers = resolver.resolve(fqdn, dnsrecord, tcp=use_tcp,
-                                       raise_on_no_answer=False)  # todo: response validation in future
-
-        except (dns.resolver.NoNameservers, dns.resolver.NoAnswer):
-            break
-        except dns.resolver.Timeout:
-            pass
-        except dns.resolver.NXDOMAIN:
-            etime = time.perf_counter()
-            if force_miss:
-                elapsed = (etime - stime) * 1000  # convert to milliseconds
-                response_times.append(elapsed)
-        else:
-            elapsed = answers.response.time * 1000  # convert to milliseconds
-            response_times.append(elapsed)
-
-    r_sent = i + 1
-    r_received = len(response_times)
-    r_lost = r_sent - r_received
-    r_lost_percent = (100 * r_lost) / r_sent
-    if response_times:
-        r_min = min(response_times)
-        r_max = max(response_times)
-        r_avg = sum(response_times) / r_received
-        if len(response_times) > 1:
-            r_stddev = stdev(response_times)
-        else:
-            r_stddev = 0
-    else:
-        r_min = 0
-        r_max = 0
-        r_avg = 0
-        r_stddev = 0
-
-    if answers is not None:
-        flags = answers.response.flags
-        if len(answers.response.answer) > 0:
-            ttl = answers.response.answer[0].ttl
-
-    return server, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, answers
-
-
 def main():
-    try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # catch CTRL+C
-    except AttributeError:  # Some systems (e.g. Windows) may not support all signals
-        pass
+    setup_signal_handler()
 
     if len(sys.argv) == 1:
         usage()
 
     # defaults
-    dnsrecord = 'A'
+    rdatatype = 'A'
+    proto = PROTO_UDP
+    src_ip = None
+    dst_port = 53  # default for UDP and TCP
     count = 10
     waittime = 2
     inputfilename = None
     fromfile = False
     save_json = False
-    use_tcp = False
     use_edns = True
     force_miss = False
     verbose = False
     color_mode = False
-    hostname = 'wikipedia.org'
+    qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:TevCm",
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXH",
                                    ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose",
-                                    "color", "force-miss"])
+                                    "color", "force-miss", "srcip=", "tls", "doh"])
     except getopt.GetoptError as err:
         print(err)
         usage()
 
     if args and len(args) == 1:
-        hostname = args[0]
+        qname = args[0]
     else:
         usage()
 
@@ -264,9 +137,11 @@ def main():
         elif o in ("-m", "--cache-miss"):
             force_miss = True
         elif o in ("-t", "--type"):
-            dnsrecord = a
+            rdatatype = a
         elif o in ("-T", "--tcp"):
-            use_tcp = True
+            proto = PROTO_TCP
+        elif o in ("-S", "--srcip"):
+            src_ip = a
         elif o in ("-j", "--json"):
             save_json = True
         elif o in ("-e", "--edns"):
@@ -275,6 +150,15 @@ def main():
             color_mode = True
         elif o in ("-v", "--verbose"):
             verbose = True
+        elif o in ("-X", "--tls"):
+            proto = PROTO_TLS
+            dst_port = 853  # default for DoT, unless overriden using -p
+        elif o in ("-H", "--doh"):
+            proto = PROTO_HTTPS
+            dst_port = 443  # default for DoH, unless overriden using -p
+        elif o in ("-p", "--port"):
+            dst_port = int(a)
+
         else:
             print("Invalid option: %s" % o)
             usage()
@@ -295,7 +179,8 @@ def main():
                     print(e)
                     sys.exit(1)
         else:
-            f = resolvers
+            f = dns.resolver.get_default_resolver().nameservers
+
         if len(f) == 0:
             print("No nameserver specified")
 
@@ -304,8 +189,10 @@ def main():
 
         width = maxlen(f)
         blanks = (width - 5) * ' '
-        print('server ', blanks, ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags')
-        print((93 + width) * '-')
+        print('server ', blanks,
+              ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response')
+        print((104 + width) * '-')
+
         for server in f:
             # check if we have a valid dns server address
             if server.lstrip() == '':  # deal with empty lines
@@ -328,58 +215,51 @@ def main():
                 continue
 
             try:
-                (resolver, r_avg, r_min, r_max, r_stddev, r_lost_percent, flags, ttl, answers) = dnsping(
-                    hostname,
-                    resolver,
-                    dnsrecord,
-                    waittime,
-                    count,
-                    use_tcp=use_tcp,
-                    use_edns=use_edns,
-                    force_miss=force_miss
-                )
-            except dns.resolver.NXDOMAIN:
-                print('%-15s  NXDOMAIN' % server)
-                continue
+                retval = util.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
+                                       use_edns=use_edns, force_miss=force_miss, want_dnssec=False)
+
+            except SystemExit:
+                break
             except Exception as e:
                 print('%s: %s' % (server, e))
                 continue
 
             resolver = server.ljust(width + 1)
-            text_flags = flags_to_text(flags)
+            text_flags = flags_to_text(retval.flags)
 
-            s_ttl = str(ttl)
+            s_ttl = str(retval.ttl)
             if s_ttl == "None":
                 s_ttl = "N/A"
 
-            if r_lost_percent > 0:
+            if retval.r_lost_percent > 0:
                 l_color = color.O
             else:
                 l_color = color.N
-            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s" % (
-                resolver, r_avg, r_min, r_max, r_stddev, l_color, r_lost_percent, color.N, s_ttl, text_flags),
-                  flush=True)
+            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
+                resolver, retval.r_avg, retval.r_min, retval.r_max, retval.r_stddev, l_color, retval.r_lost_percent,
+                color.N, s_ttl, text_flags, retval.rcode_text), flush=True)
+
             if save_json:
                 dns_data = {
-                    'hostname': hostname,
+                    'hostname': qname,
                     'timestamp': str(datetime.datetime.now()),
-                    'r_min': r_min,
-                    'r_avg': r_avg,
+                    'r_min': retval.r_min,
+                    'r_avg': retval.r_avg,
                     'resolver': resolver,
-                    'r_max': r_max,
-                    'r_lost_percent': r_lost_percent,
+                    'r_max': retval.r_max,
+                    'r_lost_percent': retval.r_lost_percent,
                     's_ttl': s_ttl,
                     'text_flags': text_flags
                 }
                 outer_data = {
-                    'hostname': hostname,
+                    'hostname': qname,
                     'data': dns_data
                 }
                 with open('results.json', 'a+') as outfile:
                     json.dump(outer_data, outfile)
-            if verbose and hasattr(answers, 'response'):
+            if verbose and retval.answer:
                 ans_index = 1
-                for answer in answers.response.answer:
+                for answer in retval.answer:
                     print("Answer %d [ %s%s%s ]" % (ans_index, color.G, answer, color.N))
                     ans_index += 1
                 print("")

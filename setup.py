@@ -2,10 +2,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="dnsdiag",
-    version="1.7.0",
+    version="2.0.0",
     packages=find_packages(),
     scripts=["dnseval.py", "dnsping.py", "dnstraceroute.py"],
-    install_requires=['dnspython>=1.16.0', 'cymruwhois>=1.6'],
+    install_requires=['dnspython>=1.16.0', 'cymruwhois>=1.6', 'requests==2.21.0', 'requests-toolbelt>=0.9.1'],
 
     classifiers=[
         "Topic :: System :: Networking",
@@ -18,6 +18,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Internet :: Name Service (DNS)",
         "Development Status :: 5 - Production/Stable",
@@ -26,7 +27,7 @@ setup(
 
     author="Babak Farrokhi",
     author_email="babak@farrokhi.net",
-    description="DNS Diagnostics and measurement tools (ping, traceroute)",
+    description="DNS Measurement, Troubleshooting and Security Auditing Toolset (ping, traceroute)",
     long_description="""
 DNSDiag provides a handful of tools to measure and diagnose your DNS
 performance and integrity. Using dnsping, dnstraceroute and dnseval tools
