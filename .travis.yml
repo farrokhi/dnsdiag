@@ -6,7 +6,9 @@ install:
 scripts:
   - nosetests dnstraceroute.py
   - flake8 *.py util/*.py --count  --show-source --statistics
-  - ./dnsping.py -c 1 --flags -H -t AAAA -s 9.9.9.9 ripe.net
+  - ./dnsping.py -c 1 --flags       -t AAAA -s 9.9.9.9 ripe.net
+  - ./dnsping.py -c 1 --flags --tcp -t AAAA -s 9.9.9.9 ripe.net
+  - ./dnsping.py -c 1 --flags --doh -t AAAA -s 9.9.9.9 ripe.net
   - ./dnstraceroute.py
   - echo 1.1.1.1 > ci-test.txt
   - ./dnseval.py -c 2 --dnssec -H ci-test.txt
