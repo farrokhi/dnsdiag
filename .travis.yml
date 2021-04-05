@@ -1,7 +1,11 @@
 language: python
 sudo: false
-install: "pip install -r requirements.txt"
-script: nosetests dnstraceroute.py
+install:
+  - pip install -r requirements.txt
+  - pip install flake8
+scripts:
+  - nosetests dnstraceroute.py
+  - flake8 *.py util/*.py --count  --show-source --statistics
 matrix:
   fast_finish: true
   include:
