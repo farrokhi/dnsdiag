@@ -10,9 +10,9 @@ die() {
 }
 
 ## validate required tools
-which -s upx     || die "upx is not installed"
-which -s python3 || die "python3 is not installed"
-which -s pip3    || die "pip3 is not installed"
+which upx     > /dev/null 2>&1 || die "upx is not installed"
+which python3 > /dev/null 2>&1 || die "python3 is not installed"
+which pip3    > /dev/null 2>&1 || die "pip3 is not installed"
 
 ## constants
 ARCH=`uname -m`
