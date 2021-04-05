@@ -31,7 +31,7 @@ PKG_PATH="pkg/${PKG_NAME}"
 
 ## main
 msg "Creating virtualenv"
-virtualenv -q --clear --activators bash .venv
+virtualenv -q --clear .venv
 . ./.venv/bin/activate
 
 msg "Installing dependencies"
