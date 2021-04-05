@@ -1,7 +1,6 @@
 #!/bin/sh
 
 set -e
-set -u
 
 ## display an error message and exit(1)
 die() {
@@ -28,8 +27,15 @@ DDVER=$(grep version setup.py | awk -F\" '{print $2}')
 PKG_NAME="dnsdiag-${DDVER}.${PLATFORM}-${ARCH}-bin"
 PKG_PATH="pkg/${PKG_NAME}"
 
+## windows compatibility shims
+if [ "Windows_NT" = "${OS}" ]; then
+  PLATFORM='windows'
+fi
+
+msg "Starting to build package for ${PLATFORM}-${ARCH}"
+
 ## main
-msg "Creating virtualenv"
+msg "Initializing virtualenv"
 virtualenv -q --clear .venv
 if [ -f .venv/bin/activate ]; then  # *nix
   . .venv/bin/activate
