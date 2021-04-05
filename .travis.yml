@@ -7,7 +7,7 @@ scripts:
   - nosetests dnstraceroute.py
   - flake8 *.py util/*.py --count  --show-source --statistics
   - ./dnsping.py -c 1 --flags -H -t AAAA -s 9.9.9.9 ripe.net
-  - ./dnstraceroute.py -a -t A -s 9.9.9.9 ripe.net
+  - ./dnstraceroute.py
   - ./dnseval.py
 matrix:
   fast_finish: true
