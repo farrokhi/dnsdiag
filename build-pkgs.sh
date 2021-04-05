@@ -62,11 +62,12 @@ for i in public-servers.txt public-v4.txt rootservers.txt; do
     cp ${i} "${PKG_PATH}/"
 done
 
-msg "Building tarball: ${PKG_NAME}.tar.gz"
 cd pkg
-if [ ${PLATFORM} = "windows" ]; then
+if [ "${PLATFORM}" = "windows" ]; then
+    msg "Creating archive: ${PKG_NAME}.zip"
     powershell Compress-Archive -Force "${PKG_NAME}" "${PKG_NAME}.zip"
  else
+    msg "Creating tarball: ${PKG_NAME}.tar.gz"
     tar cf "${PKG_NAME}".tar "${PKG_NAME}" || die "Failed to build archive (tar)"
     gzip -9f "${PKG_NAME}.tar"             || die "Failed to build archive (gzip)"
 fi
