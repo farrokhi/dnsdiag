@@ -8,6 +8,7 @@ __pycache__/
 .idea/
 .vscode/
 whois.cache
+pkg/
 
 # C extensions
 *.so
