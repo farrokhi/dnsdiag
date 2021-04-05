@@ -123,13 +123,13 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,
                 requests.exceptions.ConnectionError):
             raise ConnectionError('Connection failed')
-        except ValueError as e:
+        except ValueError:
             retval.rcode_text = "Invalid Response"
             break
         except dns.exception.Timeout:
             break
         except OSError:
-            if socket_ttl: # this is an acceptable error while doing traceroute
+            if socket_ttl:  # this is an acceptable error while doing traceroute
                 break
         except Exception as e:
             print(e)
@@ -209,7 +209,7 @@ def flags_to_text(flags):
     }
 
     _by_value = dict([(y, x) for x, y in _by_text.items()])
-    _flags_order = sorted(_by_value.items(), reverse=True)
+    # _flags_order = sorted(_by_value.items(), reverse=True)
 
     _by_value = dict([(y, x) for x, y in _by_text.items()])
 
