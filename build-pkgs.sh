@@ -5,8 +5,12 @@ set -u
 
 ## display an error message and exit(1)
 die() {
-    echo "ERROR: $*" 1>&2
+    echo "[ERROR]  $*" 1>&2
     exit 1
+}
+
+msg() {
+    echo "[STATUS] $*" 1>&2
 }
 
 ## validate required tools
@@ -22,14 +26,14 @@ PKG_NAME="dnsdiag-${DDVER}.${PLATFORM}-${ARCH}-bin"
 PKG_PATH="pkg/${PKG_NAME}"
 
 ## main
-echo "Building package for ${PLATFORM}-${ARCH} under ${PKG_PATH}"
-echo
-pip3 install pyinstaller || die "Failed to install pyinstaller"
-pip3 install -r requirements.txt || die "Failed to install dependencies"
+msg "Installing dependencies"
+pip3 install -q pyinstaller || die "Failed to install pyinstaller"
+pip3 install -q -r requirements.txt || die "Failed to install dependencies"
 
 mkdir -p ${PKG_PATH} || die "Cannot create dir hierarcy: ${PKG_PATH}"
 
 for i in dnsping.py dnstraceroute.py dnseval.py; do
+    msg "Building package for ${i}"
     pyinstaller ${i} -y --onefile --clean \
         --log-level=ERROR \
         --distpath=${PKG_PATH} \
@@ -37,12 +41,14 @@ for i in dnsping.py dnstraceroute.py dnseval.py; do
         --hidden-import=requests
 done
 
+msg "Adding extra files..."
 for i in public-servers.txt public-v4.txt rootservers.txt; do
     cp -v ${i} ${PKG_PATH}/
 done
 
 ## build the tarball
+msg "Building tarball: ${PKG_NAME}.tar.gz"
 cd pkg
 tar cvf ${PKG_NAME}.tar ${PKG_NAME} || die "Failed to build archive (tar)"
-gzip -9v ${PKG_NAME}.tar            || die "Failed to build archive (gzip)"
+gzip -9fv ${PKG_NAME}.tar           || die "Failed to build archive (gzip)"
 rm -fr ${PKG_NAME}
