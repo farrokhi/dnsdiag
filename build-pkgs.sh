@@ -13,10 +13,14 @@ msg() {
     echo "[STATUS] $*" 1>&2
 }
 
+checkbin() {
+    which ${1} > /dev/null 2>&1 || die "${1} is not installed"
+}
+
 ## validate required tools
-which upx     > /dev/null 2>&1 || die "upx is not installed"
-which python3 > /dev/null 2>&1 || die "python3 is not installed"
-which pip3    > /dev/null 2>&1 || die "pip3 is not installed"
+checkbin "virtualenv"
+checkbin "python3"
+checkbin "upx"
 
 ## constants
 ARCH=`uname -m`
@@ -26,6 +30,10 @@ PKG_NAME="dnsdiag-${DDVER}.${PLATFORM}-${ARCH}-bin"
 PKG_PATH="pkg/${PKG_NAME}"
 
 ## main
+msg "Creating virtualenv"
+virtualenv -q --clear --activators bash .venv
+. ./.venv/bin/activate
+
 msg "Installing dependencies"
 pip3 install -q pyinstaller || die "Failed to install pyinstaller"
 pip3 install -q -r requirements.txt || die "Failed to install dependencies"
@@ -46,7 +54,6 @@ for i in public-servers.txt public-v4.txt rootservers.txt; do
     cp ${i} ${PKG_PATH}/
 done
 
-## build the tarball
 msg "Building tarball: ${PKG_NAME}.tar.gz"
 cd pkg
 tar cf ${PKG_NAME}.tar ${PKG_NAME} || die "Failed to build archive (tar)"
