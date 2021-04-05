@@ -64,6 +64,10 @@ done
 
 msg "Building tarball: ${PKG_NAME}.tar.gz"
 cd pkg
-tar cf "${PKG_NAME}".tar "${PKG_NAME}" || die "Failed to build archive (tar)"
-gzip -9f "${PKG_NAME}.tar"             || die "Failed to build archive (gzip)"
+if [ ${PLATFORM} = "windows" ]; then
+    powershell Compress-Archive -Force "${PKG_NAME}" "${PKG_NAME}.zip"
+ else
+    tar cf "${PKG_NAME}".tar "${PKG_NAME}" || die "Failed to build archive (tar)"
+    gzip -9f "${PKG_NAME}.tar"             || die "Failed to build archive (gzip)"
+fi
 rm -fr "${PKG_NAME}"
