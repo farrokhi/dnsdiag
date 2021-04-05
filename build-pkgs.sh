@@ -43,12 +43,12 @@ done
 
 msg "Adding extra files..."
 for i in public-servers.txt public-v4.txt rootservers.txt; do
-    cp -v ${i} ${PKG_PATH}/
+    cp ${i} ${PKG_PATH}/
 done
 
 ## build the tarball
 msg "Building tarball: ${PKG_NAME}.tar.gz"
 cd pkg
-tar cvf ${PKG_NAME}.tar ${PKG_NAME} || die "Failed to build archive (tar)"
-gzip -9fv ${PKG_NAME}.tar           || die "Failed to build archive (gzip)"
+tar cf ${PKG_NAME}.tar ${PKG_NAME} || die "Failed to build archive (tar)"
+gzip -9f ${PKG_NAME}.tar           || die "Failed to build archive (gzip)"
 rm -fr ${PKG_NAME}
