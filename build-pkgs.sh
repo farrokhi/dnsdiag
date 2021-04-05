@@ -33,7 +33,7 @@ for i in dnsping.py dnstraceroute.py dnseval.py; do
     pyinstaller ${i} -y --onefile --clean \
         --log-level=ERROR \
         --distpath=${PKG_PATH} \
-        --hidden-import=dnspython \
+        --hidden-import=dns \
         --hidden-import=requests
 done
 
