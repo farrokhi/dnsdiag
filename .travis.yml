@@ -8,7 +8,8 @@ scripts:
   - flake8 *.py util/*.py --count  --show-source --statistics
   - ./dnsping.py -c 1 --flags -H -t AAAA -s 9.9.9.9 ripe.net
   - ./dnstraceroute.py
-  - ./dnseval.py
+  - echo 1.1.1.1 > ci-test.txt
+  - ./dnseval.py -c 2 --dnssec -H ci-test.txt
 matrix:
   fast_finish: true
   include:
