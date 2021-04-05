@@ -50,7 +50,7 @@ def asn_lookup(ip, whois_cache) -> (str, dict):
             c = cymruwhois.Client()
             asn = c.lookup(ip)
             whois_cache[ip] = (asn, currenttime)
-    except Exception as e:
+    except Exception:
         pass
     return asn, whois_cache
 
