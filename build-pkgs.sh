@@ -21,16 +21,15 @@ checkbin "virtualenv"
 checkbin "python3"
 
 ## constants
+if [ "Windows_NT" = "${OS}" ]; then ## windows compatibility shims
+  PLATFORM='windows'
+else
+  PLATFORM=$(uname -s | tr 'A-Z' 'a-z')
+fi
 ARCH=$(uname -m)
-PLATFORM=$(uname -s | tr 'A-Z' 'a-z')
 DDVER=$(grep version setup.py | awk -F\" '{print $2}')
 PKG_NAME="dnsdiag-${DDVER}.${PLATFORM}-${ARCH}-bin"
 PKG_PATH="pkg/${PKG_NAME}"
-
-## windows compatibility shims
-if [ "Windows_NT" = "${OS}" ]; then
-  PLATFORM='windows'
-fi
 
 msg "Starting to build package for ${PLATFORM}-${ARCH}"
 
