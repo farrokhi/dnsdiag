@@ -36,11 +36,12 @@ import sys
 import dns.rcode
 import dns.rdatatype
 import dns.resolver
+
 import util.dns
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 __progname__ = os.path.basename(sys.argv[0])
 
 from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, setup_signal_handler, flags_to_text
