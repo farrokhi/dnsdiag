@@ -28,7 +28,6 @@ import datetime
 import random
 import signal
 import socket
-import string
 import sys
 from statistics import stdev
 
@@ -38,6 +37,7 @@ import dns.query
 import dns.rcode
 import dns.rdataclass
 import requests.exceptions
+import string
 
 shutdown = False
 
@@ -112,13 +112,20 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
 
         try:
             if proto is PROTO_UDP:
-                response = dns.query.udp(query, server, timeout, dst_port, src_ip, ignore_unexpected=True)
+                response = dns.query.udp(query, server, timeout=timeout, port=dst_port, source=src_ip,
+                                         ignore_unexpected=True)
             elif proto is PROTO_TCP:
-                response = dns.query.tcp(query, server, timeout, dst_port, src_ip)
+                response = dns.query.tcp(query, server, timeout=timeout, port=dst_port, source=src_ip)
             elif proto is PROTO_TLS:
-                response = dns.query.tls(query, server, timeout, dst_port, src_ip)
+                if hasattr(dns.query, 'tls'):
+                    response = dns.query.tls(query, server, timeout, dst_port, src_ip)
+                else:
+                    unsupported_feature()
             elif proto is PROTO_HTTPS:
-                response = dns.query.https(query, server, timeout, dst_port, src_ip)
+                if hasattr(dns.query, 'https'):
+                    response = dns.query.https(query, server, timeout, dst_port, src_ip)
+                else:
+                    unsupported_feature()
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,
                 requests.exceptions.ConnectionError):
