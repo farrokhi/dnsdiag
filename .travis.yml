@@ -1,5 +1,8 @@
 language: python
 sudo: false
+branches:
+  only:
+    - master
 install:
   - pip install -r requirements.txt
   - pip install flake8
