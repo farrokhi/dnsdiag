@@ -263,7 +263,7 @@ def main():
                     'data': dns_data
                 }
                 with open(json_filename, 'a+') as outfile:
-                    json.dump(outer_data, outfile)
+                    json.dump(outer_data, outfile, indent=2)
 
             else:
                 print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
