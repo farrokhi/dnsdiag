@@ -184,6 +184,13 @@ def signal_handler(sig, frame):
     shutdown = True  # pressed once, exit gracefully
 
 
+def unsupported_feature():
+    print("Error: You have an older version of Python interpreter.")
+    print("       Some features such as DoT and DoH are not available. You should upgrade")
+    print("       the Python interpreter to at least 3.6 and reinstall dependencies.")
+    sys.exit(127)
+
+
 def flags_to_text(flags):
     # Standard DNS flags
 

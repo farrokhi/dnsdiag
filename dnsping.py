@@ -39,7 +39,7 @@ from statistics import stdev
 import dns.flags
 import dns.resolver
 
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
@@ -212,17 +212,24 @@ def main():
         try:
             stime = time.perf_counter()
             if proto is PROTO_UDP:
-                answers = dns.query.udp(query, dnsserver, timeout, dst_port,
-                                        src_ip, src_port, ignore_unexpected=True)
+                answers = dns.query.udp(query, dnsserver, timeout=timeout, port=dst_port,
+                                        source=src_ip, source_port=src_port, ignore_unexpected=True)
             elif proto is PROTO_TCP:
-                answers = dns.query.tcp(query, dnsserver, timeout, dst_port,
-                                        src_ip, src_port)
+                answers = dns.query.tcp(query, dnsserver, timeout=timeout, port=dst_port,
+                                        source=src_ip, source_port=src_port)
             elif proto is PROTO_TLS:
-                answers = dns.query.tls(query, dnsserver, timeout, dst_port,
-                                        src_ip, src_port)
+                if hasattr(dns.query, 'tls'):
+                    answers = dns.query.tls(query, dnsserver, timeout, dst_port,
+                                            src_ip, src_port)
+                else:
+                    unsupported_feature()
+
             elif proto is PROTO_HTTPS:
-                answers = dns.query.https(query, dnsserver, timeout, dst_port,
-                                          src_ip, src_port)
+                if hasattr(dns.query, 'https'):
+                    answers = dns.query.https(query, dnsserver, timeout, dst_port,
+                                              src_ip, src_port)
+                else:
+                    unsupported_feature()
 
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
