@@ -64,7 +64,7 @@ class Colors(object):
 def usage():
     print("""%s version %s
 
-usage: %s [-ehmvCTXH] [-f server-list] [-c count] [-t type] [-p port] [-w wait] hostname
+usage: %s [-ehmvCTXH] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
   -h  --help        Show this help
   -f  --file        DNS server list to use (default: system resolvers)
   -c  --count       Number of requests to send (default: 10)
@@ -73,6 +73,7 @@ usage: %s [-ehmvCTXH] [-f server-list] [-c count] [-t type] [-p port] [-w wait] 
   -t  --type        DNS request record type (default: A)
   -T  --tcp         Use TCP instead of UDP
   -X  --tls         Use TLS as transport protocol
+  -j  --json        Save results as a JSON formatted file
   -H  --doh         Use HTTPS as transport protols (DoH)
   -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
   -S  --srcip       Query source IP address
@@ -113,8 +114,8 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHD",
-                                   ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose",
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHDj",
+                                   ["help", "file=", "count=", "type=", "wait=", "json=", "tcp", "edns", "verbose",
                                     "color", "force-miss", "srcip=", "tls", "doh", "dnssec"])
     except getopt.GetoptError as err:
         print(err)
@@ -145,6 +146,7 @@ def main():
             src_ip = a
         elif o in ("-j", "--json"):
             save_json = True
+            json_filename = a
         elif o in ("-e", "--edns"):
             use_edns = False
         elif o in ("-D", "--dnssec"):
@@ -252,13 +254,15 @@ def main():
                     'r_max': retval.r_max,
                     'r_lost_percent': retval.r_lost_percent,
                     's_ttl': s_ttl,
-                    'text_flags': text_flags
+                    'text_flags': text_flags,
+                    'rcode': retval.rcode,
+                    'rcode_text': retval.rcode_text
                 }
                 outer_data = {
                     'hostname': qname,
                     'data': dns_data
                 }
-                with open('results.json', 'a+') as outfile:
+                with open(json_filename, 'a+') as outfile:
                     json.dump(outer_data, outfile)
             if verbose and retval.answer:
                 ans_index = 1
