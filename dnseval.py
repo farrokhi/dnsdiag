@@ -64,7 +64,7 @@ class Colors(object):
 def usage():
     print("""%s version %s
 
-usage: %s [-ehmvCTXH] [-f server-list] [-c count] [-t type] [-p port] [-w wait] hostname
+usage: %s [-ehmvCTXH] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
   -h  --help        Show this help
   -f  --file        DNS server list to use (default: system resolvers)
   -c  --count       Number of requests to send (default: 10)
@@ -73,6 +73,7 @@ usage: %s [-ehmvCTXH] [-f server-list] [-c count] [-t type] [-p port] [-w wait] 
   -t  --type        DNS request record type (default: A)
   -T  --tcp         Use TCP instead of UDP
   -X  --tls         Use TLS as transport protocol
+  -j  --json        Save results as a JSON formatted file
   -H  --doh         Use HTTPS as transport protols (DoH)
   -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
   -S  --srcip       Query source IP address
@@ -104,7 +105,7 @@ def main():
     waittime = 2
     inputfilename = None
     fromfile = False
-    save_json = False
+    json_output = False
     use_edns = True
     want_dnssec = False
     force_miss = False
@@ -113,8 +114,8 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHD",
-                                   ["help", "file=", "count=", "type=", "wait=", "json", "tcp", "edns", "verbose",
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHDj:",
+                                   ["help", "file=", "count=", "type=", "wait=", "json=", "tcp", "edns", "verbose",
                                     "color", "force-miss", "srcip=", "tls", "doh", "dnssec"])
     except getopt.GetoptError as err:
         print(err)
@@ -144,7 +145,8 @@ def main():
         elif o in ("-S", "--srcip"):
             src_ip = a
         elif o in ("-j", "--json"):
-            save_json = True
+            json_output = True
+            json_filename = a
         elif o in ("-e", "--edns"):
             use_edns = False
         elif o in ("-D", "--dnssec"):
@@ -192,9 +194,11 @@ def main():
 
         width = maxlen(f)
         blanks = (width - 5) * ' '
-        print('server ', blanks,
-              ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response')
-        print((104 + width) * '-')
+
+        if not json_output:
+            print('server ', blanks,
+                  ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response')
+            print((104 + width) * '-')
 
         for server in f:
             # check if we have a valid dns server address
@@ -238,29 +242,39 @@ def main():
                 l_color = color.O
             else:
                 l_color = color.N
-            print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
-                resolver, retval.r_avg, retval.r_min, retval.r_max, retval.r_stddev, l_color, retval.r_lost_percent,
-                color.N, s_ttl, text_flags, retval.rcode_text), flush=True)
 
-            if save_json:
+            if json_output:
                 dns_data = {
                     'hostname': qname,
                     'timestamp': str(datetime.datetime.now()),
                     'r_min': retval.r_min,
                     'r_avg': retval.r_avg,
-                    'resolver': resolver,
+                    'resolver': resolver.rstrip(),
                     'r_max': retval.r_max,
                     'r_lost_percent': retval.r_lost_percent,
                     's_ttl': s_ttl,
-                    'text_flags': text_flags
+                    'text_flags': text_flags,
+                    'flags': retval.flags,
+                    'rcode': retval.rcode,
+                    'rcode_text': retval.rcode_text,
                 }
                 outer_data = {
                     'hostname': qname,
                     'data': dns_data
                 }
-                with open('results.json', 'a+') as outfile:
-                    json.dump(outer_data, outfile)
-            if verbose and retval.answer:
+
+                if json_filename == '-':  # stdout
+                    print(json.dumps(outer_data, indent=2))
+                else:
+                    with open(json_filename, 'a+') as outfile:
+                        json.dump(outer_data, outfile, indent=2)
+
+            else:
+                print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
+                    resolver, retval.r_avg, retval.r_min, retval.r_max, retval.r_stddev, l_color, retval.r_lost_percent,
+                    color.N, s_ttl, text_flags, retval.rcode_text), flush=True)
+
+            if verbose and retval.answer and not json_output:
                 ans_index = 1
                 for answer in retval.answer:
                     print("Answer %d [ %s%s%s ]" % (ans_index, color.G, answer, color.N))

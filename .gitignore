@@ -5,6 +5,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.json
 .idea/
 .vscode/
 whois.cache
