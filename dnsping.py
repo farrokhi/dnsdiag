@@ -258,7 +258,7 @@ def main():
             response_time.append(elapsed)
             if not quiet:
                 if show_flags:
-                    flags = " [%s]" % dns.flags.to_text(answers.flags)
+                    flags = " [%s]  %s" % (dns.flags.to_text(answers.flags), dns.rcode.to_text(answers.rcode()))
                 else:
                     flags = ""
                 print("%d bytes from %s: seq=%-3d time=%.3f ms%s" % (
