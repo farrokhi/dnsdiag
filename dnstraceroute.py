@@ -47,7 +47,7 @@ whois_cache = {}
 # Constants
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 __progname__ = os.path.basename(sys.argv[0])
 
 
