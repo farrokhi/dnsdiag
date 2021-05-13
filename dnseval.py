@@ -41,25 +41,10 @@ import util.dns
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = '2.0.2'
 __progname__ = os.path.basename(sys.argv[0])
 
 from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, setup_signal_handler, flags_to_text
-
-
-class Colors(object):
-    N = '\033[m'  # native
-    R = '\033[31m'  # red
-    G = '\033[32m'  # green
-    O = '\033[33m'  # orange
-    B = '\033[34m'  # blue
-
-    def __init__(self, mode):
-        if not mode:
-            self.N = ''
-            self.R = ''
-            self.G = ''
-            self.B = ''
+from util.shared import __version__, Colors
 
 
 def usage():

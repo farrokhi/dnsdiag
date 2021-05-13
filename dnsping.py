@@ -29,7 +29,6 @@ import datetime
 import getopt
 import ipaddress
 import os
-import requests
 import signal
 import socket
 import sys
@@ -38,12 +37,13 @@ from statistics import stdev
 
 import dns.flags
 import dns.resolver
+import requests
 
 from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature
+from util.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = '2.0.2'
 __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 

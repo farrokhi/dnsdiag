@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
+from util.shared import __version__
 
 setup(
     name="dnsdiag",
-    version="2.0.2",
+    version=__version__,
     packages=find_packages(),
     scripts=["dnseval.py", "dnsping.py", "dnstraceroute.py"],
     install_requires=['dnspython>=1.16.0', 'cymruwhois>=1.6', 'requests>=2.21.0', 'requests-toolbelt>=0.9.1'],
