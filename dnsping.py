@@ -75,6 +75,14 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
     sys.exit(0)
 
 
+def setup_signal_handler():
+    try:
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
+    except AttributeError:  # not all signals are supported on all platforms
+        pass
+
+
 def signal_handler(sig, frame):
     global shutdown
     if shutdown:  # pressed twice, so exit immediately
@@ -82,12 +90,22 @@ def signal_handler(sig, frame):
     shutdown = True  # pressed once, exit gracefully
 
 
-def main():
+def validate_server_address(dnsserver, address_family):
+    """checks if we have a valid dns server address and resolve if it is a hostname"""
+
     try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError:  # OS Does not support some signals, probably windows
-        pass
+        ipaddress.ip_address(dnsserver)
+    except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
+        try:
+            dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family)[1][4][0]
+        except OSError:
+            print('Error: cannot resolve hostname:', dnsserver, file=sys.stderr, flush=True)
+            sys.exit(1)
+    return dnsserver
+
+
+def main():
+    setup_signal_handler()
 
     if len(sys.argv) == 1:
         usage()
@@ -177,15 +195,7 @@ def main():
     if dnsserver is None:
         dnsserver = dns.resolver.get_default_resolver().nameservers[0]
 
-    # check if we have a valid dns server address
-    try:
-        ipaddress.ip_address(dnsserver)
-    except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
-        try:
-            dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af)[1][4][0]
-        except OSError:
-            print('Error: cannot resolve hostname:', dnsserver, file=sys.stderr, flush=True)
-            sys.exit(1)
+    dnsserver = validate_server_address(dnsserver, af)
 
     if use_edns:
         query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
