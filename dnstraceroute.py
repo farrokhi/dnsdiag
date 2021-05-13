@@ -277,6 +277,7 @@ def main():
         else:
             elapsed = abs(etime - stime) * 1000  # convert to milliseconds
 
+        curr_name = curr_addr
         if should_resolve:
             try:
                 if curr_addr:
@@ -287,8 +288,6 @@ def main():
                 pass
             except Exception:
                 print("unxpected error: ", sys.exc_info()[0])
-        else:
-            curr_name = curr_addr
 
         global whois_cache
         if curr_addr:
