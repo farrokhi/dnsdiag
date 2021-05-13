@@ -39,6 +39,7 @@ import dns.resolver
 
 import util.whois
 from util.dns import PROTO_UDP, PROTO_TCP, setup_signal_handler
+from util.shared import __version__, Colors
 
 # Global Variables
 quiet = False
@@ -47,7 +48,6 @@ whois_cache = {}
 # Constants
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
-__version__ = '2.0.2'
 __progname__ = os.path.basename(sys.argv[0])
 
 
@@ -56,26 +56,12 @@ def test_import():
     pass
 
 
-class Colors(object):
-    N = '\033[m'  # native
-    R = '\033[31m'  # red
-    G = '\033[32m'  # green
-    B = '\033[34m'  # blue
-
-    def __init__(self, mode):
-        if not mode:
-            self.N = ''
-            self.R = ''
-            self.G = ''
-            self.B = ''
-
-
 def usage():
     print("""%s version %s
 usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname
 
   -h  --help      Show this help
-  -q  --quiet     Quiet
+  -q  --quiet     Quiet mode: No extra information, only traceroute output.
   -T  --tcp       Use TCP as transport protocol
   -x  --expert    Print expert hints if available
   -a  --asn       Turn on AS# lookups for each hop encountered
