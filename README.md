@@ -67,8 +67,11 @@ A complete explanation of supported command line flags is shown by using `--help
 
 In addition to UDP, you can ping using TCP, DoT (DNS over TLS) and DoH (DNS over HTTPS) using `--tcp`, `--tls` and `--doh` respectively.
 
+```shell
+./dnsping.py -c 5 --dnssec --flags --tls -t AAAA -s 9.9.9.9 ripe.net
 ```
-% ./dnsping.py -c 5 --dnssec --flags --tls -t AAAA -s 9.9.9.9 ripe.net
+
+```
 dnsping.py DNS: 9.9.9.9:853, hostname: ripe.net, proto: TLS, rdatatype: AAAA, flags: RD
 233 bytes from 9.9.9.9: seq=1   time=186.202 ms [QR RD RA AD]
 233 bytes from 9.9.9.9: seq=2   time=191.233 ms [QR RD RA AD]
@@ -98,8 +101,11 @@ routed to any unwanted path.
 
 In addition to UDP, it also supports TCP as transport protocol, using `--tcp` flag.
 
+```shell
+./dnstraceroute.py --expert --asn -C -t A -s 8.8.4.4 facebook.com
 ```
-% ./dnstraceroute.py --expert --asn -C -t A -s 8.8.4.4 facebook.com
+
+```
 dnstraceroute.py DNS: 8.8.4.4:53, hostname: facebook.com, rdatatype: A
 1	192.168.0.1 (192.168.0.1) 1 ms
 2	192.168.28.177 (192.168.28.177) 4 ms
@@ -123,8 +129,11 @@ You can use `dnseval` to compare response times using different transport
 protocols such as UDP (default), TCP, DoT and DoH using `--tcp`, `--tls` and
 `--doh` respectively.
 
+```shell
+./dnseval.py --dnssec -t AAAA -f public-servers.txt -c10 ripe.net
 ```
-% ./dnseval.py --dnssec -t AAAA -f public-servers.txt -c10 ripe.net
+
+```
 server                   avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response
 ----------------------------------------------------------------------------------------------------------------------------
 1.0.0.1                  36.906      7.612       152.866     50.672      %0       300        QR -- -- RD RA AD --   NOERROR
