@@ -102,7 +102,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHDj:",
                                    ["help", "file=", "count=", "type=", "wait=", "json=", "tcp", "edns", "verbose",
-                                    "color", "force-miss", "srcip=", "tls", "doh", "dnssec"])
+                                    "color", "cache-miss", "srcip=", "tls", "doh", "dnssec"])
     except getopt.GetoptError as err:
         print(err)
         usage()
