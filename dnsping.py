@@ -222,11 +222,11 @@ def main():
 
         if use_edns:
             query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN,
-                                        use_edns=True, want_dnssec=want_dnssec,
-                                        ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
+                                           use_edns=True, want_dnssec=want_dnssec,
+                                           ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
         else:
             query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN,
-                                        use_edns=False, want_dnssec=want_dnssec)
+                                           use_edns=False, want_dnssec=want_dnssec)
 
         try:
             stime = time.perf_counter()
