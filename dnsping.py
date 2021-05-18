@@ -39,7 +39,7 @@ import dns.flags
 import dns.resolver
 import requests
 
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature, random_string
 from util.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -52,25 +52,26 @@ def usage():
     print("""%s version %s
 usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
 
-  -h  --help      Show this help
-  -q  --quiet     Quiet
-  -v  --verbose   Print actual dns response
-  -s  --server    DNS server to use (default: first entry from /etc/resolv.conf)
-  -p  --port      DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
-  -T  --tcp       Use TCP as transport protocol
-  -X  --tls       Use TLS as transport protocol
-  -H  --doh       Use HTTPS as transport protols (DoH)
-  -4  --ipv4      Use IPv4 as default network protocol
-  -6  --ipv6      Use IPv6 as default network protocol
-  -P  --srcport   Query source port number (default: 0)
-  -S  --srcip     Query source IP address (default: default interface address)
-  -c  --count     Number of requests to send (default: 10, 0 for infinity)
-  -w  --wait      Maximum wait time for a reply (default: 2 seconds)
-  -i  --interval  Time between each request (default: 1 seconds)
-  -t  --type      DNS request record type (default: A)
-  -e  --edns      Disable EDNS0 (default: Enabled)
-  -D  --dnssec    Enable 'DNSSEC desired' flag in requests. Implies EDNS.
-  -F  --flags     Display response flags
+  -h  --help        Show this help
+  -q  --quiet       Quiet
+  -v  --verbose     Print actual dns response
+  -s  --server      DNS server to use (default: first entry from /etc/resolv.conf)
+  -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
+  -T  --tcp         Use TCP as transport protocol
+  -X  --tls         Use TLS as transport protocol
+  -H  --doh         Use HTTPS as transport protols (DoH)
+  -4  --ipv4        Use IPv4 as default network protocol
+  -6  --ipv6        Use IPv6 as default network protocol
+  -P  --srcport     Query source port number (default: 0)
+  -S  --srcip       Query source IP address (default: default interface address)
+  -c  --count       Number of requests to send (default: 10, 0 for infinity)
+  -m  --cache-miss  Force cache miss measurement by prepending a random hostname
+  -w  --wait        Maximum wait time for a reply (default: 2 seconds)
+  -i  --interval    Time between each request (default: 1 seconds)
+  -t  --type        DNS request record type (default: A)
+  -e  --edns        Disable EDNS0 (default: Enabled)
+  -D  --dnssec      Enable 'DNSSEC desired' flag in requests. Implies EDNS.
+  -F  --flags       Display response flags
 """ % (__progname__, __version__, __progname__))
     sys.exit(0)
 
@@ -125,13 +126,14 @@ def main():
     proto = PROTO_UDP
     use_edns = True
     want_dnssec = False
+    force_miss = False
     af = socket.AF_INET
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46eDFXH",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXH",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
-                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "srcport=", "edns", "dnssec", "flags",
+                                    "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns", "dnssec", "flags",
                                     "tls", "doh"])
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -157,6 +159,8 @@ def main():
             verbose = False
         elif o in ("-w", "--wait"):
             timeout = int(a)
+        elif o in ("-m", "--cache-miss"):
+            force_miss = True
         elif o in ("-i", "--interval"):
             interval = int(a)
         elif o in ("-t", "--type"):
@@ -197,20 +201,12 @@ def main():
 
     dnsserver = validate_server_address(dnsserver, af)
 
-    if use_edns:
-        query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
-                                       use_edns=True, want_dnssec=want_dnssec,
-                                       ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
-    else:
-        query = dns.message.make_query(qname, rdatatype, dns.rdataclass.IN,
-                                       use_edns=False, want_dnssec=want_dnssec)
-
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, proto: %s, rdatatype: %s, flags: %s" %
-          (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), rdatatype,
-           dns.flags.to_text(query.flags)), flush=True)
+    print("%s DNS: %s:%d, hostname: %s, force_miss: %s, proto: %s, rdatatype: %s, flags: %s" %
+          (__progname__, dnsserver, dst_port, qname, force_miss, proto_to_text(proto), rdatatype,
+           dns.flags.to_text(dns.flags.RD)), flush=True)
 
     while not shutdown:
 
@@ -218,6 +214,19 @@ def main():
             break
         else:
             i += 1
+
+        if force_miss:
+            fqdn = "_dnsdiag_%s_.%s" % (random_string(), qname)
+        else:
+            fqdn = qname
+
+        if use_edns:
+            query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN,
+                                        use_edns=True, want_dnssec=want_dnssec,
+                                        ednsflags=dns.flags.edns_from_text('DO'), payload=8192)
+        else:
+            query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN,
+                                        use_edns=False, want_dnssec=want_dnssec)
 
         try:
             stime = time.perf_counter()
