@@ -158,7 +158,7 @@ def main():
         elif o in ("-w", "--wait"):
             timeout = int(a)
         elif o in ("-i", "--interval"):
-            interval = int(a)
+            interval = float(a)
         elif o in ("-t", "--type"):
             rdatatype = a
         elif o in ("-T", "--tcp"):
