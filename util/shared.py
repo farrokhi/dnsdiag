@@ -40,4 +40,5 @@ class Colors(object):
             self.N = ''
             self.R = ''
             self.G = ''
+            self.O = ''
             self.B = ''
