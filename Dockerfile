@@ -1,6 +1,8 @@
-FROM python:3.8.2
+FROM python:3.8-alpine
 
 WORKDIR /dnsdiag
+
+ENV PATH "$PATH:/dnsdiag"
 
 COPY . .
 

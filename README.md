@@ -54,7 +54,7 @@ From time to time, binary packages will be released for Windows, Mac OS X and Li
 If you don't want to install dnsdiags on your local machine, you may use the docker image and run programs in a container. For example:
 
 ```
-docker run -it --rm farrokhi/dnsdiag ./dnsping.py
+docker run --network host -it --rm farrokhi/dnsdiag dnsping.py
 ```
 
 # dnsping
