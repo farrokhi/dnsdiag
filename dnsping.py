@@ -271,7 +271,7 @@ def main():
                     flags = " [%s]  %s" % (dns.flags.to_text(answers.flags), dns.rcode.to_text(answers.rcode()))
                 else:
                     flags = ""
-                print("%d bytes from %s: seq=%-3d time=%.3f ms%s" % (
+                print("%d bytes from %s: seq=%-3d time=%-7.3f ms%s" % (
                     len(answers.to_wire()), dnsserver, i, elapsed, flags), flush=True)
             if verbose:
                 print(answers.to_text(), flush=True)
