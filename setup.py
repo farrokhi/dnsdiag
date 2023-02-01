@@ -6,16 +6,13 @@ setup(
     version=__version__,
     packages=find_packages(),
     scripts=["dnseval.py", "dnsping.py", "dnstraceroute.py"],
-    install_requires=['dnspython>=1.16.0', 'cymruwhois>=1.6', 'requests>=2.21.0', 'requests-toolbelt>=0.9.1'],
+    install_requires=['dnspython>=2.3.0', 'cymruwhois>=1.6', 'requests>=2.28.2', 'requests-toolbelt>=0.9.1'],
 
     classifiers=[
         "Topic :: System :: Networking",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
