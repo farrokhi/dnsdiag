@@ -27,11 +27,11 @@ else
   PLATFORM=$(uname -s | tr 'A-Z' 'a-z')
 fi
 ARCH=$(uname -m)
-DDVER=$(grep version setup.py | awk -F\" '{print $2}')
+DDVER=$(grep version util/shared.py | awk -F\' '{print $2}')
 PKG_NAME="dnsdiag-${DDVER}.${PLATFORM}-${ARCH}-bin"
 PKG_PATH="pkg/${PKG_NAME}"
 
-msg "Starting to build package for ${PLATFORM}-${ARCH}"
+msg "Starting to build dnsdiag package version ${DDVER} for ${PLATFORM}-${ARCH}"
 
 ## main
 msg "Initializing virtualenv"
