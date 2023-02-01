@@ -73,15 +73,15 @@ In addition to UDP, you can ping using TCP, DoT (DNS over TLS) and DoH (DNS over
 
 ```
 dnsping.py DNS: 9.9.9.9:853, hostname: ripe.net, proto: TLS, rdatatype: AAAA, flags: RD
-233 bytes from 9.9.9.9: seq=1   time=186.202 ms [QR RD RA AD]
-233 bytes from 9.9.9.9: seq=2   time=191.233 ms [QR RD RA AD]
-233 bytes from 9.9.9.9: seq=3   time=105.455 ms [QR RD RA AD]
-233 bytes from 9.9.9.9: seq=4   time=111.053 ms [QR RD RA AD]
-233 bytes from 9.9.9.9: seq=5   time=110.329 ms [QR RD RA AD]
+169 bytes from 9.9.9.9: seq=1   time=279.805 ms [QR RD RA AD]  NOERROR
+169 bytes from 9.9.9.9: seq=2   time=107.237 ms [QR RD RA AD]  NOERROR
+169 bytes from 9.9.9.9: seq=3   time=96.747  ms [QR RD RA AD]  NOERROR
+169 bytes from 9.9.9.9: seq=4   time=107.782 ms [QR RD RA AD]  NOERROR
+169 bytes from 9.9.9.9: seq=5   time=94.713  ms [QR RD RA AD]  NOERROR
 
 --- 9.9.9.9 dnsping statistics ---
 5 requests transmitted, 5 responses received, 0% lost
-min=105.455 ms, avg=140.854 ms, max=191.233 ms, stddev=43.782 ms
+min=94.713 ms, avg=137.257 ms, max=279.805 ms, stddev=79.908 ms
 ```
 
 It also displays statistics such as minimum, maximum and average response time as well as
