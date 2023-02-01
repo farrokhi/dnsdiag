@@ -65,6 +65,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -P  --srcport     Query source port number (default: 0)
   -S  --srcip       Query source IP address (default: default interface address)
   -c  --count       Number of requests to send (default: 10, 0 for infinity)
+  -r  --norecurse   Enforce non-recursive query by clearing the RD (recursion desired) bit in the query
   -m  --cache-miss  Force cache miss measurement by prepending a random hostname
   -w  --wait        Maximum wait time for a reply (default: 2 seconds)
   -i  --interval    Time between each request (default: 1 seconds)
@@ -132,11 +133,10 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXH",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHr",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
-                                    "dnssec", "flags",
-                                    "tls", "doh"])
+                                    "dnssec", "flags", "norecurse", "tls", "doh"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -181,6 +181,8 @@ def main():
             af = socket.AF_INET6
         elif o in ("-e", "--edns"):
             use_edns = False
+        elif o in ("-r", "--norecurse"):
+            request_flags = dns.flags.from_text('')
         elif o in ("-D", "--dnssec"):
             want_dnssec = True
         elif o in ("-F", "--flags"):
