@@ -17,7 +17,6 @@ checkbin() {
 }
 
 ## validate required tools
-checkbin "virtualenv"
 checkbin "python3"
 
 ## constants
@@ -34,15 +33,22 @@ PKG_PATH="pkg/${PKG_NAME}"
 msg "Starting to build dnsdiag package version ${DDVER} for ${PLATFORM}-${ARCH}"
 
 ## main
-msg "Initializing virtualenv"
-virtualenv -q --clear .venv
-if [ -f .venv/bin/activate ]; then  # *nix
-  . .venv/bin/activate
-elif [ -f .venv/Scripts/activate ]; then  # windows
-  . .venv/Scripts/activate
+
+if [ $# -gt 0 ]; then
+    if [ $1 == "--venv" ]; then
+        msg "Initializing virtualenv"
+        checkbin "virtualenv"
+        virtualenv -q --clear .venv
+        if [ -f .venv/bin/activate ]; then  # *nix
+            . .venv/bin/activate
+        elif [ -f .venv/Scripts/activate ]; then  # windows
+            . .venv/Scripts/activate
+        fi
+    fi
 fi
 
 msg "Installing dependencies"
+pip3 install --upgrade pip
 pip3 install -q pyinstaller || die "Failed to install pyinstaller"
 pip3 install -q -r requirements.txt || die "Failed to install dependencies"
 
@@ -63,12 +69,13 @@ for i in public-servers.txt public-v4.txt rootservers.txt; do
 done
 
 cd pkg
-if [ "${PLATFORM}" = "windows" ]; then
+if [ "${PLATFORM}" == "windows" ]; then
     msg "Creating archive: ${PKG_NAME}.zip"
     powershell Compress-Archive -Force "${PKG_NAME}" "${PKG_NAME}.zip"
  else
     msg "Creating tarball: ${PKG_NAME}.tar.gz"
-    tar cf "${PKG_NAME}".tar "${PKG_NAME}" || die "Failed to build archive (tar)"
+    tar cf "${PKG_NAME}.tar" "${PKG_NAME}" || die "Failed to build archive (tar)"
     gzip -9f "${PKG_NAME}.tar"             || die "Failed to build archive (gzip)"
 fi
+
 rm -fr "${PKG_NAME}"
