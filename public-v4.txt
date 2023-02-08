@@ -1,19 +1,19 @@
-#Cloudflare
+## Cloudflare
 1.0.0.1
 1.1.1.1
 
-#SafeDNS
+## SafeDNS
 195.46.39.39
 195.46.39.40
 
-#OpenDNS
+## OpenDNS
 208.67.220.220
 208.67.222.222
 
-#DYN DNS
+## DYN DNS
 216.146.35.35
 
-#Level3
+## Level3
 209.244.0.3
 209.244.0.4
 4.2.2.1
@@ -22,14 +22,14 @@
 4.2.2.4
 4.2.2.5
 
-#freenom world
+## freenom world
 80.80.80.80
 80.80.81.81
 
-#Google
+## Google
 8.8.4.4
 8.8.8.8
 
-#PCH's Quad9
+## PCH's Quad9
 9.9.9.9
 149.112.112.112
