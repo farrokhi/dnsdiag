@@ -169,9 +169,10 @@ server                   avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)
 
 Babak Farrokhi 
 
-- twitter: [@farrokhi](https://twitter.com/farrokhi)
 - github: [github.com/farrokhi](https://github.com/farrokhi/)
 - website: [farrokhi.net](https://farrokhi.net/)
+- mastodon: [@farrokhi@unix.family](https://unix.family/@farrokhi)
+- twitter: [@farrokhi](https://twitter.com/farrokhi)
 
 
 ### License
