@@ -192,9 +192,9 @@ def signal_handler(sig, frame):
 
 
 def unsupported_feature():
-    print("Error: You have an older version of Python interpreter.")
+    print("Error: You have an unsupported version of Python interpreter dnspython library.")
     print("       Some features such as DoT and DoH are not available. You should upgrade")
-    print("       the Python interpreter to at least 3.6 and reinstall dependencies.")
+    print("       the Python interpreter to at least 3.7 and reinstall dependencies.")
     sys.exit(127)
 
 
