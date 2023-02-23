@@ -46,6 +46,7 @@ PROTO_UDP = 0
 PROTO_TCP = 1
 PROTO_TLS = 2
 PROTO_HTTPS = 3
+PROTO_QUIC = 4
 
 _TTL = None
 
@@ -70,6 +71,7 @@ def proto_to_text(proto):
         PROTO_TCP: 'TCP',
         PROTO_TLS: 'TLS',
         PROTO_HTTPS: 'HTTPS',
+        PROTO_QUIC: 'QUIC',
     }
     return _proto_name[proto]
 

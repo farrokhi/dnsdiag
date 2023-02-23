@@ -39,7 +39,8 @@ import dns.flags
 import dns.resolver
 import requests
 
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature, random_string
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, proto_to_text, unsupported_feature, \
+    random_string
 from util.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -53,19 +54,20 @@ def usage():
 usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
 
   -h  --help        Show this help
-  -q  --quiet       Quiet
+  -q  --quiet       Quiet output. Only header and statistics are displayed.
   -v  --verbose     Print actual dns response
   -s  --server      DNS server to use (default: first entry from /etc/resolv.conf)
-  -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
+  -p  --port        DNS server port number (default: 53 for TCP/UDP, 853 for TLS and QUIC)
   -T  --tcp         Use TCP as transport protocol
   -X  --tls         Use TLS as transport protocol
-  -H  --doh         Use HTTPS as transport protols (DoH)
+  -H  --doh         Use HTTPS as transport protocol (DoH)
+  -Q  --quic        Use QUIC as transport protocol (DoQ)
   -4  --ipv4        Use IPv4 as default network protocol
   -6  --ipv6        Use IPv6 as default network protocol
   -P  --srcport     Query source port number (default: 0)
   -S  --srcip       Query source IP address (default: default interface address)
   -c  --count       Number of requests to send (default: 10, 0 for infinity)
-  -r  --norecurse   Enforce non-recursive query by clearing the RD (recursion desired) bit in the query
+  -r  --norecurse   Enforce non-recursive query by clearing RD (recursion desired) bit
   -m  --cache-miss  Force cache miss measurement by prepending a random hostname
   -w  --wait        Maximum wait time for a reply (default: 2 seconds)
   -i  --interval    Time between each request (default: 1 seconds)
@@ -133,10 +135,10 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHr",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrQ",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
-                                    "dnssec", "flags", "norecurse", "tls", "doh"])
+                                    "dnssec", "flags", "norecurse", "tls", "doh", "quic"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -175,6 +177,9 @@ def main():
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
             dst_port = 443  # default for DoH, unless overriden using -p
+        elif o in ("-Q", "--quic"):
+            proto = PROTO_QUIC
+            dst_port = 853
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
         elif o in ("-6", "--ipv6"):
@@ -251,6 +256,13 @@ def main():
                 if hasattr(dns.query, 'https'):
                     answers = dns.query.https(query, dnsserver, timeout, dst_port,
                                               src_ip, src_port)
+                else:
+                    unsupported_feature()
+
+            elif proto is PROTO_QUIC:
+                if hasattr(dns.query, 'quic'):
+                    answers = dns.query.quic(query, dnsserver, timeout, dst_port,
+                                             src_ip, src_port)
                 else:
                     unsupported_feature()
 
