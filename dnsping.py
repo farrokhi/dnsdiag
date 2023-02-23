@@ -39,8 +39,8 @@ from statistics import stdev
 import dns.flags
 import dns.resolver
 
-import util.dns
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature, random_string
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, proto_to_text, unsupported_feature, \
+    random_string
 from util.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -54,6 +54,7 @@ def usage():
 Usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] hostname
 
+<<<<<<< HEAD
   -h, --help        Show this help message
   -q, --quiet       Suppress output
   -v, --verbose     Print the full DNS response
@@ -82,7 +83,7 @@ Usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_po
   -F, --flags       Display response flags
   -x, --expert      Display additional information (implies --ttl, --flags, --ede)
 """ % (__progname__, __version__, __progname__, ' ' * len(__progname__)))
-    sys.exit(0)
+   sys.exit(0)
 
 
 def setup_signal_handler():
@@ -155,7 +156,7 @@ def main():
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
-                                    "expert", "answer"])
+                                    "expert", "answer", "quic"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print_stderr(err, False)  # will print something like "option -a not recognized"
@@ -211,6 +212,9 @@ def main():
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
             dst_port = 443  # default for DoH, unless overridden using -p
+        elif o in ("-Q", "--quic"):
+            proto = PROTO_QUIC
+            dst_port = 853
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
         elif o in ("-6", "--ipv6"):
@@ -301,6 +305,13 @@ def main():
                 if hasattr(dns.query, 'https'):
                     answers = dns.query.https(query, dnsserver, timeout, dst_port,
                                               src_ip, src_port)
+                else:
+                    unsupported_feature()
+
+            elif proto is PROTO_QUIC:
+                if hasattr(dns.query, 'quic'):
+                    answers = dns.query.quic(query, dnsserver, timeout, dst_port,
+                                             src_ip, src_port)
                 else:
                     unsupported_feature()
 
