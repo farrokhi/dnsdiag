@@ -205,10 +205,12 @@ def signal_handler(sig, frame):
     shutdown = True  # pressed once, exit gracefully
 
 
-def unsupported_feature():
+def unsupported_feature(feature=""):
     print("Error: You have an unsupported version of Python interpreter dnspython library.")
     print("       Some features such as DoT and DoH are not available. You should upgrade")
     print("       the Python interpreter to at least 3.7 and reinstall dependencies.")
+    if feature:
+        print("Missing Feature: %s" % feature)
     sys.exit(127)
 
 

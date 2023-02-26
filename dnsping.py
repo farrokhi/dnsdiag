@@ -303,24 +303,27 @@ def main():
                                         source=src_ip, source_port=src_port)
             elif proto is PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
-                    answers = dns.query.tls(query, dnsserver, timeout, dst_port,
-                                            src_ip, src_port)
+                    answers = dns.query.tls(query, dnsserver, timeout=timeout, port=dst_port,
+                                            source=src_ip, source_port=src_port)
                 else:
-                    unsupported_feature()
+                    unsupported_feature("DNS-over-TLS")
 
             elif proto is PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
-                    answers = dns.query.https(query, dnsserver, timeout, dst_port,
-                                              src_ip, src_port)
+                    answers = dns.query.https(query, dnsserver, timeout=timeout, port=dst_port,
+                                              source=src_ip, source_port=src_port)
                 else:
-                    unsupported_feature()
+                    unsupported_feature("DNS-over-HTTPS (DoH)")
 
             elif proto is PROTO_QUIC:
                 if hasattr(dns.query, 'quic'):
-                    answers = dns.query.quic(query, dnsserver, timeout, dst_port,
-                                             src_ip, src_port)
+                    try:
+                        answers = dns.query.quic(query, dnsserver, timeout=timeout, port=dst_port,
+                                                 source=src_ip, source_port=src_port)
+                    except dns.exception.BadResponse:
+                        print("BadResponse expection raised")
                 else:
-                    unsupported_feature()
+                    unsupported_feature("DNS-over-QUIC (DoQ)")
 
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
