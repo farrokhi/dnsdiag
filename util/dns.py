@@ -76,6 +76,17 @@ def proto_to_text(proto):
     return _proto_name[proto]
 
 
+def getDefaultPort(proto):
+    _proto_port = {
+        PROTO_UDP: 53,
+        PROTO_TCP: 53,
+        PROTO_TLS: 853,  # RFC 7858, Secion 3.1
+        PROTO_HTTPS: 443,
+        PROTO_QUIC: 853,  # RFC 9250, Section 4.1.1
+    }
+    return _proto_port[proto]
+
+
 class CustomSocket(socket.socket):
     def __init__(self, *args, **kwargs):
         super(CustomSocket, self).__init__(*args, **kwargs)
