@@ -40,7 +40,7 @@ import dns.resolver
 import requests
 
 from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, proto_to_text, unsupported_feature, \
-    random_string
+    random_string, getDefaultPort
 from util.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -123,10 +123,11 @@ def main():
     verbose = False
     show_flags = False
     dnsserver = None  # do not try to use system resolver by default
-    dst_port = 53  # default for UDP and TCP
+    proto = PROTO_UDP
+    dst_port = getDefaultPort(proto)
+    use_default_dst_port = True
     src_port = 0
     src_ip = None
-    proto = PROTO_UDP
     use_edns = True
     want_dnssec = False
     force_miss = False
@@ -171,15 +172,20 @@ def main():
             rdatatype = a
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
-            dst_port = 853  # default for DoT, unless overriden using -p
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
-            dst_port = 443  # default for DoH, unless overriden using -p
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
         elif o in ("-Q", "--quic"):
             proto = PROTO_QUIC
-            dst_port = 853
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
         elif o in ("-6", "--ipv6"):
@@ -194,6 +200,7 @@ def main():
             show_flags = True
         elif o in ("-p", "--port"):
             dst_port = int(a)
+            use_default_dst_port = False
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024:
