@@ -63,8 +63,8 @@ usage: %s [-ehmvCTXH] [-f server-list] [-j output.json] [-c count] [-t type] [-p
   -H  --doh         Use HTTPS as transport protols (DoH)
   -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
   -S  --srcip       Query source IP address
-  -e  --edns        Disable EDNS0 (default: Enabled)
-  -D  --dnssec      Enable 'DNSSEC desired' flag in requests.
+  -e  --edns        Enable EDNS0
+  -D  --dnssec      Enable 'DNSSEC desired' (DO flag) in requests
   -C  --color       Print colorful output
   -v  --verbose     Print actual dns response
 """ % (__progname__, __version__, __progname__))
@@ -92,7 +92,7 @@ def main():
     inputfilename = None
     fromfile = False
     json_output = False
-    use_edns = True
+    use_edns = False
     want_dnssec = False
     force_miss = False
     verbose = False
@@ -134,9 +134,10 @@ def main():
             json_output = True
             json_filename = a
         elif o in ("-e", "--edns"):
-            use_edns = False
+            use_edns = True
         elif o in ("-D", "--dnssec"):
             want_dnssec = True
+            use_edns = True  # implied
         elif o in ("-C", "--color"):
             color_mode = True
         elif o in ("-v", "--verbose"):

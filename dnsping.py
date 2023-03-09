@@ -70,7 +70,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -w  --wait        Maximum wait time for a reply (default: 2 seconds)
   -i  --interval    Time between each request (default: 1 seconds)
   -t  --type        DNS request record type (default: A)
-  -e  --edns        Disable EDNS0 (default: Enabled)
+  -e  --edns        Enable EDNS0 and set
   -D  --dnssec      Enable 'DNSSEC desired' flag in requests. Implies EDNS.
   -F  --flags       Display response flags
 """ % (__progname__, __version__, __progname__))
@@ -125,7 +125,7 @@ def main():
     src_port = 0
     src_ip = None
     proto = PROTO_UDP
-    use_edns = True
+    use_edns = False
     want_dnssec = False
     force_miss = False
     request_flags = dns.flags.from_text('RD')
@@ -180,11 +180,12 @@ def main():
         elif o in ("-6", "--ipv6"):
             af = socket.AF_INET6
         elif o in ("-e", "--edns"):
-            use_edns = False
+            use_edns = True
         elif o in ("-r", "--norecurse"):
             request_flags = dns.flags.from_text('')
         elif o in ("-D", "--dnssec"):
             want_dnssec = True
+            use_edns = True  # implied
         elif o in ("-F", "--flags"):
             show_flags = True
         elif o in ("-p", "--port"):
@@ -226,11 +227,10 @@ def main():
 
         if use_edns:
             query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN, flags=request_flags,
-                                           use_edns=True, want_dnssec=want_dnssec,
-                                           ednsflags=dns.flags.EDNSFlag.DO, payload=8192)
+                                           use_edns=True, want_dnssec=want_dnssec, payload=8192)
         else:
             query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN, flags=request_flags,
-                                           use_edns=False, want_dnssec=want_dnssec)
+                                           use_edns=False, want_dnssec=False)
 
         try:
             stime = time.perf_counter()
