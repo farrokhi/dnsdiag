@@ -72,7 +72,7 @@ usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostna
   -w  --wait      Maximum wait time for a reply (default: 2)
   -t  --type      DNS request record type (default: A)
   -C  --color     Print colorful output
-  -e  --edns      Disable EDNS0 (Default: Enabled)
+  -e  --edns      Enable EDNS0 (Default: Disabled)
 """ % (__progname__, __version__, __progname__))
     sys.exit()
 
@@ -110,7 +110,7 @@ def expert_report(trace_path, color_mode):
     print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
-def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns=False):
+def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
     reached = False
     resp_time = None
 
@@ -151,7 +151,7 @@ def main():
     as_lookup = False
     expert_mode = False
     should_resolve = True
-    use_edns = True
+    use_edns = False
     color_mode = False
 
     args = None
@@ -197,7 +197,7 @@ def main():
         elif o in ("-a", "--asn"):
             as_lookup = True
         elif o in ("-e", "--edns"):
-            use_edns = False
+            use_edns = True
         else:
             usage()
 
