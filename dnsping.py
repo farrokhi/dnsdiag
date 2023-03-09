@@ -39,6 +39,7 @@ import dns.flags
 import dns.resolver
 import requests
 
+import util.dns
 from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature, random_string
 from util.shared import __version__
 
@@ -208,6 +209,11 @@ def main():
 
     response_time = []
     i = 0
+
+    # validate RR type
+    if not util.dns.valid_rdatatype(rdatatype):
+        print('Error: Invalid record type "%s" ' % rdatatype)
+        sys.exit(1)
 
     print("%s DNS: %s:%d, hostname: %s, proto: %s, type: %s, flags: [%s]" %
           (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), rdatatype,
