@@ -203,6 +203,11 @@ def main():
 
     color = Colors(color_mode)
 
+    # validate RR type
+    if not util.dns.valid_rdatatype(rdatatype):
+        print('Error: Invalid record type "%s" ' % rdatatype)
+        sys.exit(1)
+
     # Use system DNS server if parameter is not specified
     # remember not all systems have /etc/resolv.conf (i.e. Android)
     if dnsserver is None:

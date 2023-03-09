@@ -155,6 +155,11 @@ def main():
             print("Invalid option: %s" % o)
             usage()
 
+    # validate RR type
+    if not util.dns.valid_rdatatype(rdatatype):
+        print('Error: Invalid record type "%s" ' % rdatatype)
+        sys.exit(1)
+
     color = Colors(color_mode)
 
     try:
@@ -174,7 +179,7 @@ def main():
             f = dns.resolver.get_default_resolver().nameservers
 
         if len(f) == 0:
-            print("No nameserver specified")
+            print("Error: No nameserver specified")
 
         f = [name.strip() for name in f]  # remove annoying blanks
         f = [x for x in f if not x.startswith('#') and len(x)]  # remove comments and empty entries

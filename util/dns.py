@@ -197,6 +197,15 @@ def unsupported_feature():
     sys.exit(127)
 
 
+def valid_rdatatype(rtype):
+    # validate RR type
+    try:
+        _ = dns.rdatatype.from_text(rtype)
+    except dns.rdatatype.UnknownRdatatype:
+        return False
+    return True
+
+
 def flags_to_text(flags):
     # Standard DNS flags
 
