@@ -209,7 +209,7 @@ def main():
     response_time = []
     i = 0
 
-    print("%s DNS: %s:%d, hostname: %s, proto: %s, rdatatype: %s, flags: %s" %
+    print("%s DNS: %s:%d, hostname: %s, proto: %s, type: %s, flags: [%s]" %
           (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), rdatatype,
            dns.flags.to_text(request_flags)), flush=True)
 
