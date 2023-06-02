@@ -193,7 +193,7 @@ def main():
             dst_port = int(a)
         elif o in ("-P", "--srcport"):
             src_port = int(a)
-            if src_port < 1024:
+            if src_port < 1024 and not quiet:
                 print("WARNING: Source ports below 1024 are only available to superuser", flush=True)
         elif o in ("-S", "--srcip"):
             src_ip = a
@@ -273,6 +273,14 @@ def main():
         except requests.exceptions.ReadTimeout:
             if not quiet:
                 print("Read timeout", flush=True)
+        except PermissionError:
+            if not quiet:
+                print("Permission denied", file=sys.stderr, flush=True)
+            sys.exit(1)
+        except OSError as e:
+            if not quiet:
+                print("%s" % e, file=sys.stderr, flush=True)
+            sys.exit(1)
         except ValueError:
             if not quiet:
                 print("Invalid Response", flush=True)
