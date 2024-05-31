@@ -31,12 +31,12 @@ import socket
 import sys
 from statistics import stdev
 
+import httpx
 import dns.flags
 import dns.message
 import dns.query
 import dns.rcode
 import dns.rdataclass
-import requests.exceptions
 import string
 
 shutdown = False
@@ -126,8 +126,8 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
                 else:
                     unsupported_feature()
 
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout,
-                requests.exceptions.ConnectionError):
+        except (httpx.ConnectTimeout, httpx.ReadTimeout,
+                httpx.ConnectError):
             raise ConnectionError('Connection failed')
         except ValueError:
             retval.rcode_text = "Invalid Response"
