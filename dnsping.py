@@ -72,6 +72,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -i  --interval    Time between each request (default: 1 seconds)
   -t  --type        DNS request record type (default: A)
   -e  --edns        Enable EDNS0 and set
+  -n  --nsid        Enable NSID bit to find out identification of the resulver. Implies EDNS.
   -D  --dnssec      Enable 'DNSSEC desired' flag in requests. Implies EDNS.
   -F  --flags       Display response flags
 """ % (__progname__, __version__, __progname__))
@@ -127,6 +128,7 @@ def main():
     src_ip = None
     proto = PROTO_UDP
     use_edns = False
+    want_nsid = False
     want_dnssec = False
     force_miss = False
     request_flags = dns.flags.from_text('RD')
@@ -134,10 +136,10 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHr",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrn",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
-                                    "dnssec", "flags", "norecurse", "tls", "doh"])
+                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -182,11 +184,14 @@ def main():
             af = socket.AF_INET6
         elif o in ("-e", "--edns"):
             use_edns = True
+        elif o in ("-n", "--nsid"):
+            use_edns = True  # required
+            want_nsid = True
         elif o in ("-r", "--norecurse"):
             request_flags = dns.flags.from_text('')
         elif o in ("-D", "--dnssec"):
+            use_edns = True  # required
             want_dnssec = True
-            use_edns = True  # implied
         elif o in ("-F", "--flags"):
             show_flags = True
         elif o in ("-p", "--port"):
@@ -232,8 +237,13 @@ def main():
             fqdn = qname
 
         if use_edns:
+            edns_options = []
+            if want_nsid:
+                edns_options.append(dns.edns.GenericOption(dns.edns.NSID,''))
+
             query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN, flags=request_flags,
-                                           use_edns=True, want_dnssec=want_dnssec, payload=8192)
+                                           use_edns=True, want_dnssec=want_dnssec, payload=8192,
+                                           options=edns_options)
         else:
             query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN, flags=request_flags,
                                            use_edns=False, want_dnssec=False)
@@ -294,12 +304,20 @@ def main():
                 elapsed = answers.time * 1000
             response_time.append(elapsed)
             if not quiet:
+                flags = ""
                 if show_flags:
-                    flags = " [%s]  %s" % (dns.flags.to_text(answers.flags), dns.rcode.to_text(answers.rcode()))
-                else:
-                    flags = ""
-                print("%d bytes from %s: seq=%-3d time=%-7.3f ms%s" % (
+                    flags += " [%s]  %s" % (dns.flags.to_text(answers.flags), dns.rcode.to_text(answers.rcode()))
+
+                if want_nsid:
+                    for ans_opt in answers.options:
+                        if ans_opt.otype == dns.edns.OptionType.NSID:
+                            nsid_val = ans_opt.nsid
+                            flags += " NSID=\"%s\"" % nsid_val.decode("utf-8")
+
+                print("%d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
                     len(answers.to_wire()), dnsserver, i, elapsed, flags), flush=True)
+
+
             if verbose:
                 print(answers.to_text(), flush=True)
 
