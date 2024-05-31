@@ -60,7 +60,7 @@ for i in dnsping.py dnstraceroute.py dnseval.py; do
         --log-level=ERROR \
         --distpath="${PKG_PATH}" \
         --hidden-import=dns \
-        --hidden-import=requests
+        --hidden-import=httpx
 done
 
 msg "Adding extra files..."

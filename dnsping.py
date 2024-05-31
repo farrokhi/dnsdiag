@@ -33,11 +33,11 @@ import signal
 import socket
 import sys
 import time
+import httpx
 from statistics import stdev
 
 import dns.flags
 import dns.resolver
-import requests
 
 import util.dns
 from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature, random_string
@@ -267,10 +267,10 @@ def main():
                 if verbose:
                     print("error:", e, file=sys.stderr, flush=True)
             sys.exit(1)
-        except (requests.exceptions.ConnectTimeout, dns.exception.Timeout):
+        except (httpx.ConnectTimeout, dns.exception.Timeout):
             if not quiet:
                 print("Request timeout", flush=True)
-        except requests.exceptions.ReadTimeout:
+        except httpx.ReadTimeout:
             if not quiet:
                 print("Read timeout", flush=True)
         except PermissionError:
