@@ -72,6 +72,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -i  --interval    Time between each request (default: 1 seconds)
   -t  --type        DNS request record type (default: A)
   -e  --edns        Enable EDNS0 and set
+  -E  --ede         Display EDE messages when available
   -n  --nsid        Enable NSID bit to find out identification of the resulver. Implies EDNS.
   -D  --dnssec      Enable 'DNSSEC desired' flag in requests. Implies EDNS.
   -F  --flags       Display response flags
@@ -122,6 +123,7 @@ def main():
     quiet = False
     verbose = False
     show_flags = False
+    show_ede = False
     dnsserver = None  # do not try to use system resolver by default
     dst_port = 53  # default for UDP and TCP
     src_port = 0
@@ -136,10 +138,10 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrn",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnE",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
-                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid"])
+                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid","ede"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -194,6 +196,8 @@ def main():
             want_dnssec = True
         elif o in ("-F", "--flags"):
             show_flags = True
+        elif o in ("-E", "--ede"):
+            show_ede = True
         elif o in ("-p", "--port"):
             dst_port = int(a)
         elif o in ("-P", "--srcport"):
@@ -307,7 +311,10 @@ def main():
                 flags = ""
                 if show_flags:
                     flags += " [%s]  %s" % (dns.flags.to_text(answers.flags), dns.rcode.to_text(answers.rcode()))
-
+                if show_ede:
+                    for ans_opt in answers.options:
+                        if ans_opt.otype == dns.edns.EDE:
+                            flags += " [%d: %s] " % (ans_opt.code, ans_opt.text)
                 if want_nsid:
                     for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
