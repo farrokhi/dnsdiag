@@ -246,7 +246,7 @@ def main():
                 edns_options.append(dns.edns.GenericOption(dns.edns.NSID,''))
 
             query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN, flags=request_flags,
-                                           use_edns=True, want_dnssec=want_dnssec, payload=8192,
+                                           use_edns=True, want_dnssec=want_dnssec, payload=1232,
                                            options=edns_options)
         else:
             query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN, flags=request_flags,

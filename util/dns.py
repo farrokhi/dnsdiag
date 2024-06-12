@@ -105,7 +105,7 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
             fqdn = qname
 
         if use_edns:
-            query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec, payload=8192)
+            query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec, payload=1232)
         else:
             query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns=False, want_dnssec=False)
 
