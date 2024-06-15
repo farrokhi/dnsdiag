@@ -71,6 +71,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -w  --wait        Maximum wait time for a reply (default: 2 seconds)
   -i  --interval    Time between each request (default: 1 seconds)
   -t  --type        DNS request record type (default: A)
+  -C  --class       DNS request record class (default: IN)
   -e  --edns        Enable EDNS0 and set
   -E  --ede         Display EDE messages when available
   -n  --nsid        Enable NSID bit to find out identification of the resulver. Implies EDNS.
@@ -117,6 +118,7 @@ def main():
 
     # defaults
     rdatatype = 'A'
+    rdata_class = dns.rdataclass.from_text('IN')
     count = 10
     timeout = 2
     interval = 1
@@ -138,10 +140,10 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnE",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
-                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid","ede"])
+                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err, file=sys.stderr)  # will print something like "option -a not recognized"
@@ -172,6 +174,13 @@ def main():
             interval = float(a)
         elif o in ("-t", "--type"):
             rdatatype = a
+        elif o in ("-C", "--class"):
+            try:
+                rdata_class = dns.rdataclass.from_text(a)
+            except dns.rdataclass.UnknownRdataclass:
+                print("Invalid RR class: %s" % a, file=sys.stderr, flush=True)
+                sys.exit(1)
+
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
         elif o in ("-X", "--tls"):
@@ -224,9 +233,9 @@ def main():
         print('Error: Invalid record type "%s" ' % rdatatype)
         sys.exit(1)
 
-    print("%s DNS: %s:%d, hostname: %s, proto: %s, type: %s, flags: [%s]" %
-          (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), rdatatype,
-           dns.flags.to_text(request_flags)), flush=True)
+    print("%s DNS: %s:%d, hostname: %s, proto: %s, class: %s, type: %s, flags: [%s]" %
+          (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), dns.rdataclass.to_text(rdata_class),
+           rdatatype, dns.flags.to_text(request_flags)), flush=True)
 
     while not shutdown:
 
@@ -243,13 +252,13 @@ def main():
         if use_edns:
             edns_options = []
             if want_nsid:
-                edns_options.append(dns.edns.GenericOption(dns.edns.NSID,''))
+                edns_options.append(dns.edns.GenericOption(dns.edns.NSID, ''))
 
-            query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN, flags=request_flags,
+            query = dns.message.make_query(fqdn, rdatatype, rdata_class, flags=request_flags,
                                            use_edns=True, want_dnssec=want_dnssec, payload=1232,
                                            options=edns_options)
         else:
-            query = dns.message.make_query(fqdn, rdatatype, dns.rdataclass.IN, flags=request_flags,
+            query = dns.message.make_query(fqdn, rdatatype, rdata_class, flags=request_flags,
                                            use_edns=False, want_dnssec=False)
 
         try:
