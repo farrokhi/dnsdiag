@@ -322,16 +322,19 @@ def main():
             if not quiet:
                 flags = ""
                 if show_flags:
-                    flags += " [%s]  %s" % (dns.flags.to_text(answers.flags), dns.rcode.to_text(answers.rcode()))
+                    ans_flags = dns.flags.to_text(answers.flags)
+                    edns_flags = dns.flags.edns_to_text(answers.ednsflags)
+                    flags += "[%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # add legacy and edns flags
+                    flags += " %s" % dns.rcode.to_text(answers.rcode())  # add response code
                 if show_ede:
-                    for ans_opt in answers.options:
+                    for ans_opt in answers.options:  # EDE response is optional, but print if there is one
                         if ans_opt.otype == dns.edns.EDE:
-                            flags += " [%d: %s] " % (ans_opt.code, ans_opt.text)
+                            flags += " [EDE %d: %s]" % (ans_opt.code, ans_opt.text)
                 if want_nsid:
                     for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
                             nsid_val = ans_opt.nsid
-                            flags += " NSID=\"%s\"" % nsid_val.decode("utf-8")
+                            flags += " [NSID: %s]" % nsid_val.decode("utf-8")
 
                 print("%d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
                     len(answers.to_wire()), dnsserver, i, elapsed, flags), flush=True)
