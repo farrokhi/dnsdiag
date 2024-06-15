@@ -62,26 +62,28 @@ dnsping pings a DNS resolver by sending an arbitrary DNS query for given number 
 A complete explanation of supported command line flags is shown by using `--help`. Here are a few useful flags:
 
 - Using `--tcp`, `--tls` and `--doh` to select transport protocol. Default is UDP.
-- Using `--flags` to display response flags for each response
+- Using `--flags` to display response flags (including EDNS flags) for each response
 - Using `--dnssec` to request DNSSEC if available
+- Using `--ede` to display Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914))
+- Using `--nsid` to display Name Server Identifier (NSID) if available ([RFC 5001](https://www.rfc-editor.org/rfc/rfc5001))
 
 In addition to UDP, you can ping using TCP, DoT (DNS over TLS) and DoH (DNS over HTTPS) using `--tcp`, `--tls` and `--doh` respectively.
 
 ```shell
-./dnsping.py -c 5 --dnssec --flags --tls -t AAAA -s 9.9.9.9 ripe.net
+./dnsping.py -c 5 --dnssec --flags --tls --ede -t AAAA -s 8.8.8.8 brokendnssec.net
 ```
 
 ```
-dnsping.py DNS: 9.9.9.9:853, hostname: ripe.net, proto: TLS, rdatatype: AAAA, flags: RD
-169 bytes from 9.9.9.9: seq=1   time=279.805 ms [QR RD RA AD]  NOERROR
-169 bytes from 9.9.9.9: seq=2   time=107.237 ms [QR RD RA AD]  NOERROR
-169 bytes from 9.9.9.9: seq=3   time=96.747  ms [QR RD RA AD]  NOERROR
-169 bytes from 9.9.9.9: seq=4   time=107.782 ms [QR RD RA AD]  NOERROR
-169 bytes from 9.9.9.9: seq=5   time=94.713  ms [QR RD RA AD]  NOERROR
+dnsping.py DNS: 8.8.8.8:853, hostname: brokendnssec.net, proto: TLS, class: IN, type: AAAA, flags: [RD]
+75 bytes from 8.8.8.8: seq=1   time=113.631 ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
+75 bytes from 8.8.8.8: seq=2   time=115.479 ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
+75 bytes from 8.8.8.8: seq=3   time=90.882  ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
+75 bytes from 8.8.8.8: seq=4   time=91.256  ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
+75 bytes from 8.8.8.8: seq=5   time=94.072  ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
 
---- 9.9.9.9 dnsping statistics ---
+--- 8.8.8.8 dnsping statistics ---
 5 requests transmitted, 5 responses received, 0% lost
-min=94.713 ms, avg=137.257 ms, max=279.805 ms, stddev=79.908 ms
+min=90.882 ms, avg=101.064 ms, max=115.479 ms, stddev=12.394 ms
 ```
 
 It also displays statistics such as minimum, maximum and average response time as well as
