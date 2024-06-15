@@ -96,6 +96,12 @@ def signal_handler(sig, frame):
     shutdown = True  # pressed once, exit gracefully
 
 
+def print_stderr(s, should_die):
+    print(s, file=sys.stderr, flush=True)
+    if should_die:
+        sys.exit(1)
+
+
 def validate_server_address(dnsserver, address_family):
     """checks if we have a valid dns server address and resolve if it is a hostname"""
 
@@ -105,8 +111,7 @@ def validate_server_address(dnsserver, address_family):
         try:
             dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family)[1][4][0]
         except OSError:
-            print('Error: cannot resolve hostname:', dnsserver, file=sys.stderr, flush=True)
-            sys.exit(1)
+            print_stderr('Error: cannot resolve hostname: %s' % dnsserver, True)
     return dnsserver
 
 
@@ -146,7 +151,7 @@ def main():
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class="])
     except getopt.GetoptError as err:
         # print help information and exit:
-        print(err, file=sys.stderr)  # will print something like "option -a not recognized"
+        print_stderr(err, False)  # will print something like "option -a not recognized"
         usage()
 
     if args and len(args) == 1:
@@ -178,17 +183,16 @@ def main():
             try:
                 rdata_class = dns.rdataclass.from_text(a)
             except dns.rdataclass.UnknownRdataclass:
-                print("Invalid RR class: %s" % a, file=sys.stderr, flush=True)
-                sys.exit(1)
+                print_stderr("Invalid RR class: %s" % a, True)
 
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
-            dst_port = 853  # default for DoT, unless overriden using -p
+            dst_port = 853  # default for DoT, unless overridden using -p
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
-            dst_port = 443  # default for DoH, unless overriden using -p
+            dst_port = 443  # default for DoH, unless overridden using -p
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
         elif o in ("-6", "--ipv6"):
@@ -212,7 +216,7 @@ def main():
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024 and not quiet:
-                print("WARNING: Source ports below 1024 are only available to superuser", flush=True)
+                print_stderr("WARNING: Source ports below 1024 are only available to superuser", False)
         elif o in ("-S", "--srcip"):
             src_ip = a
         else:
@@ -230,8 +234,7 @@ def main():
 
     # validate RR type
     if not util.dns.valid_rdatatype(rdatatype):
-        print('Error: Invalid record type "%s" ' % rdatatype)
-        sys.exit(1)
+        print_stderr('Error: Invalid record type: %s ' % rdatatype, True)
 
     print("%s DNS: %s:%d, hostname: %s, proto: %s, class: %s, type: %s, flags: [%s]" %
           (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), dns.rdataclass.to_text(rdata_class),
@@ -286,9 +289,9 @@ def main():
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
             if not quiet:
-                print("No response to DNS request", file=sys.stderr, flush=True)
+                print_stderr("No response to DNS request", False)
                 if verbose:
-                    print("error:", e, file=sys.stderr, flush=True)
+                    print_stderr("error: %s" % e, False)
             sys.exit(1)
         except (httpx.ConnectTimeout, dns.exception.Timeout):
             if not quiet:
@@ -298,15 +301,15 @@ def main():
                 print("Read timeout", flush=True)
         except PermissionError:
             if not quiet:
-                print("Permission denied", file=sys.stderr, flush=True)
+                print_stderr("Permission denied", True)
             sys.exit(1)
         except OSError as e:
             if not quiet:
-                print("%s" % e, file=sys.stderr, flush=True)
+                print_stderr("%s" % e, True)
             sys.exit(1)
         except ValueError:
             if not quiet:
-                print("Invalid Response", flush=True)
+                print_stderr("Invalid Response", False)
                 continue
         else:
             # convert time to milliseconds, considering that
@@ -332,7 +335,6 @@ def main():
 
                 print("%d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
                     len(answers.to_wire()), dnsserver, i, elapsed, flags), flush=True)
-
 
             if verbose:
                 print(answers.to_text(), flush=True)
