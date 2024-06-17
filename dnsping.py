@@ -334,16 +334,16 @@ def main():
             response_time.append(elapsed)
             if not quiet:
                 extras = ""
+                extras += " %s" % dns.rcode.to_text(answers.rcode())  # add response code
                 if show_ttl:
                     if answers.answer:
                         ans_ttl = str(answers.answer[0].ttl)
-                        extras += "[TTL=%-4s] " % ans_ttl
+                        extras += " [TTL=%-4s]" % ans_ttl
 
                 if show_flags:
                     ans_flags = dns.flags.to_text(answers.flags)
                     edns_flags = dns.flags.edns_to_text(answers.ednsflags)
-                    extras += "[%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # add legacy and edns flags
-                    extras += " %s" % dns.rcode.to_text(answers.rcode())  # add response code
+                    extras += " [%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # add legacy and edns flags
                 if show_ede:
                     for ans_opt in answers.options:  # EDE response is optional, but print if there is one
                         if ans_opt.otype == dns.edns.EDE:
@@ -354,7 +354,7 @@ def main():
                             nsid_val = ans_opt.nsid
                             extras += " [NSID: %s]" % nsid_val.decode("utf-8")
 
-                print("%d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
+                print("%-3d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
                     len(answers.to_wire()), dnsserver, i, elapsed, extras), flush=True)
 
             if verbose:
