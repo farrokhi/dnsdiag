@@ -75,7 +75,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -C  --class       DNS request record class (default: IN)
   -e  --edns        Enable EDNS0 and set
   -E  --ede         Display EDE messages when available
-  -n  --nsid        Enable NSID bit to find out identification of the resulver. Implies EDNS.
+  -n  --nsid        Enable NSID bit to find out identification of the resolver. Implies EDNS.
   -D  --dnssec      Enable 'DNSSEC desired' flag in requests. Implies EDNS.
   -F  --flags       Display response flags
   -x  --expert      Display extra information. Implies --ttl --flags --ede.
