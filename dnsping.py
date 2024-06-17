@@ -330,7 +330,7 @@ def main():
                 continue
         else:
             # convert time to milliseconds, considering that
-            # time property is retruned differently by query.https
+            # time property is returned differently by query.https
             if type(answers.time) is datetime.timedelta:
                 elapsed = answers.time.total_seconds() * 1000
             else:
@@ -339,6 +339,7 @@ def main():
             if not quiet:
                 extras = ""
                 extras += " %s" % dns.rcode.to_text(answers.rcode())  # add response code
+
                 if show_ttl:
                     if answers.answer:
                         ans_ttl = str(answers.answer[0].ttl)
@@ -347,11 +348,8 @@ def main():
                 if show_flags:
                     ans_flags = dns.flags.to_text(answers.flags)
                     edns_flags = dns.flags.edns_to_text(answers.ednsflags)
-                    extras += " [%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # add legacy and edns flags
-                if show_ede:
-                    for ans_opt in answers.options:  # EDE response is optional, but print if there is one
-                        if ans_opt.otype == dns.edns.EDE:
-                            extras += " [EDE %d: %s]" % (ans_opt.code, ans_opt.text)
+                    extras += " [%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # display both regular and edns flags
+
                 if want_nsid:
                     for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
