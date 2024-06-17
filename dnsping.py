@@ -326,10 +326,9 @@ def main():
             if not quiet:
                 extras = ""
                 if show_ttl:
-                    ans_ttl = ""
                     if answers.answer:
                         ans_ttl = str(answers.answer[0].ttl)
-                    extras += "[TTL=%-4s] " % ans_ttl
+                        extras += "[TTL=%-4s] " % ans_ttl
 
                 if show_flags:
                     ans_flags = dns.flags.to_text(answers.flags)
