@@ -144,10 +144,10 @@ def main():
             verbose = True
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
-            dst_port = 853  # default for DoT, unless overriden using -p
+            dst_port = 853  # default for DoT, unless overridden using -p
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
-            dst_port = 443  # default for DoH, unless overriden using -p
+            dst_port = 443  # default for DoH, unless overridden using -p
         elif o in ("-p", "--port"):
             dst_port = int(a)
 
