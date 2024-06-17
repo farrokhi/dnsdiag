@@ -71,6 +71,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -w  --wait        Maximum wait time for a reply (default: 2 seconds)
   -i  --interval    Time between each request (default: 1 seconds)
   -t  --type        DNS request record type (default: A)
+  -T  --ttl         Display response TTL (if present)
   -C  --class       DNS request record class (default: IN)
   -e  --edns        Enable EDNS0 and set
   -E  --ede         Display EDE messages when available
@@ -139,16 +140,17 @@ def main():
     use_edns = False
     want_nsid = False
     want_dnssec = False
+    show_ttl = False
     force_miss = False
     request_flags = dns.flags.from_text('RD')
     af = socket.AF_INET
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:T",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
-                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class="])
+                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print_stderr(err, False)  # will print something like "option -a not recognized"
@@ -177,6 +179,8 @@ def main():
             force_miss = True
         elif o in ("-i", "--interval"):
             interval = float(a)
+        elif o in ("-T", "--ttl"):
+            show_ttl = True
         elif o in ("-t", "--type"):
             rdatatype = a
         elif o in ("-C", "--class"):
@@ -320,24 +324,30 @@ def main():
                 elapsed = answers.time * 1000
             response_time.append(elapsed)
             if not quiet:
-                flags = ""
+                extras = ""
+                if show_ttl:
+                    ans_ttl = ""
+                    if answers.answer:
+                        ans_ttl = str(answers.answer[0].ttl)
+                    extras += "[TTL=%-4s] " % ans_ttl
+
                 if show_flags:
                     ans_flags = dns.flags.to_text(answers.flags)
                     edns_flags = dns.flags.edns_to_text(answers.ednsflags)
-                    flags += "[%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # add legacy and edns flags
-                    flags += " %s" % dns.rcode.to_text(answers.rcode())  # add response code
+                    extras += "[%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # add legacy and edns flags
+                    extras += " %s" % dns.rcode.to_text(answers.rcode())  # add response code
                 if show_ede:
                     for ans_opt in answers.options:  # EDE response is optional, but print if there is one
                         if ans_opt.otype == dns.edns.EDE:
-                            flags += " [EDE %d: %s]" % (ans_opt.code, ans_opt.text)
+                            extras += " [EDE %d: %s]" % (ans_opt.code, ans_opt.text)
                 if want_nsid:
                     for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
                             nsid_val = ans_opt.nsid
-                            flags += " [NSID: %s]" % nsid_val.decode("utf-8")
+                            extras += " [NSID: %s]" % nsid_val.decode("utf-8")
 
                 print("%d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
-                    len(answers.to_wire()), dnsserver, i, elapsed, flags), flush=True)
+                    len(answers.to_wire()), dnsserver, i, elapsed, extras), flush=True)
 
             if verbose:
                 print(answers.to_text(), flush=True)
