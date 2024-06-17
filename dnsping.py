@@ -167,7 +167,10 @@ def main():
         if o in ("-h", "--help"):
             usage()
         elif o in ("-c", "--count"):
-            count = abs(int(a))
+            if a.isdigit():
+                count = abs(int(a))
+            else:
+                print_stderr("Invalid count of requests: %s" % a, True)
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-s", "--server"):
