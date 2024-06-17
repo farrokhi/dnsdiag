@@ -78,6 +78,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -n  --nsid        Enable NSID bit to find out identification of the resulver. Implies EDNS.
   -D  --dnssec      Enable 'DNSSEC desired' flag in requests. Implies EDNS.
   -F  --flags       Display response flags
+  -x  --expert      Display extra information. Implies --ttl --flags --ede.
 """ % (__progname__, __version__, __progname__))
     sys.exit(0)
 
@@ -147,10 +148,11 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:T",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:Tx",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
-                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl"])
+                                    "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
+                                    "expert"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print_stderr(err, False)  # will print something like "option -a not recognized"
@@ -175,6 +177,10 @@ def main():
             verbose = False
         elif o in ("-w", "--wait"):
             timeout = int(a)
+        elif o in ("-x", "--expert"):
+            show_flags = True
+            show_ede = True
+            show_ttl = True
         elif o in ("-m", "--cache-miss"):
             force_miss = True
         elif o in ("-i", "--interval"):
