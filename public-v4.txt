@@ -64,3 +64,6 @@
 ## Control D
 76.76.2.11
 76.76.10.11
+
+## Wikimedia DNS (Formerly Wikidough)
+185.71.138.138
