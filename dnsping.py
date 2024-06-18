@@ -51,7 +51,8 @@ shutdown = False
 
 def usage():
     print("""%s version %s
-usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S address] [-c count] [-t type] [-w wait] hostname
+usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
+       %s [-c count] [-t qtype] [-C class] [-s server] hostname
 
   -h  --help        Show this help
   -q  --quiet       Quiet
@@ -80,7 +81,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -D  --dnssec      Enable 'DNSSEC desired' flag in requests. Implies EDNS.
   -F  --flags       Display response flags
   -x  --expert      Display extra information. Implies --ttl --flags --ede.
-""" % (__progname__, __version__, __progname__))
+""" % (__progname__, __version__, __progname__, ' ' * len(__progname__)))
     sys.exit(0)
 
 
@@ -348,7 +349,7 @@ def main():
                 if show_flags:
                     ans_flags = dns.flags.to_text(answers.flags)
                     edns_flags = dns.flags.edns_to_text(answers.ednsflags)
-                    extras += " [%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # display both regular and edns flags
+                    extras += " [%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # show both regular + edns flags
 
                 if want_nsid:
                     for ans_opt in answers.options:
