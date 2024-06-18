@@ -71,7 +71,7 @@ usage: %s [-46DeFhqTvX] [-i interval] [-s server] [-p port] [-P port] [-S addres
   -w  --wait        Maximum wait time for a reply (default: 2 seconds)
   -i  --interval    Time between each request (default: 1 seconds)
   -t  --type        DNS request record type (default: A)
-  -T  --ttl         Display response TTL (if present)
+  -L  --ttl         Display response TTL (if present)
   -C  --class       DNS request record class (default: IN)
   -a  --answer      Display first matching answer in rdata, if applicable
   -e  --edns        Enable EDNS0 and set
@@ -150,7 +150,7 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:Txa",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:Lxa",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
@@ -192,7 +192,7 @@ def main():
             force_miss = True
         elif o in ("-i", "--interval"):
             interval = float(a)
-        elif o in ("-T", "--ttl"):
+        elif o in ("-L", "--ttl"):
             show_ttl = True
         elif o in ("-t", "--type"):
             rdatatype = a
