@@ -138,7 +138,7 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
             if socket_ttl:  # this is an acceptable error while doing traceroute
                 break
         except Exception as e:
-            print(e)
+            print("error: %s"% e, file=sys.stderr, flush=True)
             break
         else:
             # convert time to milliseconds, considering that
