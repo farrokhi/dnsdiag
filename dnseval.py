@@ -262,9 +262,10 @@ def main():
                         json.dump(outer_data, outfile, indent=2)
 
             else:
-                print("%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
+                result = "%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
                     resolver, retval.r_avg, retval.r_min, retval.r_max, retval.r_stddev, l_color, retval.r_lost_percent,
-                    color.N, s_ttl, text_flags, retval.rcode_text), flush=True)
+                    color.N, s_ttl, text_flags, retval.rcode_text)
+                print(result.rstrip(), flush = True)
 
             if verbose and retval.answer and not json_output:
                 ans_index = 1
