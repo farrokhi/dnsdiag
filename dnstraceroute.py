@@ -58,21 +58,22 @@ def test_import():
 
 def usage():
     print("""%s version %s
-usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait]  hostname
+Usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
 
-  -h  --help      Show this help
-  -q  --quiet     Quiet mode: No extra information, only traceroute output.
-  -T  --tcp       Use TCP as transport protocol
-  -x  --expert    Print expert hints if available
-  -a  --asn       Turn on AS# lookups for each hop encountered
-  -s  --server    DNS server to use (default: first system resolver)
-  -p  --port      DNS server port number (default: 53)
-  -S  --srcip     Query source IP address (default: default interface address)
-  -c  --count     Maximum number of hops (default: 30)
-  -w  --wait      Maximum wait time for a reply (default: 2)
-  -t  --type      DNS request record type (default: A)
-  -C  --color     Print colorful output
-  -e  --edns      Enable EDNS0 (Default: Disabled)
+Options:
+  -h, --help        Show this help message
+  -q, --quiet       Enable quiet mode: suppress additional information, showing only traceroute output
+  -T, --tcp         Use TCP as the transport protocol
+  -x, --expert      Display expert hints, if available
+  -a, --asn         Enable AS# lookups for each encountered hop
+  -s, --server      Specify the DNS server to use (default: first system resolver)
+  -p, --port        Set the DNS server port number (default: 53)
+  -S, --srcip       Set the source IP address for the query (default: address of the default network interface)
+  -c, --count       Specify the maximum number of hops (default: 30)
+  -w, --wait        Set the maximum wait time for a reply, in seconds (default: 2)
+  -t, --type        DNS request record type (default: A)
+  -C, --color       Enable colorful output
+  -e, --edns        Enable EDNS0 (default: disabled)
 """ % (__progname__, __version__, __progname__))
     sys.exit()
 
