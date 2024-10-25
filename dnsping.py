@@ -338,8 +338,11 @@ def main():
 
             elif proto is PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
-                    answers = dns.query.https(query, dnsserver, timeout=timeout, port=dst_port,
-                                              source=src_ip, source_port=src_port)
+                    try:
+                        answers = dns.query.https(query, dnsserver, timeout=timeout, port=dst_port,
+                                                  source=src_ip, source_port=src_port)
+                    except httpx.ConnectError:
+                        print_stderr(f"The server did not respond to DoH on port {dst_port}", should_die=True)
                 else:
                     unsupported_feature("DNS-over-HTTPS (DoH)")
 
