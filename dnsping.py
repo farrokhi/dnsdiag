@@ -51,7 +51,7 @@ shutdown = False
 
 def usage():
     print("""%s version %s
-usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
+Usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] hostname
 
   -h, --help        Show this help message
@@ -76,7 +76,7 @@ usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_po
   -C, --class       DNS request record class (default: IN)
   -a, --answer      Display the first matching answer in rdata, if applicable
   -e, --edns        Enable EDNS0 and set its options
-  -E, --ede         Display EDE messages, when available
+  -E, --ede         Display EDE (Extended DNS Error) messages, when available
   -n, --nsid        Enable the NSID bit to retrieve resolver identification (implies EDNS)
   -D, --dnssec      Enable the DNSSEC desired flag (implies EDNS)
   -F, --flags       Display response flags

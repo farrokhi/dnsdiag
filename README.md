@@ -3,31 +3,35 @@
 DNS Measurement, Troubleshooting and Security Auditing Toolset
 ===============================================================
 
-Ever been wondering if your ISP is [hijacking your DNS traffic](https://medium.com/decentralize-today/is-your-isp-hijacking-your-dns-traffic-f3eb7ccb0ee7)? Ever observed any
-misbehavior with your DNS responses? Ever been redirected to wrong address and
-suspected something is wrong with your DNS? Here we have a [set of tools](http://github.com/farrokhi/dnsdiag) to
-perform basic audits on your DNS requests and responses to make sure your DNS is
-working as you expect.
+Have you ever wondered if your ISP is [intercepting your DNS
+traffic](https://medium.com/decentralize-today/is-your-isp-hijacking-your-dns-traffic-f3eb7ccb0ee7))?
+Have you noticed any unusual behavior in your DNS responses, or been redirected to
+the wrong address and suspected something might be off with your DNS? We offer a
+suite of tools to perform basic audits on your DNS requests and responses, helping
+you ensure your DNS is functioning as expected.
 
-You can measure the response time of any given DNS server for arbitrary requests
-using `dnsping`. Just like traditional ping utility, it gives you similar
-functionality for DNS requests.
+With `dnsping`, you can measure the response time of any DNS server for arbitrary
+queries. Similar to the regular ping utility, dnsping offers comparable
+functionality for DNS requests, helping you monitor server responsiveness.
 
-You can also trace the path your DNS request takes to destination to make sure
-it is not being redirected or hijacked. This can be done by comparing different
-DNS queries being sent to the same DNS server using `dnstraceroute` and observe
-if there is any difference between the path.
+You can also trace the route of your DNS request to its destination using
+`dnstraceroute`, verifying that it isn't being redirected or intercepted. By
+comparing DNS queries sent to the same server, `dnstraceroute` allows you to
+observe any differences in the paths taken, alerting you to possible issues.
 
-`dnseval` evaluates multiple DNS resolvers and helps you choose the best DNS
-server for your network. While it is highly recommended using your own DNS
-resolver and never trust any third-party DNS server, but in case you need to
-choose the best DNS forwarder for your network, `dnseval` lets you compare
-different DNS servers from performance (latency) and reliability (loss) point
-of view.
+
+`dnseval` assesses multiple DNS resolvers to help you choose the best DNS resolver
+for your network. While using your own DNS resolver is recommended to avoid
+reliance on third-party DNS resolvers, `dnseval` can assist in selecting the
+optimal DNS resolver when needed. It lets you compare DNS servers based on
+performance (latency) and reliability (packet loss), giving you a comprehensive
+view for informed decision-making.
+
 
 # Installation
 
-There are several ways that you can use this toolset. However, using the source code is always recommended.
+There are several ways to use this toolset, though we recommend running it
+directly from the source code for optimal flexibility and control.
 
 ## Source Code
 
@@ -51,23 +55,22 @@ From time to time, binary packages will be released for Windows, Mac OS X and Li
 
 ## Docker
 
-If you don't want to install dnsdiags on your local machine, you may use the docker image and run programs in a container. For example:
+If you prefer not to install `dnsdiag` on your local machine, you can use the
+Docker image to run the tools in a containerized environment. For example:
 
 ```
 docker run --network host -it --rm farrokhi/dnsdiag dnsping.py
 ```
 
 # dnsping
-dnsping pings a DNS resolver by sending an arbitrary DNS query for given number of times.
-A complete explanation of supported command line flags is shown by using `--help`. Here are a few useful flags:
 
-- Using `--tcp`, `--tls` and `--doh` to select transport protocol. Default is UDP.
-- Using `--flags` to display response flags (including EDNS flags) for each response
-- Using `--dnssec` to request DNSSEC if available
-- Using `--ede` to display Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914))
-- Using `--nsid` to display Name Server Identifier (NSID) if available ([RFC 5001](https://www.rfc-editor.org/rfc/rfc5001))
+`dnsping` allows you to "ping" a DNS resolver by sending an arbitrary DNS query multiple times. For a full list of supported command-line options, use `--help`. Here are a few key flags:
 
-In addition to UDP, you can ping using TCP, DoT (DNS over TLS) and DoH (DNS over HTTPS) using `--tcp`, `--tls` and `--doh` respectively.
+- Use `--tcp`, `--tls`, or `--doh` to select the transport protocol (default is UDP).
+- Use `--flags` to display response flags, including EDNS flags, for each response.
+- Use `--dnssec` to request DNSSEC validation if available.
+- Use `--ede` to display Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914)).
+- Use `--nsid` to display the Name Server Identifier (NSID) if available ([RFC 5001](https://www.rfc-editor.org/rfc/rfc5001)).
 
 ```shell
 ./dnsping.py -c 5 --dnssec --flags --tls --ede -t AAAA -s 8.8.8.8 brokendnssec.net
@@ -86,22 +89,24 @@ dnsping.py DNS: 8.8.8.8:853, hostname: brokendnssec.net, proto: TLS, class: IN, 
 min=90.882 ms, avg=101.064 ms, max=115.479 ms, stddev=12.394 ms
 ```
 
-It also displays statistics such as minimum, maximum and average response time as well as
-jitter (stddev) and lost packets.
+`dnsping` also provides statistics such as minimum, maximum, and average
+response times, along with jitter (standard deviation) and packet loss.
 
-There are several interesting use cases for dnsping, including:
+Here are a few interesting use cases for `dnsping`:
 
-- Comparing response times using different transport protocols (e.g. UDP vs DoH)
-- Measuring how reliable your DNS server is, by measuring Jitter and packet loss
-- Measuring responses times when DNSSEC is enabled using `--dnssec`
+- Comparing response times across different transport protocols (e.g., UDP vs. DoH).
+- Evaluating the reliability of your DNS server by measuring jitter and packet loss.
+- Measuring response times with DNSSEC enabled using the `--dnssec` flag.
+
 
 # dnstraceroute
-dnstraceroute is a traceroute utility to figure out the path that your DNS
-request is passing through to get to its destination. You may want to compare
-it to your actual network traceroute and make sure your DNS traffic is not
-routed to any unwanted path.
 
-In addition to UDP, it also supports TCP as transport protocol, using `--tcp` flag.
+`dnstraceroute` is a utility that traces the path of your DNS requests to their
+destination. You may want to compare this with your actual network traceroute to
+ensure that your DNS traffic is not being routed through any unwanted paths.
+
+In addition to UDP, `dnstraceroute` also supports TCP as a transport protocol
+when you use the `--tcp` flag.
 
 ```shell
 ./dnstraceroute.py --expert --asn -C -t A -s 8.8.4.4 facebook.com
@@ -119,17 +124,17 @@ dnstraceroute.py DNS: 8.8.4.4:53, hostname: facebook.com, rdatatype: A
  [*] public DNS server is next to a private IP address (possible hijacking)
 ```
 
-Using `--expert` will instruct dnstraceroute to print expert hints (such as 
-warnings of possible DNS traffic hijacking).
+Using the `--expert` flag with `dnstraceroute` will enable the display of expert
+hints, including warnings about potential DNS traffic hijacking.
 
 # dnseval
-dnseval is a bulk ping utility that sends an arbitrary DNS query to a give list
-of DNS servers. This script is meant for comparing response time of multiple
-DNS servers at once.
+`dnseval` is a bulk ping utility that sends arbitrary DNS queries to a specified
+list of DNS servers, allowing you to compare their response times
+simultaneously.
 
-You can use `dnseval` to compare response times using different transport 
-protocols such as UDP (default), TCP, DoT and DoH using `--tcp`, `--tls` and
-`--doh` respectively.
+You can use `dnseval` to evaluate response times across different transport
+protocols, including UDP (default), TCP, DoT (DNS over TLS), and DoH (DNS over
+HTTPS) by using the `--tcp`, `--tls`, and `--doh` flags, respectively.
 
 ```shell
 ./dnseval.py --dnssec -t AAAA -f public-servers.txt -c10 ripe.net
