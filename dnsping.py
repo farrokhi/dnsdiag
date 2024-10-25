@@ -39,8 +39,8 @@ from statistics import stdev
 import dns.flags
 import dns.resolver
 
-import util.dns
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, proto_to_text, unsupported_feature, random_string
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, proto_to_text, unsupported_feature, \
+    random_string, getDefaultPort, valid_rdatatype
 from util.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -51,7 +51,7 @@ shutdown = False
 
 def usage():
     print("""%s version %s
-Usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
+Usage: %s [-46aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] hostname
 
   -h, --help        Show this help message
@@ -62,6 +62,7 @@ Usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_po
   -T, --tcp         Use TCP as the transport protocol
   -X, --tls         Use TLS as the transport protocol
   -H, --doh         Use HTTPS as the transport protocol (DoH)
+  -Q, --doq         Use QUIC as the transport protocol (DoQ)
   -4, --ipv4        Use IPv4 as the network protocol
   -6, --ipv6        Use IPv6 as the network protocol
   -P, --srcport     Specify the source port number for the query (default: 0)
@@ -125,6 +126,7 @@ def main():
     if len(sys.argv) == 1:
         usage()
 
+    dns.rdata.load_all_types()
     # defaults
     rdatatype = 'A'
     rdata_class = dns.rdataclass.from_text('IN')
@@ -136,10 +138,11 @@ def main():
     show_flags = False
     show_ede = False
     dnsserver = None  # do not try to use system resolver by default
-    dst_port = 53  # default for UDP and TCP
+    proto = PROTO_UDP
+    dst_port = getDefaultPort(proto)
+    use_default_dst_port = True
     src_port = 0
     src_ip = None
-    proto = PROTO_UDP
     use_edns = False
     want_nsid = False
     want_dnssec = False
@@ -151,11 +154,11 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:Lxa",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:TQ46meDFXHrnEC:Lxa",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
-                                    "expert", "answer"])
+                                    "expert", "answer", "quic"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print_stderr(err, False)  # will print something like "option -a not recognized"
@@ -169,34 +172,46 @@ def main():
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
+
         elif o in ("-c", "--count"):
             if a.isdigit():
                 count = abs(int(a))
             else:
                 print_stderr("Invalid count of requests: %s" % a, True)
+
         elif o in ("-v", "--verbose"):
             verbose = True
+
         elif o in ("-s", "--server"):
             dnsserver = a
+
         elif o in ("-q", "--quiet"):
             quiet = True
             verbose = False
+
         elif o in ("-w", "--wait"):
             timeout = int(a)
+
         elif o in ("-a", "--answer"):
             show_answer = True
+
         elif o in ("-x", "--expert"):
             show_flags = True
             show_ede = True
             show_ttl = True
+
         elif o in ("-m", "--cache-miss"):
             force_miss = True
+
         elif o in ("-i", "--interval"):
             interval = float(a)
+
         elif o in ("-L", "--ttl"):
             show_ttl = True
+
         elif o in ("-t", "--type"):
             rdatatype = a
+
         elif o in ("-C", "--class"):
             try:
                 rdata_class = dns.rdataclass.from_text(a)
@@ -205,38 +220,62 @@ def main():
 
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
+
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
-            dst_port = 853  # default for DoT, unless overridden using -p
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
+
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
-            dst_port = 443  # default for DoH, unless overridden using -p
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
+
+        elif o in ("-Q", "--quic"):
+            proto = PROTO_QUIC
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
+
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
+
         elif o in ("-6", "--ipv6"):
             af = socket.AF_INET6
+
         elif o in ("-e", "--edns"):
             use_edns = True
+
         elif o in ("-n", "--nsid"):
             use_edns = True  # required
             want_nsid = True
+
         elif o in ("-r", "--norecurse"):
             request_flags = dns.flags.from_text('')
+
         elif o in ("-D", "--dnssec"):
             use_edns = True  # required
             want_dnssec = True
+
         elif o in ("-F", "--flags"):
             show_flags = True
+
         elif o in ("-E", "--ede"):
             show_ede = True
+
         elif o in ("-p", "--port"):
             dst_port = int(a)
+            use_default_dst_port = False
+
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024 and not quiet:
                 print_stderr("WARNING: Source ports below 1024 are only available to superuser", False)
+
         elif o in ("-S", "--srcip"):
             src_ip = a
+
         else:
             usage()
 
@@ -251,7 +290,7 @@ def main():
     i = 0
 
     # validate RR type
-    if not util.dns.valid_rdatatype(rdatatype):
+    if not valid_rdatatype(rdatatype):
         print_stderr('Error: Invalid record type: %s ' % rdatatype, True)
 
     print("%s DNS: %s:%d, hostname: %s, proto: %s, class: %s, type: %s, flags: [%s]" %
@@ -292,17 +331,30 @@ def main():
                                         source=src_ip, source_port=src_port)
             elif proto is PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
-                    answers = dns.query.tls(query, dnsserver, timeout, dst_port,
-                                            src_ip, src_port)
+                    answers = dns.query.tls(query, dnsserver, timeout=timeout, port=dst_port,
+                                            source=src_ip, source_port=src_port)
                 else:
-                    unsupported_feature()
+                    unsupported_feature("DNS-over-TLS")
 
             elif proto is PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
-                    answers = dns.query.https(query, dnsserver, timeout, dst_port,
-                                              src_ip, src_port)
+                    try:
+                        answers = dns.query.https(query, dnsserver, timeout=timeout, port=dst_port,
+                                                  source=src_ip, source_port=src_port)
+                    except httpx.ConnectError:
+                        print_stderr(f"The server did not respond to DoH on port {dst_port}", should_die=True)
                 else:
-                    unsupported_feature()
+                    unsupported_feature("DNS-over-HTTPS (DoH)")
+
+            elif proto is PROTO_QUIC:
+                if hasattr(dns.query, 'quic'):
+                    try:
+                        answers = dns.query.quic(query, dnsserver, timeout=timeout, port=dst_port,
+                                                 source=src_ip, source_port=src_port)
+                    except dns.exception.Timeout:
+                        print_stderr(f"The server did not respond to DoQ on port {dst_port}", should_die=True)
+                else:
+                    unsupported_feature("DNS-over-QUIC (DoQ)")
 
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
