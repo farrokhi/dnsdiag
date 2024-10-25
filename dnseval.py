@@ -49,24 +49,24 @@ from util.shared import __version__, Colors
 
 def usage():
     print("""%s version %s
+Usage: %s [-ehmvCTXH] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
 
-usage: %s [-ehmvCTXH] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
-  -h  --help        Show this help
-  -f  --file        DNS server list to use (default: system resolvers)
-  -c  --count       Number of requests to send (default: 10)
-  -m  --cache-miss  Force cache miss measurement by prepending a random hostname
-  -w  --wait        Maximum wait time for a reply (default: 2)
-  -t  --type        DNS request record type (default: A)
-  -T  --tcp         Use TCP instead of UDP
-  -X  --tls         Use TLS as transport protocol
-  -j  --json        Save results as a JSON formatted file
-  -H  --doh         Use HTTPS as transport protols (DoH)
-  -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
-  -S  --srcip       Query source IP address
-  -e  --edns        Enable EDNS0
-  -D  --dnssec      Enable 'DNSSEC desired' (DO flag) in requests
-  -C  --color       Print colorful output
-  -v  --verbose     Print actual dns response
+  -h, --help         Display this help message
+  -f, --file         Specify a DNS server list file to use (default: system resolvers)
+  -c, --count        Number of requests to send (default: 10)
+  -m, --cache-miss   Force a cache miss measurement by prepending a random hostname
+  -w, --wait         Set the maximum wait time for a reply in seconds (default: 2)
+  -t, --type         Set the DNS request record type (default: A)
+  -T, --tcp          Use TCP as the transport protocol instead of UDP
+  -X, --tls          Use TLS as the transport protocol
+  -j, --json         Save the results to a specified file in JSON format
+  -H, --doh          Use HTTPS as the transport protocol (DoH)
+  -p, --port         Specify the DNS server port number (default: 53 for TCP/UDP, 853 for TLS)
+  -S, --srcip        Set the query source IP address
+  -e, --edns         Enable EDNS0 in requests
+  -D, --dnssec       Enable the 'DNSSEC desired' (DO flag) in requests
+  -C, --color        Enable colorful output
+  -v, --verbose      Print the full DNS response details
 """ % (__progname__, __version__, __progname__))
     sys.exit()
 
