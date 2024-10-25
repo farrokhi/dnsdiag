@@ -40,7 +40,7 @@ import dns.flags
 import dns.resolver
 
 from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, proto_to_text, unsupported_feature, \
-    random_string, getDefaultPort
+    random_string, getDefaultPort, valid_rdatatype
 from util.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -51,10 +51,9 @@ shutdown = False
 
 def usage():
     print("""%s version %s
-Usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
+Usage: %s [-46aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] hostname
 
-<<<<<<< HEAD
   -h, --help        Show this help message
   -q, --quiet       Suppress output
   -v, --verbose     Print the full DNS response
@@ -63,6 +62,7 @@ Usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_po
   -T, --tcp         Use TCP as the transport protocol
   -X, --tls         Use TLS as the transport protocol
   -H, --doh         Use HTTPS as the transport protocol (DoH)
+  -Q, --doq         Use QUIC as the transport protocol (DoQ)
   -4, --ipv4        Use IPv4 as the network protocol
   -6, --ipv6        Use IPv6 as the network protocol
   -P, --srcport     Specify the source port number for the query (default: 0)
@@ -83,7 +83,7 @@ Usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_po
   -F, --flags       Display response flags
   -x, --expert      Display additional information (implies --ttl, --flags, --ede)
 """ % (__progname__, __version__, __progname__, ' ' * len(__progname__)))
-   sys.exit(0)
+    sys.exit(0)
 
 
 def setup_signal_handler():
@@ -126,6 +126,7 @@ def main():
     if len(sys.argv) == 1:
         usage()
 
+    dns.rdata.load_all_types()
     # defaults
     rdatatype = 'A'
     rdata_class = dns.rdataclass.from_text('IN')
@@ -153,7 +154,7 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:T46meDFXHrnEC:Lxa",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:TQ46meDFXHrnEC:Lxa",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
@@ -262,7 +263,7 @@ def main():
     i = 0
 
     # validate RR type
-    if not util.dns.valid_rdatatype(rdatatype):
+    if not valid_rdatatype(rdatatype):
         print_stderr('Error: Invalid record type: %s ' % rdatatype, True)
 
     print("%s DNS: %s:%d, hostname: %s, proto: %s, class: %s, type: %s, flags: [%s]" %
@@ -320,8 +321,8 @@ def main():
                     try:
                         answers = dns.query.quic(query, dnsserver, timeout=timeout, port=dst_port,
                                                  source=src_ip, source_port=src_port)
-                    except dns.exception.BadResponse:
-                        print("BadResponse expection raised")
+                    except dns.exception.Timeout:
+                        print_stderr(f"The server did not respond to DoQ on port {dst_port}", should_die=True)
                 else:
                     unsupported_feature("DNS-over-QUIC (DoQ)")
 
