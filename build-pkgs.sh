@@ -35,7 +35,7 @@ msg "Starting to build dnsdiag package version ${DDVER} for ${PLATFORM}-${ARCH}"
 ## main
 
 if [ $# -gt 0 ]; then
-    if [ $1 == "--venv" ]; then
+    if [ "$1" = "--venv" ]; then
         msg "Initializing virtualenv"
         checkbin "virtualenv"
         virtualenv -q --clear .venv
@@ -69,7 +69,7 @@ for i in public-servers.txt public-v4.txt rootservers.txt; do
 done
 
 cd pkg
-if [ "${PLATFORM}" == "windows" ]; then
+if [ "${PLATFORM:-}" = "windows" ]; then
     msg "Creating archive: ${PKG_NAME}.zip"
     powershell Compress-Archive -Force "${PKG_NAME}" "${PKG_NAME}.zip"
  else
