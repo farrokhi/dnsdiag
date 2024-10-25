@@ -172,34 +172,46 @@ def main():
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
+
         elif o in ("-c", "--count"):
             if a.isdigit():
                 count = abs(int(a))
             else:
                 print_stderr("Invalid count of requests: %s" % a, True)
+
         elif o in ("-v", "--verbose"):
             verbose = True
+
         elif o in ("-s", "--server"):
             dnsserver = a
+
         elif o in ("-q", "--quiet"):
             quiet = True
             verbose = False
+
         elif o in ("-w", "--wait"):
             timeout = int(a)
+
         elif o in ("-a", "--answer"):
             show_answer = True
+
         elif o in ("-x", "--expert"):
             show_flags = True
             show_ede = True
             show_ttl = True
+
         elif o in ("-m", "--cache-miss"):
             force_miss = True
+
         elif o in ("-i", "--interval"):
             interval = float(a)
+
         elif o in ("-L", "--ttl"):
             show_ttl = True
+
         elif o in ("-t", "--type"):
             rdatatype = a
+
         elif o in ("-C", "--class"):
             try:
                 rdata_class = dns.rdataclass.from_text(a)
@@ -210,45 +222,60 @@ def main():
             proto = PROTO_TCP
             if use_default_dst_port:
                 dst_port = getDefaultPort(proto)
+
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
             if use_default_dst_port:
                 dst_port = getDefaultPort(proto)
+
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
             if use_default_dst_port:
                 dst_port = getDefaultPort(proto)
+
         elif o in ("-Q", "--quic"):
             proto = PROTO_QUIC
             if use_default_dst_port:
                 dst_port = getDefaultPort(proto)
+
         elif o in ("-4", "--ipv4"):
             af = socket.AF_INET
+
         elif o in ("-6", "--ipv6"):
             af = socket.AF_INET6
+
         elif o in ("-e", "--edns"):
             use_edns = True
+
         elif o in ("-n", "--nsid"):
             use_edns = True  # required
             want_nsid = True
+
         elif o in ("-r", "--norecurse"):
             request_flags = dns.flags.from_text('')
+
         elif o in ("-D", "--dnssec"):
             use_edns = True  # required
             want_dnssec = True
+
         elif o in ("-F", "--flags"):
             show_flags = True
+
         elif o in ("-E", "--ede"):
             show_ede = True
+
         elif o in ("-p", "--port"):
             dst_port = int(a)
             use_default_dst_port = False
+
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024 and not quiet:
                 print_stderr("WARNING: Source ports below 1024 are only available to superuser", False)
+
         elif o in ("-S", "--srcip"):
             src_ip = a
+
         else:
             usage()
 
