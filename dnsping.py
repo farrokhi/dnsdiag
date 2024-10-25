@@ -54,33 +54,33 @@ def usage():
 usage: %s [-46aDeEFhLmqnrvTxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] hostname
 
-  -h  --help        Show this help
-  -q  --quiet       Quiet
-  -v  --verbose     Print actual dns response
-  -s  --server      DNS server to use (default: first entry from /etc/resolv.conf)
-  -p  --port        DNS server port number (default: 53 for TCP/UDP and 853 for TLS)
-  -T  --tcp         Use TCP as transport protocol
-  -X  --tls         Use TLS as transport protocol
-  -H  --doh         Use HTTPS as transport protols (DoH)
-  -4  --ipv4        Use IPv4 as default network protocol
-  -6  --ipv6        Use IPv6 as default network protocol
-  -P  --srcport     Query source port number (default: 0)
-  -S  --srcip       Query source IP address (default: default interface address)
-  -c  --count       Number of requests to send (default: 10, 0 for infinity)
-  -r  --norecurse   Enforce non-recursive query by clearing the RD (recursion desired) bit in the query
-  -m  --cache-miss  Force cache miss measurement by prepending a random hostname
-  -w  --wait        Maximum wait time for a reply (default: 2 seconds)
-  -i  --interval    Time between each request (default: 1 seconds)
-  -t  --type        DNS request record type (default: A)
-  -L  --ttl         Display response TTL (if present)
-  -C  --class       DNS request record class (default: IN)
-  -a  --answer      Display first matching answer in rdata, if applicable
-  -e  --edns        Enable EDNS0 and set
-  -E  --ede         Display EDE messages when available
-  -n  --nsid        Enable NSID bit to find out identification of the resolver. Implies EDNS.
-  -D  --dnssec      Enable 'DNSSEC desired' flag in requests. Implies EDNS.
-  -F  --flags       Display response flags
-  -x  --expert      Display extra information. Implies --ttl --flags --ede.
+  -h, --help        Show this help message
+  -q, --quiet       Suppress output
+  -v, --verbose     Print the full DNS response
+  -s, --server      Specify the DNS server to use (default: first entry from /etc/resolv.conf)
+  -p, --port        Specify the DNS server port number (default: 53 for TCP/UDP, 853 for TLS)
+  -T, --tcp         Use TCP as the transport protocol
+  -X, --tls         Use TLS as the transport protocol
+  -H, --doh         Use HTTPS as the transport protocol (DoH)
+  -4, --ipv4        Use IPv4 as the network protocol
+  -6, --ipv6        Use IPv6 as the network protocol
+  -P, --srcport     Specify the source port number for the query (default: 0)
+  -S, --srcip       Specify the source IP address for the query (default: default interface address)
+  -c, --count       Number of requests to send (default: 10, 0 for unlimited)
+  -r, --norecurse   Enforce a non-recursive query by clearing the RD (recursion desired) bit
+  -m, --cache-miss  Force cache miss measurement by prepending a random hostname
+  -w, --wait        Maximum wait time for a reply (default: 2 seconds)
+  -i, --interval    Time interval between requests (default: 1 second)
+  -t, --type        DNS request record type (default: A)
+  -L, --ttl         Display the response TTL (if present)
+  -C, --class       DNS request record class (default: IN)
+  -a, --answer      Display the first matching answer in rdata, if applicable
+  -e, --edns        Enable EDNS0 and set its options
+  -E, --ede         Display EDE messages, when available
+  -n, --nsid        Enable the NSID bit to retrieve resolver identification (implies EDNS)
+  -D, --dnssec      Enable the DNSSEC desired flag (implies EDNS)
+  -F, --flags       Display response flags
+  -x, --expert      Display additional information (implies --ttl, --flags, --ede)
 """ % (__progname__, __version__, __progname__, ' ' * len(__progname__)))
     sys.exit(0)
 
