@@ -46,6 +46,7 @@ PROTO_UDP = 0
 PROTO_TCP = 1
 PROTO_TLS = 2
 PROTO_HTTPS = 3
+PROTO_QUIC = 4
 
 _TTL = None
 
@@ -70,8 +71,20 @@ def proto_to_text(proto):
         PROTO_TCP: 'TCP',
         PROTO_TLS: 'TLS',
         PROTO_HTTPS: 'HTTPS',
+        PROTO_QUIC: 'QUIC',
     }
     return _proto_name[proto]
+
+
+def getDefaultPort(proto):
+    _proto_port = {
+        PROTO_UDP: 53,
+        PROTO_TCP: 53,
+        PROTO_TLS: 853,  # RFC 7858, Secion 3.1
+        PROTO_HTTPS: 443,
+        PROTO_QUIC: 853,  # RFC 9250, Section 4.1.1
+    }
+    return _proto_port[proto]
 
 
 class CustomSocket(socket.socket):
@@ -192,10 +205,12 @@ def signal_handler(sig, frame):
     shutdown = True  # pressed once, exit gracefully
 
 
-def unsupported_feature():
+def unsupported_feature(feature=""):
     print("Error: You have an unsupported version of Python interpreter dnspython library.")
     print("       Some features such as DoT and DoH are not available. You should upgrade")
     print("       the Python interpreter to at least 3.7 and reinstall dependencies.")
+    if feature:
+        print("Missing Feature: %s" % feature)
     sys.exit(127)
 
 
