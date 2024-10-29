@@ -33,11 +33,11 @@ import signal
 import socket
 import sys
 import time
-import httpx
 from statistics import stdev
 
 import dns.flags
 import dns.resolver
+import httpx
 
 from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, proto_to_text, unsupported_feature, \
     random_string, getDefaultPort, valid_rdatatype
@@ -419,7 +419,6 @@ def main():
                 if show_answer:  # The answer should be displayed at the rightmost
                     for ans in answers.answer:
                         if ans.rdtype == dns.rdatatype.from_text(rdatatype):  # is this the answer to our question?
-                            # extras += " [%s]" % ans[0]
                             extras += " [RDATA: %s]" % ans[0]
                             break
 
