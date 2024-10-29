@@ -401,6 +401,8 @@ def main():
                 if show_flags:
                     ans_flags = dns.flags.to_text(answers.flags)
                     edns_flags = dns.flags.edns_to_text(answers.ednsflags)
+                    if want_dnssec and not (answers.flags & dns.flags.AD):
+                        ans_flags += " --"  # add padding to printer output when dnssec is requested, but AD flag is not set
                     extras += " [%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # show both regular + edns flags
 
                 if want_nsid:
