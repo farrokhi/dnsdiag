@@ -47,6 +47,7 @@ PROTO_TCP = 1
 PROTO_TLS = 2
 PROTO_HTTPS = 3
 PROTO_QUIC = 4
+PROTO_HTTP3 = 5
 
 _TTL = None
 
@@ -72,6 +73,7 @@ def proto_to_text(proto):
         PROTO_TLS: 'TLS',
         PROTO_HTTPS: 'HTTPS',
         PROTO_QUIC: 'QUIC',
+        PROTO_HTTP3: 'HTTP3',
     }
     return _proto_name[proto]
 
@@ -83,6 +85,7 @@ def getDefaultPort(proto):
         PROTO_TLS: 853,  # RFC 7858, Secion 3.1
         PROTO_HTTPS: 443,
         PROTO_QUIC: 853,  # RFC 9250, Section 4.1.1
+        PROTO_HTTP3: 443,
     }
     return _proto_port[proto]
 
