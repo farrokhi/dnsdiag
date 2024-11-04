@@ -66,9 +66,9 @@ docker run --network host -it --rm farrokhi/dnsdiag dnsping.py
 
 `dnsping` allows you to "ping" a DNS resolver by sending an arbitrary DNS query multiple times. For a full list of supported command-line options, use `--help`. Here are a few key flags:
 
-- Use `--tcp`, `--tls`, or `--doh` to select the transport protocol (default is UDP).
+- Use `--tcp`, `--tls`, `--doh`, `doq` or `--http3` to select the transport protocol (default is UDP).
 - Use `--flags` to display response flags, including EDNS flags, for each response.
-- Use `--dnssec` to request DNSSEC validation if available.
+- Use `--dnssec` to request DNSSEC validation, if available.
 - Use `--ede` to display Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914)).
 - Use `--nsid` to display the Name Server Identifier (NSID) if available ([RFC 5001](https://www.rfc-editor.org/rfc/rfc5001)).
 
