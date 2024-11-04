@@ -422,7 +422,7 @@ def main():
                             extras += " [RDATA: %s]" % ans[0]
                             break
 
-                print("%-3d bytes from %s: seq=%-3d time=%-6.3f ms %s" % (
+                print("%-3d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
                     len(answers.to_wire()), dnsserver, i, elapsed, extras), flush=True)
 
             if verbose:
