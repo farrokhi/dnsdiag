@@ -39,8 +39,8 @@ import dns.flags
 import dns.resolver
 import httpx
 
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, proto_to_text, unsupported_feature, \
-    random_string, getDefaultPort, valid_rdatatype
+from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
+    unsupported_feature, random_string, getDefaultPort, valid_rdatatype
 from util.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -62,6 +62,7 @@ Usage: %s [-46aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_p
   -T, --tcp         Use TCP as the transport protocol
   -X, --tls         Use TLS as the transport protocol
   -H, --doh         Use HTTPS as the transport protocol (DoH)
+  -3, --http3       Use HTTP/3 as the transport protocol (DoH3)
   -Q, --doq         Use QUIC as the transport protocol (DoQ)
   -4, --ipv4        Use IPv4 as the network protocol
   -6, --ipv6        Use IPv6 as the network protocol
@@ -154,11 +155,11 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:TQ46meDFXHrnEC:Lxa",
+        opts, args = getopt.getopt(sys.argv[1:], "qhc:s:t:w:i:vp:P:S:TQ346meDFXHrnEC:Lxa",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
-                                    "expert", "answer", "quic"])
+                                    "expert", "answer", "quic", "http3"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print_stderr(err, False)  # will print something like "option -a not recognized"
@@ -235,6 +236,11 @@ def main():
 
         elif o in ("-Q", "--quic"):
             proto = PROTO_QUIC
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
+
+        elif o in ("-3", "--http3"):
+            proto = PROTO_HTTP3
             if use_default_dst_port:
                 dst_port = getDefaultPort(proto)
 
@@ -345,6 +351,18 @@ def main():
                         print_stderr(f"The server did not respond to DoH on port {dst_port}", should_die=True)
                 else:
                     unsupported_feature("DNS-over-HTTPS (DoH)")
+
+            elif proto is PROTO_HTTP3:
+                if hasattr(dns.query, 'quic'):
+                    try:
+                        answers = dns.query.https(query, dnsserver, timeout=timeout, port=dst_port,
+                                                  source=src_ip, source_port=src_port,
+                                                  http_version=dns.query.HTTPVersion.H3)
+                    except ConnectionRefusedError:
+                        print_stderr(f"The server did not respond to DNS-over-HTTPS/3 on port {dst_port}",
+                                     should_die=True)
+                else:
+                    unsupported_feature("DNS-over-HTTPS/3 (DoH3)")
 
             elif proto is PROTO_QUIC:
                 if hasattr(dns.query, 'quic'):
