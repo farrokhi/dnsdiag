@@ -432,7 +432,7 @@ def main():
                 if show_ede:
                     for ans_opt in answers.options:  # EDE response is optional, but print if there is one
                         if ans_opt.otype == dns.edns.EDE:
-                            extras += " [EDE %d: %s]" % (ans_opt.code, ans_opt.text)
+                            extras += " [EDE %d: \"%s\"]" % (ans_opt.code, ans_opt.text or "")
 
                 if show_answer:  # The answer should be displayed at the rightmost
                     for ans in answers.answer:
