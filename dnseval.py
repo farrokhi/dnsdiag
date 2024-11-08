@@ -37,14 +37,14 @@ import dns.rcode
 import dns.rdatatype
 import dns.resolver
 
-import util.dns
+import dnsdiag.dns
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __progname__ = os.path.basename(sys.argv[0])
 
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, setup_signal_handler, flags_to_text
-from util.shared import __version__, Colors
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, setup_signal_handler, flags_to_text
+from dnsdiag.shared import __version__, Colors
 
 
 def usage():
@@ -156,7 +156,7 @@ def main():
             usage()
 
     # validate RR type
-    if not util.dns.valid_rdatatype(rdatatype):
+    if not dnsdiag.dns.valid_rdatatype(rdatatype):
         print('Error: Invalid record type "%s" ' % rdatatype)
         sys.exit(1)
 
@@ -214,7 +214,7 @@ def main():
                 continue
 
             try:
-                retval = util.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
+                retval = dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
                                        use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
 
             except SystemExit:

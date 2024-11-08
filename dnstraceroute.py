@@ -37,9 +37,9 @@ import dns.query
 import dns.rdatatype
 import dns.resolver
 
-import util.whois
-from util.dns import PROTO_UDP, PROTO_TCP, setup_signal_handler
-from util.shared import __version__, Colors
+import dnsdiag.whois
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, setup_signal_handler
+from dnsdiag.shared import __version__, Colors
 
 # Global Variables
 quiet = False
@@ -116,7 +116,7 @@ def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
     resp_time = None
 
     try:
-        resp = util.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
+        resp = dnsdiag.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
                              want_dnssec=False, socket_ttl=ttl)
 
     except SystemExit:
@@ -205,7 +205,7 @@ def main():
     color = Colors(color_mode)
 
     # validate RR type
-    if not util.dns.valid_rdatatype(rdatatype):
+    if not dnsdiag.dns.valid_rdatatype(rdatatype):
         print('Error: Invalid record type "%s" ' % rdatatype)
         sys.exit(1)
 
@@ -299,7 +299,7 @@ def main():
         if curr_addr:
             as_name = ""
             if as_lookup:
-                asn, whois_cache = util.whois.asn_lookup(curr_addr, whois_cache)
+                asn, whois_cache = dnsdiag.whois.asn_lookup(curr_addr, whois_cache)
                 as_name = ''
                 try:
                     if asn and asn.asn != "NA":
@@ -338,7 +338,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        whois_cache = util.whois.restore()
+        whois_cache = dnsdiag.whois.restore()
         main()
     finally:
-        util.whois.save(whois_cache)
+        dnsdiag.whois.save(whois_cache)

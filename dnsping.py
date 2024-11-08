@@ -39,9 +39,9 @@ import dns.flags
 import dns.resolver
 import httpx
 
-from util.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
     unsupported_feature, random_string, getDefaultPort, valid_rdatatype
-from util.shared import __version__
+from dnsdiag.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
