@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from util.shared import __version__
+from dnsdiag.shared import __version__
 
 setup(
     name="dnsdiag",
