@@ -38,12 +38,13 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.whois
+from typing import Any
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, setup_signal_handler
 from dnsdiag.shared import __version__, Colors
 
 # Global Variables
 quiet = False
-whois_cache = {}
+whois_cache: dict[str, Any] = {}
 
 # Constants
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
