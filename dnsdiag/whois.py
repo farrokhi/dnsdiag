@@ -26,20 +26,21 @@
 
 import pickle
 import time
+from typing import Optional, Tuple
 
 import cymruwhois
 
 WHOIS_CACHE_FILE = 'whois.cache'
 
 
-def asn_lookup(ip, whois_cache) -> (str, dict):
+def asn_lookup(ip: str, whois_cache: dict) -> Tuple[Optional[Tuple[cymruwhois.record, cymruwhois.asrecord]], dict]:
     """
     Look up an ASN given teh IP address from cache. If not in cache, lookup from a whois server and update the cache
-    :param ip: IP Address (str)
-    :param whois_cache: whois data cache (dict)
-    :return: AS Number (str), Updated whois cache (dict)
+    :param ip: IP Address
+    :param whois_cache: whois data cache
+    :return: AS Number, Updated whois cache
     """
-    asn = None
+    asn: Optional[Tuple[cymruwhois.record, cymruwhois.asrecord]] = None
     try:
         currenttime = time.time()
         if ip in whois_cache:
