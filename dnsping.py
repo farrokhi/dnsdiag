@@ -371,6 +371,9 @@ def main():
                                                  source=src_ip, source_port=src_port)
                     except dns.exception.Timeout:
                         print_stderr(f"The server did not respond to DoQ on port {dst_port}", should_die=True)
+                    except ConnectionRefusedError:
+                        print_stderr(f"The server did not respond to DNS-over-HTTPS/3 on port {dst_port}",
+                                     should_die=True)
                 else:
                     unsupported_feature("DNS-over-QUIC (DoQ)")
 
