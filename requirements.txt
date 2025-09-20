@@ -1,6 +1,6 @@
 aioquic>=1.2.0
 cryptography>=42.0.5
 cymruwhois>=1.6
-dnspython>=2.7.0
+dnspython>=2.8.0
 h2>=4.1.0
 httpx>=0.27.0
