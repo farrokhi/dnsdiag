@@ -75,7 +75,7 @@ if [ "${PLATFORM:-}" = "windows" ]; then
     powershell Compress-Archive -Force "${PKG_NAME}" "${PKG_NAME}.zip"
  else
     msg "Creating tarball: ${PKG_NAME}.tar.gz"
-    tar cf "${PKG_NAME}.tar" "${PKG_NAME}" || die "Failed to build archive (tar)"
+    COPYFILE_DISABLE=1 tar cf "${PKG_NAME}.tar" "${PKG_NAME}" || die "Failed to build archive (tar)"
     gzip -9f "${PKG_NAME}.tar"             || die "Failed to build archive (gzip)"
 fi
 
