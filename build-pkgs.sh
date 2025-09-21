@@ -26,7 +26,8 @@ else
   PLATFORM=$(uname -s | tr 'A-Z' 'a-z')
 fi
 ARCH=$(uname -m)
-DDVER=$(grep version util/shared.py | awk -F\' '{print $2}')
+DDVER=$(grep __version__ dnsdiag/shared.py | awk -F\' '{print $2}')
+[ -z "${DDVER}" ] && die "Failed to extract version number from dnsdiag/shared.py"
 PKG_NAME="dnsdiag-${DDVER}.${PLATFORM}-${ARCH}-bin"
 PKG_PATH="pkg/${PKG_NAME}"
 
