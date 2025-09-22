@@ -58,7 +58,7 @@ def test_import():
 
 def usage():
     print("""%s version %s
-Usage: %s [-aeqhCx] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
+Usage: %s [-aenqhCxTS] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
 
 Options:
   -h, --help        Show this help message
@@ -74,6 +74,7 @@ Options:
   -t, --type        DNS request record type (default: A)
   -C, --color       Enable colorful output
   -e, --edns        Enable EDNS0 (default: disabled)
+  -n                Disable hostname resolution for IP addresses
 """ % (__progname__, __version__, __progname__))
     sys.exit()
 
@@ -158,7 +159,7 @@ def main():
     args = None
     try:
         opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCT",
-                                   ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port", "expert",
+                                   ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port=", "expert",
                                     "color", "srcip=", "tcp"])
     except getopt.GetoptError as err:
         # print help information and exit:
