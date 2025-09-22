@@ -16,6 +16,24 @@ checkbin() {
     which "${1}" > /dev/null 2>&1 || die "${1} is not installed"
 }
 
+usage() {
+    echo "Usage: $0 [--venv] [-h|--help]"
+    echo
+    echo "Build binary packages for dnsdiag utilities using PyInstaller"
+    echo
+    echo "Options:"
+    echo "  --venv       Create and use a virtual environment for building"
+    echo "  -h, --help   Show this help message"
+    echo
+    echo "This script will:"
+    echo "  * Install required dependencies (pyinstaller and project requirements)"
+    echo "  * Build standalone executables for dnsping, dnstraceroute, and dnseval"
+    echo "  * Package the binaries with configuration files"
+    echo "  * Create a compressed archive (tar.gz on Unix, zip on Windows)"
+    echo
+    exit 0
+}
+
 ## validate required tools
 checkbin "python3"
 
@@ -36,16 +54,24 @@ msg "Starting to build dnsdiag package version ${DDVER} for ${PLATFORM}-${ARCH}"
 ## main
 
 if [ $# -gt 0 ]; then
-    if [ "$1" = "--venv" ]; then
-        msg "Initializing virtualenv"
-        checkbin "virtualenv"
-        virtualenv -q --clear .venv
-        if [ -f .venv/bin/activate ]; then  # *nix
-            . .venv/bin/activate
-        elif [ -f .venv/Scripts/activate ]; then  # windows
-            . .venv/Scripts/activate
-        fi
-    fi
+    case "$1" in
+        --venv)
+            msg "Initializing virtualenv"
+            checkbin "virtualenv"
+            virtualenv -q --clear .venv
+            if [ -f .venv/bin/activate ]; then  # *nix
+                . .venv/bin/activate
+            elif [ -f .venv/Scripts/activate ]; then  # windows
+                . .venv/Scripts/activate
+            fi
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            die "Unknown option: $1. Use -h or --help for usage information."
+            ;;
+    esac
 fi
 
 msg "Installing dependencies"
