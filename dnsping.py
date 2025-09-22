@@ -51,7 +51,7 @@ shutdown = False
 
 def usage():
     print("""%s version %s
-Usage: %s [-46aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
+Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] hostname
 
   -h, --help        Show this help message
@@ -63,7 +63,7 @@ Usage: %s [-46aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_p
   -X, --tls         Use TLS as the transport protocol
   -H, --doh         Use HTTPS as the transport protocol (DoH)
   -3, --http3       Use HTTP/3 as the transport protocol (DoH3)
-  -Q, --doq         Use QUIC as the transport protocol (DoQ)
+  -Q, --quic        Use QUIC as the transport protocol (DoQ)
   -4, --ipv4        Use IPv4 as the network protocol
   -6, --ipv6        Use IPv6 as the network protocol
   -P, --srcport     Specify the source port number for the query (default: 0)
