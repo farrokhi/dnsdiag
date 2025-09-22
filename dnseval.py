@@ -49,7 +49,7 @@ from dnsdiag.shared import __version__, Colors
 
 def usage():
     print("""%s version %s
-Usage: %s [-ehmvCTXH] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
+Usage: %s [-ehmvCTXHSDjf] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
 
   -h, --help         Display this help message
   -f, --file         Specify a DNS server list file to use (default: system resolvers)
