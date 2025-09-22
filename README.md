@@ -49,6 +49,26 @@ pip3 install -r requirements.txt
 pip3 install dnsdiag
 ```
 
+## Using uv (Recommended)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager that can run tools directly without installation. This is the easiest way to try dnsdiag tools:
+
+```bash
+# Run dnsping directly without installation
+uv run --from dnsdiag dnsping google.com
+
+# Run with specific options
+uv run --from dnsdiag dnsping -c 5 --tls -s 8.8.8.8 example.com
+
+# Run dnstraceroute
+uv run --from dnsdiag dnstraceroute cloudflare.com
+
+# Run dnseval
+uv run --from dnsdiag dnseval -f public-servers.txt github.com
+```
+
+This approach automatically manages dependencies and ensures you're always using the latest version from PyPI.
+
 ## Binary Package
 
 From time to time, binary packages will be released for Windows, Mac OS X and Linux. You can grab the latest release from [releases page](https://github.com/farrokhi/dnsdiag/releases).
