@@ -98,15 +98,15 @@ docker run --network host -it --rm farrokhi/dnsdiag dnsping.py
 
 ```
 dnsping.py DNS: 8.8.8.8:853, hostname: brokendnssec.net, proto: TLS, class: IN, type: AAAA, flags: [RD]
-75 bytes from 8.8.8.8: seq=1   time=113.631 ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
-75 bytes from 8.8.8.8: seq=2   time=115.479 ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
-75 bytes from 8.8.8.8: seq=3   time=90.882  ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
-75 bytes from 8.8.8.8: seq=4   time=91.256  ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
-75 bytes from 8.8.8.8: seq=5   time=94.072  ms [QR RD RA DO] SERVFAIL [EDE 10: For brokendnssec.net/soa]
+75  bytes from 8.8.8.8: seq=1   time=73.703 ms  SERVFAIL [QR RD RA -- DO] [EDE 10: "For brokendnssec.net/soa"]
+75  bytes from 8.8.8.8: seq=2   time=69.523 ms  SERVFAIL [QR RD RA -- DO] [EDE 10: "For brokendnssec.net/soa"]
+75  bytes from 8.8.8.8: seq=3   time=58.058 ms  SERVFAIL [QR RD RA -- DO] [EDE 10: "For brokendnssec.net/soa"]
+75  bytes from 8.8.8.8: seq=4   time=54.235 ms  SERVFAIL [QR RD RA -- DO] [EDE 10: "For brokendnssec.net/soa"]
+75  bytes from 8.8.8.8: seq=5   time=57.806 ms  SERVFAIL [QR RD RA -- DO] [EDE 10: "For brokendnssec.net/soa"]
 
 --- 8.8.8.8 dnsping statistics ---
 5 requests transmitted, 5 responses received, 0% lost
-min=90.882 ms, avg=101.064 ms, max=115.479 ms, stddev=12.394 ms
+min=54.235 ms, avg=22.665 ms, max=69.523 ms, stddev=38.202 ms
 ```
 
 `dnsping` also provides statistics such as minimum, maximum, and average
