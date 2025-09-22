@@ -67,3 +67,11 @@
 
 ## Wikimedia DNS (Formerly Wikidough)
 185.71.138.138
+
+## NextDNS
+45.90.28.157
+45.90.30.157
+
+## DNS4EU
+86.54.11.100
+86.54.11.200
