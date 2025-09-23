@@ -461,6 +461,55 @@ def main():
             if verbose:
                 print(answers.to_text(), flush=True)
 
+                # Display EDNS options if present
+                if answers.options:
+                    print(";EDNS OPTIONS")
+                    for ans_opt in answers.options:
+                        option_name = "UNKNOWN"
+                        option_details = ""
+
+                        if ans_opt.otype == dns.edns.OptionType.NSID:
+                            option_name = "NSID"
+                            nsid_val = ans_opt.nsid
+                            option_details = nsid_val.decode("utf-8") if nsid_val else ""
+                        elif ans_opt.otype == dns.edns.OptionType.ECS:
+                            option_name = "ECS"
+                            option_details = "family=%d, source=%d, scope=%d, address=%s" % (
+                                ans_opt.family, ans_opt.srclen, ans_opt.scopelen,
+                                ans_opt.address if ans_opt.address else "None")
+                        elif ans_opt.otype == dns.edns.EDE:
+                            option_name = "EDE"
+                            option_details = "code=%d, text=\"%s\"" % (ans_opt.code, ans_opt.text or "")
+                        elif ans_opt.otype == 10:  # COOKIE
+                            option_name = "COOKIE"
+                            option_details = "length=%d" % len(ans_opt.data)
+                        elif ans_opt.otype == 11:  # TCP-KEEPALIVE
+                            option_name = "TCP-KEEPALIVE"
+                            if len(ans_opt.data) >= 2:
+                                import struct
+                                timeout = struct.unpack('!H', ans_opt.data[:2])[0]
+                                option_details = "timeout=%ds" % timeout
+                        elif ans_opt.otype == 12:  # PADDING
+                            option_name = "PADDING"
+                            option_details = "length=%d" % len(ans_opt.data)
+                        elif ans_opt.otype == 13:  # CHAIN
+                            option_name = "CHAIN"
+                            option_details = "closest_encloser=%s" % ans_opt.data.decode('utf-8', errors='ignore')
+                        elif ans_opt.otype == 14:  # KEY-TAG
+                            option_name = "KEY-TAG"
+                            import struct
+                            if len(ans_opt.data) >= 2:
+                                key_tags = []
+                                for i in range(0, len(ans_opt.data), 2):
+                                    if i + 1 < len(ans_opt.data):
+                                        tag = struct.unpack('!H', ans_opt.data[i:i+2])[0]
+                                        key_tags.append(str(tag))
+                                option_details = "tags=[%s]" % ",".join(key_tags)
+                        else:
+                            option_details = "type=%d, length=%d" % (ans_opt.otype, len(ans_opt.data))
+
+                        print("%s (%d): %s" % (option_name, ans_opt.otype, option_details), flush=True)
+
             time_to_next = (stime + interval) - etime
             if time_to_next > 0:
                 time.sleep(time_to_next)
