@@ -35,7 +35,15 @@ import sys
 import time
 from statistics import stdev
 
+import dns.edns
+import dns.exception
 import dns.flags
+import dns.message
+import dns.query
+import dns.rcode
+import dns.rdata
+import dns.rdataclass
+import dns.rdatatype
 import dns.resolver
 import httpx
 
