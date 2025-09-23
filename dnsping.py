@@ -52,7 +52,7 @@ shutdown = False
 def usage():
     print("""%s version %s
 Usage: %s [-346aDeEFhLmqnrvTQxXHq] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
-       %s [-c count] [-t qtype] [-C class] [-s server] hostname
+       %s [-c count] [-t qtype] [-C class] [-s server] [--ecs client_subnet] hostname
 
   -h, --help        Show this help message
   -q, --quiet       Suppress output
@@ -81,6 +81,7 @@ Usage: %s [-346aDeEFhLmqnrvTQxXHq] [-i interval] [-w wait] [-p dst_port] [-P src
   -E, --ede         Display EDE (Extended DNS Error) messages, when available
   -n, --nsid        Enable the NSID bit to retrieve resolver identification (implies EDNS)
   -D, --dnssec      Enable the DNSSEC desired flag (implies EDNS)
+      --ecs         Set EDNS Client Subnet option (format: IP/prefix, e.g., 192.168.1.0/24)
   -F, --flags       Display response flags
   -x, --expert      Display additional information (implies --ttl, --flags, --ede)
 """ % (__progname__, __version__, __progname__, ' ' * len(__progname__)))
@@ -147,6 +148,7 @@ def main():
     use_edns = False
     want_nsid = False
     want_dnssec = False
+    client_subnet = None
     show_ttl = False
     force_miss = False
     show_answer = False
@@ -159,7 +161,7 @@ def main():
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
-                                    "expert", "answer", "quic", "http3"])
+                                    "expert", "answer", "quic", "http3", "ecs="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print_stderr(err, False)  # will print something like "option -a not recognized"
@@ -282,6 +284,10 @@ def main():
         elif o in ("-S", "--srcip"):
             src_ip = a
 
+        elif o == "--ecs":
+            client_subnet = a
+            use_edns = True  # ECS requires EDNS
+
         else:
             usage()
 
@@ -319,6 +325,12 @@ def main():
             edns_options = []
             if want_nsid:
                 edns_options.append(dns.edns.GenericOption(dns.edns.NSID, ''))
+            if client_subnet:
+                try:
+                    ecs_option = dns.edns.ECSOption.from_text(client_subnet)
+                    edns_options.append(ecs_option)
+                except Exception as e:
+                    print_stderr("Error: Invalid ECS format '%s': %s" % (client_subnet, e), True)
 
             query = dns.message.make_query(fqdn, rdatatype, rdata_class, flags=request_flags,
                                            use_edns=True, want_dnssec=want_dnssec, payload=1232,
