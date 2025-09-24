@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ master, develop, improve-github-actions ]
   pull_request:
     branches: [ master ]
 
@@ -12,8 +12,57 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          # x86_64 runners
+          - os: ubuntu-latest
+            arch: x64
+            python-version: "3.10"
+          - os: ubuntu-latest
+            arch: x64
+            python-version: "3.11"
+          - os: ubuntu-latest
+            arch: x64
+            python-version: "3.12"
+          - os: ubuntu-latest
+            arch: x64
+            python-version: "3.13"
+          - os: macos-latest
+            arch: x64
+            python-version: "3.10"
+          - os: macos-latest
+            arch: x64
+            python-version: "3.11"
+          - os: macos-latest
+            arch: x64
+            python-version: "3.12"
+          - os: macos-latest
+            arch: x64
+            python-version: "3.13"
+          - os: windows-latest
+            arch: x64
+            python-version: "3.10"
+          - os: windows-latest
+            arch: x64
+            python-version: "3.11"
+          - os: windows-latest
+            arch: x64
+            python-version: "3.12"
+          - os: windows-latest
+            arch: x64
+            python-version: "3.13"
+          # ARM64 runners
+          - os: ubuntu-latest-arm
+            arch: arm64
+            python-version: "3.11"
+          - os: ubuntu-latest-arm
+            arch: arm64
+            python-version: "3.12"
+          - os: macos-latest-xlarge
+            arch: arm64
+            python-version: "3.11"
+          - os: macos-latest-xlarge
+            arch: arm64
+            python-version: "3.12"
 
     steps:
       - uses: actions/checkout@v5
@@ -30,8 +79,9 @@ jobs:
             ~/.cache/pip
             ~/AppData/Local/pip/Cache
             ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-pip-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
           restore-keys: |
+            ${{ runner.os }}-${{ matrix.arch }}-pip-
             ${{ runner.os }}-pip-
 
       - name: Install dependencies

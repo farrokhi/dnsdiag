@@ -2,7 +2,7 @@ name: Security Scan
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ master, develop, improve-github-actions ]
   pull_request:
     branches: [ master ]
   schedule:
@@ -24,8 +24,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ubuntu-latest-pip-security-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          key: ubuntu-latest-x64-pip-security-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
           restore-keys: |
+            ubuntu-latest-x64-pip-security-
             ubuntu-latest-pip-security-
             ubuntu-latest-pip-
 

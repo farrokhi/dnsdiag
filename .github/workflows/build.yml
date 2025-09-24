@@ -2,7 +2,7 @@ name: Build Packages
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, improve-github-actions ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ master ]
@@ -13,8 +13,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11"]  # Use single Python version for builds
+        include:
+          # x86_64 runners
+          - os: ubuntu-latest
+            arch: x64
+            python-version: "3.11"
+          - os: macos-latest
+            arch: x64
+            python-version: "3.11"
+          - os: windows-latest
+            arch: x64
+            python-version: "3.11"
+          # ARM64 runners
+          - os: ubuntu-latest-arm
+            arch: arm64
+            python-version: "3.11"
+          - os: macos-latest-xlarge
+            arch: arm64
+            python-version: "3.11"
 
     steps:
       - uses: actions/checkout@v5
@@ -31,9 +47,10 @@ jobs:
             ~/.cache/pip
             ~/AppData/Local/pip/Cache
             ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-build-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-pip-build-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-pip-build-
+            ${{ runner.os }}-${{ matrix.arch }}-pip-build-
+            ${{ runner.os }}-${{ matrix.arch }}-pip-
             ${{ runner.os }}-pip-
 
       - name: Install build dependencies
@@ -90,7 +107,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dnsdiag-${{ runner.os }}-${{ runner.arch }}
+          name: dnsdiag-${{ runner.os }}-${{ matrix.arch }}
           path: pkg/dnsdiag-*.*
           retention-days: 7
 
