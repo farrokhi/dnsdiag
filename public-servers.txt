@@ -65,6 +65,7 @@
 # Features DNS-over-HTTPS, DNS-over-TLS, and DNSSEC validation
 # Website: https://developers.google.com/speed/public-dns
 # DNSSEC: YES (validates) | ECS: YES (echoes with scope/24, normalizes to /26 for IPv4)
+# Protocols: UDP, TCP, DoT, DoH, DoH3 (HTTP/3)
 8.8.4.4
 8.8.8.8
 2001:4860:4860::8844
@@ -144,6 +145,7 @@
 # Blocks ads, trackers, and malicious domains at DNS level
 # Website: https://adguard-dns.io/
 # DNSSEC: YES (validates) | ECS: YES (echoes with exact scope match, transparent mirroring)
+# Protocols: UDP, TCP, DoT, DoH, DoQ (QUIC)
 94.140.14.14
 94.140.15.15
 94.140.14.15
