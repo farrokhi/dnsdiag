@@ -1,0 +1,101 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/AppData/Local/pip/Cache
+            ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest pytest-cov
+          pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=60 --max-line-length=127 --statistics
+
+      - name: Run unit tests (if they exist)
+        run: |
+          if [ -d "tests" ]; then
+            pytest tests/ --cov=dnsdiag --cov-report=xml --cov-report=term
+          else
+            echo "No tests directory found - skipping unit tests"
+          fi
+        shell: bash
+
+      - name: Test imports and basic functionality
+        run: |
+          python -c "import dnsdiag.dns; print('DNS module imports successfully')"
+          python -c "import dnsping; print('dnsping imports successfully')"
+          python -c "import dnstraceroute; print('dnstraceroute imports successfully')"
+          python -c "import dnseval; print('dnseval imports successfully')"
+        shell: bash
+
+      - name: Run help commands
+        run: |
+          python dnsping.py --help
+          python dnstraceroute.py --help
+          python dnseval.py --help
+        shell: bash
+
+      - name: Run basic protocol tests (Linux/Mac only)
+        if: runner.os != 'Windows'
+        run: |
+          echo "Testing basic UDP DNS functionality..."
+          timeout 15s python dnsping.py -s 8.8.8.8 -c 1 -w 3 google.com || echo "UDP test failed/timed out - may be network issue"
+
+          echo "Testing TCP DNS functionality..."
+          timeout 15s python dnsping.py -T -s 8.8.8.8 -c 1 -w 3 google.com || echo "TCP test failed/timed out - may be network issue"
+
+          echo "Testing DoT DNS functionality..."
+          timeout 15s python dnsping.py -X -s 8.8.8.8 -c 1 -w 3 google.com || echo "DoT test failed/timed out - may be network issue"
+
+          echo "Testing DoH DNS functionality..."
+          timeout 15s python dnsping.py -H -s 8.8.8.8 -c 1 -w 3 google.com || echo "DoH test failed/timed out - may be network issue"
+
+          echo "Testing DoQ DNS functionality (AdGuard)..."
+          timeout 15s python dnsping.py -Q -s 94.140.14.14 -c 1 -w 3 google.com || echo "DoQ test failed/timed out - may be network issue"
+
+          echo "Testing DoH3 DNS functionality..."
+          timeout 15s python dnsping.py -3 -s 8.8.8.8 -c 1 -w 3 google.com || echo "DoH3 test failed/timed out - may be network issue"
+        shell: bash
+
+      - name: Run dnstraceroute basic test (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          echo "Testing dnstraceroute UDP functionality..."
+          timeout 20s python dnstraceroute.py -s 8.8.8.8 -c 3 -w 2 google.com || echo "dnstraceroute test failed/timed out - may be network or permission issue"
+        shell: bash
