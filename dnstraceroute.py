@@ -38,7 +38,7 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.whois
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, setup_signal_handler
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort, setup_signal_handler
 from dnsdiag.shared import __version__, Colors
 
 # Global Variables
@@ -58,12 +58,14 @@ def test_import():
 
 def usage():
     print("""%s version %s
-Usage: %s [-aenqhCxTS] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
+Usage: %s [-aenqhCxTSQ3] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
 
 Options:
   -h, --help        Show this help message
   -q, --quiet       Enable quiet mode: suppress additional information, showing only traceroute output
   -T, --tcp         Use TCP as the transport protocol
+  -Q, --quic        Use QUIC as the transport protocol (DoQ)
+  -3, --http3       Use HTTP/3 as the transport protocol (DoH3)
   -x, --expert      Display expert hints, if available
   -a, --asn         Enable AS# lookups for each encountered hop
   -s, --server      Specify the DNS server to use (default: first system resolver)
@@ -115,6 +117,7 @@ def expert_report(trace_path, color_mode):
 def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
     reached = False
     resp_time = None
+    resp = None
 
     try:
         resp = dnsdiag.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
@@ -126,7 +129,7 @@ def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
         print("unxpected error: ", e)
         sys.exit(1)
     else:
-        if resp.answer:
+        if resp and resp.answer:
             reached = True
             resp_time = resp.r_max
 
@@ -146,10 +149,11 @@ def main():
     count = 30
     timeout = 2
     dnsserver = None
-    dest_port = 53
+    proto = PROTO_UDP
+    dest_port = getDefaultPort(proto)
+    use_default_dest_port = True
     src_ip = None
     hops = 0
-    proto = PROTO_UDP
     as_lookup = False
     expert_mode = False
     should_resolve = True
@@ -158,9 +162,9 @@ def main():
 
     args = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCT",
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCTQ3",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port=", "expert",
-                                    "color", "srcip=", "tcp"])
+                                    "color", "srcip=", "tcp", "quic", "http3"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -190,12 +194,23 @@ def main():
             rdatatype = a
         elif o in ("-p", "--port"):
             dest_port = int(a)
+            use_default_dest_port = False
         elif o in ("-C", "--color"):
             color_mode = True
         elif o in "-n":
             should_resolve = False
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
+            if use_default_dest_port:
+                dest_port = getDefaultPort(proto)
+        elif o in ("-Q", "--quic"):
+            proto = PROTO_QUIC
+            if use_default_dest_port:
+                dest_port = getDefaultPort(proto)
+        elif o in ("-3", "--http3"):
+            proto = PROTO_HTTP3
+            if use_default_dest_port:
+                dest_port = getDefaultPort(proto)
         elif o in ("-a", "--asn"):
             as_lookup = True
         elif o in ("-e", "--edns"):

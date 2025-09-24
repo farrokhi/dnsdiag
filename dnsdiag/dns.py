@@ -141,6 +141,17 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
                     response = dns.query.https(query, server, timeout, dst_port, src_ip)
                 else:
                     unsupported_feature()
+            elif proto is PROTO_QUIC:
+                if hasattr(dns.query, 'quic'):
+                    response = dns.query.quic(query, server, timeout, dst_port, src_ip)
+                else:
+                    unsupported_feature()
+            elif proto is PROTO_HTTP3:
+                if hasattr(dns.query, '_http3'):
+                    url = f"https://{server}:{dst_port}/dns-query"
+                    response = dns.query._http3(query, server, url, timeout, dst_port, src_ip)
+                else:
+                    unsupported_feature()
 
         except (httpx.ConnectTimeout, httpx.ReadTimeout,
                 httpx.ConnectError):
