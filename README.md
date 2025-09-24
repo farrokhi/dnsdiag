@@ -91,6 +91,7 @@ docker run --network host -it --rm farrokhi/dnsdiag dnsping.py
 - Use `--dnssec` to request DNSSEC validation, if available.
 - Use `--ede` to display Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914)).
 - Use `--nsid` to display the Name Server Identifier (NSID) if available ([RFC 5001](https://www.rfc-editor.org/rfc/rfc5001)).
+- Use `--ecs` to include EDNS Client Subnet information for geographic routing optimization.
 
 ```shell
 ./dnsping.py -c 5 --dnssec --flags --tls --ede -t AAAA -s 8.8.8.8 brokendnssec.net
@@ -168,6 +169,16 @@ simultaneously.
 You can use `dnseval` to evaluate response times across different transport
 protocols, including UDP (default), TCP, DoT (DNS over TLS), and DoH (DNS over
 HTTPS) by using the `--tcp`, `--tls`, and `--doh` flags, respectively.
+
+## Protocol Support Summary
+
+| Tool | UDP | TCP | TLS (DoT) | DoH | DoQ | DoH3 |
+|------|-----|-----|-----------|-----|-----|------|
+| `dnsping` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `dnstraceroute` | ✓ | ✓ | - | - | ✓ | ✓ |
+| `dnseval` | ✓ | ✓ | ✓ | ✓ | - | - |
+
+*DoQ: DNS over QUIC, DoH3: DNS over HTTP/3*
 
 ```shell
 ./dnseval.py --dnssec -t AAAA -f public-servers.txt -c10 ripe.net
