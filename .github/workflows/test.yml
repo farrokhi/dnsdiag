@@ -50,19 +50,20 @@ jobs:
           - os: windows-latest
             arch: x64
             python-version: "3.13"
-          # ARM64 runners
-          - os: ubuntu-latest-arm
-            arch: arm64
-            python-version: "3.11"
-          - os: ubuntu-latest-arm
-            arch: arm64
-            python-version: "3.12"
-          - os: macos-latest-xlarge
-            arch: arm64
-            python-version: "3.11"
-          - os: macos-latest-xlarge
-            arch: arm64
-            python-version: "3.12"
+          # ARM64 runners (only available on paid GitHub accounts)
+          # Uncomment these if you have access to ARM64 runners:
+          # - os: ubuntu-latest-arm
+          #   arch: arm64
+          #   python-version: "3.11"
+          # - os: ubuntu-latest-arm
+          #   arch: arm64
+          #   python-version: "3.12"
+          # - os: macos-latest-xlarge
+          #   arch: arm64
+          #   python-version: "3.11"
+          # - os: macos-latest-xlarge
+          #   arch: arm64
+          #   python-version: "3.12"
 
     steps:
       - uses: actions/checkout@v5
