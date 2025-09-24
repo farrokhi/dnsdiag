@@ -6,12 +6,9 @@ on:
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
-  pypi-publish:
-    name: Publish to PyPI
+  pypi-build:
+    name: Build PyPI packages (manual publish)
     runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
 
     steps:
       - uses: actions/checkout@v5
@@ -25,9 +22,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ubuntu-latest-pip-release-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
+          key: ubuntu-latest-x64-pip-release-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
           restore-keys: |
-            ubuntu-latest-pip-release-
+            ubuntu-latest-x64-pip-release-
             ubuntu-latest-pip-
 
       - name: Install build dependencies
@@ -43,10 +40,15 @@ jobs:
         run: |
           python -m twine check dist/*
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        # Only publish on actual releases, not manual workflow dispatch
-        if: github.event_name == 'release'
+      - name: Upload PyPI artifacts for manual publishing
+        uses: actions/upload-artifact@v4
+        with:
+          name: pypi-packages
+          path: dist/*
+          retention-days: 30
+
+      # PyPI publishing disabled - do this manually:
+      # python -m twine upload dist/*
 
   docker-publish:
     name: Publish Docker image
