@@ -125,11 +125,24 @@ Here are a few interesting use cases for `dnsping`:
 destination. You may want to compare this with your actual network traceroute to
 ensure that your DNS traffic is not being routed through any unwanted paths.
 
-In addition to UDP, `dnstraceroute` also supports TCP as a transport protocol
-when you use the `--tcp` flag.
+`dnstraceroute` supports multiple transport protocols:
+- UDP (default) - Traditional DNS queries
+- TCP (`--tcp`) - DNS over TCP
+- DoQ (`--quic`) - DNS over QUIC (supported by AdGuard DNS)
+- DoH3 (`--http3`) - DNS over HTTP/3 (supported by Google DNS and Cloudflare)
 
 ```shell
 ./dnstraceroute.py --expert --asn -C -t A -s 8.8.4.4 facebook.com
+```
+
+You can also test modern DNS protocols:
+
+```shell
+# Test DNS over QUIC with AdGuard DNS
+./dnstraceroute.py --quic -s 94.140.14.14 -c 3 google.com
+
+# Test DNS over HTTP/3 with Google DNS
+./dnstraceroute.py --http3 -s 8.8.8.8 -c 3 google.com
 ```
 
 ```
