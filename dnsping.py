@@ -481,7 +481,7 @@ def main():
                     for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.OptionType.ECS:
                             if ans_opt.address:
-                                edns_parts.append("ECS:%s/%d" % (ans_opt.address, ans_opt.scopelen or ans_opt.srclen))
+                                edns_parts.append("ECS:%s/%d/%d" % (ans_opt.address, ans_opt.srclen, ans_opt.scopelen))
                             else:
                                 edns_parts.append("ECS:auto")
 
