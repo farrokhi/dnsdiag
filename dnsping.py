@@ -121,6 +121,7 @@ def print_stderr(s, should_die):
 def validate_server_address(dnsserver, address_family):
     """checks if we have a valid dns server address and resolve if it is a hostname"""
 
+    original_server = dnsserver
     try:
         ipaddress.ip_address(dnsserver)
     except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
@@ -128,7 +129,7 @@ def validate_server_address(dnsserver, address_family):
             dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family)[1][4][0]
         except OSError:
             print_stderr('Error: cannot resolve hostname: %s' % dnsserver, True)
-    return dnsserver
+    return dnsserver, original_server
 
 
 def main():
@@ -309,7 +310,7 @@ def main():
     if dnsserver is None:
         dnsserver = dns.resolver.get_default_resolver().nameservers[0]
 
-    dnsserver = validate_server_address(dnsserver, af)
+    dnsserver_ip, dnsserver_hostname = validate_server_address(dnsserver, af)
 
     response_time = []
     i = 0
@@ -318,8 +319,10 @@ def main():
     if not valid_rdatatype(rdatatype):
         print_stderr('Error: Invalid record type: %s ' % rdatatype, True)
 
+    # Display the hostname if it differs from the resolved IP, otherwise just the IP
+    server_display = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else dnsserver_ip
     print("%s DNS: %s:%d, hostname: %s, proto: %s, class: %s, type: %s, flags: [%s]" %
-          (__progname__, dnsserver, dst_port, qname, proto_to_text(proto), dns.rdataclass.to_text(rdata_class),
+          (__progname__, server_display, dst_port, qname, proto_to_text(proto), dns.rdataclass.to_text(rdata_class),
            rdatatype, dns.flags.to_text(request_flags)), flush=True)
 
     while not shutdown:
@@ -360,14 +363,14 @@ def main():
         try:
             stime = time.perf_counter()
             if proto is PROTO_UDP:
-                answers = dns.query.udp(query, dnsserver, timeout=timeout, port=dst_port,
+                answers = dns.query.udp(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                         source=src_ip, source_port=src_port, ignore_unexpected=True)
             elif proto is PROTO_TCP:
-                answers = dns.query.tcp(query, dnsserver, timeout=timeout, port=dst_port,
+                answers = dns.query.tcp(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                         source=src_ip, source_port=src_port)
             elif proto is PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
-                    answers = dns.query.tls(query, dnsserver, timeout=timeout, port=dst_port,
+                    answers = dns.query.tls(query, dnsserver_hostname, timeout=timeout, port=dst_port,
                                             source=src_ip, source_port=src_port)
                 else:
                     unsupported_feature("DNS-over-TLS")
@@ -375,7 +378,12 @@ def main():
             elif proto is PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
                     try:
-                        answers = dns.query.https(query, dnsserver, timeout=timeout, port=dst_port,
+                        # For hostnames, construct full URL; for IPs, use IP directly
+                        if dnsserver_hostname != dnsserver_ip:
+                            https_server = f"https://{dnsserver_hostname}/dns-query"
+                        else:
+                            https_server = dnsserver_ip
+                        answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
                                                   source=src_ip, source_port=src_port)
                     except httpx.ConnectError:
                         print_stderr(f"The server did not respond to DoH on port {dst_port}", should_die=True)
@@ -385,7 +393,12 @@ def main():
             elif proto is PROTO_HTTP3:
                 if hasattr(dns.query, 'quic'):
                     try:
-                        answers = dns.query.https(query, dnsserver, timeout=timeout, port=dst_port,
+                        # For hostnames, construct full URL; for IPs, use IP directly
+                        if dnsserver_hostname != dnsserver_ip:
+                            https_server = f"https://{dnsserver_hostname}/dns-query"
+                        else:
+                            https_server = dnsserver_ip
+                        answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
                                                   source=src_ip, source_port=src_port,
                                                   http_version=dns.query.HTTPVersion.H3)
                     except ConnectionRefusedError:
@@ -397,7 +410,7 @@ def main():
             elif proto is PROTO_QUIC:
                 if hasattr(dns.query, 'quic'):
                     try:
-                        answers = dns.query.quic(query, dnsserver, timeout=timeout, port=dst_port,
+                        answers = dns.query.quic(query, dnsserver_hostname, timeout=timeout, port=dst_port,
                                                  source=src_ip, source_port=src_port)
                     except dns.exception.Timeout:
                         print_stderr(f"The server did not respond to DoQ on port {dst_port}", should_die=True)
@@ -506,7 +519,7 @@ def main():
                             break
 
                 print("%-3d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
-                    len(answers.to_wire()), dnsserver, i, elapsed, extras), flush=True)
+                    len(answers.to_wire()), server_display, i, elapsed, extras), flush=True)
 
             if verbose:
                 print(answers.to_text(), flush=True)
@@ -591,7 +604,7 @@ def main():
         r_avg = 0
         r_stddev = 0
 
-    print('\n--- %s dnsping statistics ---' % dnsserver, flush=True)
+    print('\n--- %s dnsping statistics ---' % server_display, flush=True)
     print('%d requests transmitted, %d responses received, %.0f%% lost' % (r_sent, r_received, r_lost_percent),
           flush=True)
     print('min=%.3f ms, avg=%.3f ms, max=%.3f ms, stddev=%.3f ms' % (r_min, r_avg, r_max, r_stddev), flush=True)
