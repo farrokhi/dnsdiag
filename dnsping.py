@@ -446,16 +446,35 @@ def main():
                         ans_flags += " --"  # add padding to printer output when dnssec is requested, but AD flag is not set
                     extras += " [%s]" % " ".join([ans_flags, edns_flags]).rstrip(' ')  # show both regular + edns flags
 
-                if want_nsid:
+                # Display EDNS options compactly (only for explicitly enabled options)
+                edns_parts = []
+
+                if want_nsid and answers.options:
                     for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
                             nsid_val = ans_opt.nsid
-                            extras += " [ID: %s]" % nsid_val.decode("utf-8")
+                            if nsid_val:
+                                edns_parts.append("NSID:%s" % nsid_val.decode("utf-8"))
 
-                if show_ede:
-                    for ans_opt in answers.options:  # EDE response is optional, but print if there is one
+                if show_ede and answers.options:
+                    for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.EDE:
-                            extras += " [EDE %d: \"%s\"]" % (ans_opt.code, ans_opt.text or "")
+                            if ans_opt.text:
+                                edns_parts.append("EDE:%d(\"%s\")" % (ans_opt.code, ans_opt.text))
+                            else:
+                                edns_parts.append("EDE:%d" % ans_opt.code)
+
+                # Always show ECS if present (since it's typically echoed back when requested)
+                if answers.options:
+                    for ans_opt in answers.options:
+                        if ans_opt.otype == dns.edns.OptionType.ECS:
+                            if ans_opt.address:
+                                edns_parts.append("ECS:%s/%d" % (ans_opt.address, ans_opt.scopelen or ans_opt.srclen))
+                            else:
+                                edns_parts.append("ECS:auto")
+
+                if edns_parts:
+                    extras += " [%s]" % ", ".join(edns_parts)
 
                 if show_answer:  # The answer should be displayed at the rightmost
                     for ans in answers.answer:
