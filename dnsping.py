@@ -460,7 +460,9 @@ def main():
                     for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.EDE:
                             if ans_opt.text:
-                                edns_parts.append("EDE:%d(\"%s\")" % (ans_opt.code, ans_opt.text))
+                                # Truncate EDE text for ping output to prevent display issues
+                                truncated_text = ans_opt.text[:50] + "..." if len(ans_opt.text) > 50 else ans_opt.text
+                                edns_parts.append("EDE:%d(\"%s\")" % (ans_opt.code, truncated_text))
                             else:
                                 edns_parts.append("EDE:%d" % ans_opt.code)
 
