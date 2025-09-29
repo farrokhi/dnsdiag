@@ -89,12 +89,12 @@ docker run --network host -it --rm farrokhi/dnsdiag dnsping.py
 - Use `--tcp`, `--tls`, `--doh`, `--quic` or `--http3` to select the transport protocol (default is UDP).
 - Use `--flags` to display response flags, including EDNS flags, for each response.
 - Use `--dnssec` to request DNSSEC validation, if available.
-- Use `--ede` to display Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914)).
+- Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914)) are automatically displayed when present.
 - Use `--nsid` to display the Name Server Identifier (NSID) if available ([RFC 5001](https://www.rfc-editor.org/rfc/rfc5001)).
 - Use `--ecs` to include EDNS Client Subnet information for geographic routing optimization.
 
 ```shell
-./dnsping.py -c 5 --dnssec --flags --tls --ede -t AAAA -s 8.8.8.8 brokendnssec.net
+./dnsping.py -c 5 --dnssec --flags --tls -t AAAA -s 8.8.8.8 brokendnssec.net
 ```
 
 ```

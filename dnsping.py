@@ -86,13 +86,13 @@ Usage: %s [-346aDeEFhLmqnrvTQxXHq] [-i interval] [-w wait] [-p dst_port] [-P src
   -C, --class       DNS request record class (default: IN)
   -a, --answer      Display the first matching answer in rdata, if applicable
   -e, --edns        Enable EDNS0 and set its options
-  -E, --ede         Display EDE (Extended DNS Error) messages, when available
+  -E, --ede         (Ignored - EDE messages now always displayed when present)
   -n, --nsid        Enable the NSID bit to retrieve resolver identification (implies EDNS)
       --cookie      Display EDNS cookies when present
   -D, --dnssec      Enable the DNSSEC desired flag (implies EDNS)
       --ecs         Set EDNS Client Subnet option (format: IP/prefix, e.g., 192.168.1.0/24)
   -F, --flags       Display response flags
-  -x, --expert      Display additional information (implies --ttl, --flags, --ede)
+  -x, --expert      Display additional information (implies --ttl, --flags)
 """ % (__progname__, __version__, __progname__, ' ' * len(__progname__)))
     sys.exit(0)
 
@@ -147,7 +147,6 @@ def main():
     quiet = False
     verbose = False
     show_flags = False
-    show_ede = False
     show_cookie = False
     dnsserver = None  # do not try to use system resolver by default
     proto = PROTO_UDP
@@ -210,7 +209,6 @@ def main():
 
         elif o in ("-x", "--expert"):
             show_flags = True
-            show_ede = True
             show_ttl = True
 
         elif o in ("-m", "--cache-miss"):
@@ -280,7 +278,8 @@ def main():
             show_flags = True
 
         elif o in ("-E", "--ede"):
-            show_ede = True
+            # Kept for compatibility - EDE now always displayed when present
+            pass
 
         elif o == "--cookie":
             show_cookie = True
@@ -466,7 +465,8 @@ def main():
                             if nsid_val:
                                 edns_parts.append("NSID:%s" % nsid_val.decode("utf-8"))
 
-                if show_ede and answers.options:
+                # Always show EDE when present (server-initiated error responses)
+                if answers.options:
                     for ans_opt in answers.options:
                         if ans_opt.otype == dns.edns.EDE:
                             if ans_opt.text:
