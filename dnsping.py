@@ -88,6 +88,7 @@ Usage: %s [-346aDeEFhLmqnrvTQxXHq] [-i interval] [-w wait] [-p dst_port] [-P src
   -e, --edns        Enable EDNS0 and set its options
   -E, --ede         Display EDE (Extended DNS Error) messages, when available
   -n, --nsid        Enable the NSID bit to retrieve resolver identification (implies EDNS)
+      --cookie      Display EDNS cookies when present
   -D, --dnssec      Enable the DNSSEC desired flag (implies EDNS)
       --ecs         Set EDNS Client Subnet option (format: IP/prefix, e.g., 192.168.1.0/24)
   -F, --flags       Display response flags
@@ -147,6 +148,7 @@ def main():
     verbose = False
     show_flags = False
     show_ede = False
+    show_cookie = False
     dnsserver = None  # do not try to use system resolver by default
     proto = PROTO_UDP
     dst_port = getDefaultPort(proto)
@@ -169,7 +171,7 @@ def main():
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "interval=", "verbose",
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
-                                    "expert", "answer", "quic", "http3", "ecs="])
+                                    "expert", "answer", "quic", "http3", "ecs=", "cookie"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print_stderr(err, False)  # will print something like "option -a not recognized"
@@ -280,6 +282,9 @@ def main():
         elif o in ("-E", "--ede"):
             show_ede = True
 
+        elif o == "--cookie":
+            show_cookie = True
+
         elif o in ("-p", "--port"):
             dst_port = int(a)
             use_default_dst_port = False
@@ -339,6 +344,11 @@ def main():
                     edns_options.append(ecs_option)
                 except Exception as e:
                     print_stderr("Error: Invalid ECS format '%s': %s" % (client_subnet, e), True)
+            if show_cookie:
+                # Send a client cookie (8 random bytes as per RFC 7873)
+                import os
+                client_cookie = os.urandom(8)
+                edns_options.append(dns.edns.GenericOption(10, client_cookie))  # COOKIE = 10
 
             query = dns.message.make_query(fqdn, rdatatype, rdata_class, flags=request_flags,
                                            use_edns=True, want_dnssec=want_dnssec, payload=1232,
@@ -474,6 +484,12 @@ def main():
                                 edns_parts.append("ECS:%s/%d" % (ans_opt.address, ans_opt.scopelen or ans_opt.srclen))
                             else:
                                 edns_parts.append("ECS:auto")
+
+                # Always show cookies when present (echoed back from server)
+                if answers.options:
+                    for ans_opt in answers.options:
+                        if ans_opt.otype == 10:  # COOKIE
+                            edns_parts.append("COOKIE:%d" % len(ans_opt.data))
 
                 if edns_parts:
                     extras += " [%s]" % ", ".join(edns_parts)
