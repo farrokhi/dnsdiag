@@ -1,8 +1,10 @@
+# Last tested and validated: September 2025
+
 ## Cloudflare
 # Fast, privacy-focused DNS with no logging policy
 # Offers standard DNS, malware blocking, and family protection variants
 # Website: https://1.1.1.1/
-# DNSSEC: YES (validates) | ECS: NO (processes but doesn't echo back)
+# DNSSEC: YES | ECS: NO | EDE: NO
 1.0.0.1
 1.1.1.1
 1.0.0.2
@@ -21,7 +23,7 @@
 # Cisco-owned DNS service with content filtering and security features
 # Provides phishing protection and customizable content blocking
 # Website: https://www.opendns.com/
-# DNSSEC: YES (validates) | ECS: NO (no echo back)
+# DNSSEC: YES | ECS: NO | EDE: NO
 208.67.220.220
 208.67.222.222
 208.67.220.123
@@ -31,7 +33,7 @@
 # Legacy DNS service, now part of Oracle's infrastructure
 # Basic DNS resolution without advanced filtering
 # Website: https://dyn.com/
-# DNSSEC: YES (validates) | ECS: NO (no support)
+# DNSSEC: YES | ECS: NO | EDE: NO
 216.146.35.35
 216.146.36.36
 
@@ -39,7 +41,7 @@
 # Legacy telecommunications company DNS servers
 # Now part of Lumen Technologies (formerly CenturyLink)
 # Website: https://www.lumen.com/
-# DNSSEC: NO (does not validate) | ECS: NO (no support)
+# DNSSEC: NO | ECS: NO | EDE: NO
 209.244.0.3
 209.244.0.4
 4.2.2.1
@@ -52,7 +54,7 @@
 # Free DNS service from domain registrar Freenom
 # Basic DNS resolution service
 # Website: https://www.freenom.com/
-# DNSSEC: YES (validates) | ECS: NO (no support)
+# DNSSEC: YES | ECS: NO | EDE: NO
 80.80.80.80
 80.80.81.81
 
@@ -60,7 +62,7 @@
 # Google's public DNS service with high performance and reliability
 # Features DNS-over-HTTPS, DNS-over-TLS, and DNSSEC validation
 # Website: https://developers.google.com/speed/public-dns
-# DNSSEC: YES (validates) | ECS: YES (echoes with scope/24, normalizes to /26 for IPv4)
+# DNSSEC: YES | ECS: YES | EDE: NO
 # Protocols: UDP, TCP, DoT, DoH, DoH3 (HTTP/3)
 8.8.4.4
 8.8.8.8
@@ -69,7 +71,7 @@
 # Security-focused DNS with malware blocking and privacy protection
 # Offers secure (.9), unsecured (.10), and ECS-enabled (.11) variants
 # Website: https://quad9.net/
-# DNSSEC: YES (validates) | ECS: NO (processes but doesn't echo back)
+# DNSSEC: YES (.9/.11), NO (.10) | ECS: YES (.11), NO (.9/.10) | EDE: NO
 9.9.9.9
 9.9.9.10
 9.9.9.11
@@ -81,7 +83,7 @@
 # Enterprise-grade public DNS with high availability and security
 # Provides stable, reliable DNS resolution worldwide
 # Website: https://www.verisign.com/en_US/security-services/public-dns/index.xhtml
-# DNSSEC: YES (validates) | ECS: YES (echoes with scope/0, conservative approach)
+# DNSSEC: YES | ECS: YES | EDE: NO
 64.6.64.6
 64.6.65.6
 
@@ -96,7 +98,7 @@
 # European sovereign DNS resolver with GDPR compliance
 # Privacy-focused service with infrastructure located in the EU
 # Website: https://www.dns0.eu/
-# DNSSEC: YES (validates) | ECS: NO (no echo back)
+# DNSSEC: YES | ECS: NO | EDE: NO
 193.110.81.0
 185.253.5.0
 
@@ -110,7 +112,7 @@
 # Russian search engine company's DNS service
 # Offers basic, safe, and family protection modes
 # Website: https://dns.yandex.com/
-# DNSSEC: NO (does not validate) | ECS: NO (no support)
+# DNSSEC: NO | ECS: NO | EDE: NO
 77.88.8.88
 77.88.8.2
 
@@ -124,7 +126,7 @@
 # Ad-blocking DNS service with privacy protection
 # Blocks ads, trackers, and malicious domains at DNS level
 # Website: https://adguard-dns.io/
-# DNSSEC: YES (validates) | ECS: YES (echoes with exact scope match, transparent mirroring)
+# DNSSEC: YES | ECS: YES | EDE: YES
 # Protocols: UDP, TCP, DoT, DoH, DoQ (QUIC)
 94.140.14.14
 94.140.15.15
@@ -135,7 +137,7 @@
 # Customizable DNS service with filtering and unblocking capabilities
 # Offers granular control over content filtering and geographic unblocking
 # Website: https://controld.com/
-# DNSSEC: YES (validates) | ECS: YES (echoes with scope/0, conservative approach)
+# DNSSEC: YES | ECS: YES | EDE: NO
 76.76.2.11
 76.76.10.11
 
@@ -150,6 +152,7 @@
 # Highly customizable DNS service with extensive filtering options
 # Cloud-based DNS with detailed analytics and custom block lists
 # Website: https://nextdns.io/
+# DNSSEC: YES | ECS: NO | EDE: NO
 45.90.28.157
 45.90.30.157
 
@@ -164,7 +167,7 @@
 # Privacy-focused European DNS with no logging policy
 # Open source DNS resolver with strong privacy protection
 # Website: https://dns.sb/
-# DNSSEC: YES (validates) | ECS: NO (no echo back)
+# DNSSEC: YES | ECS: NO | EDE: NO
 185.222.222.222
 45.11.45.11
 
@@ -211,6 +214,7 @@
 # Enterprise-grade DNS with threat protection and filtering options
 # Now part of Vercara, offers multiple security service tiers
 # Website: https://vercara.com/public-dns
+# DNSSEC: YES | ECS: YES | EDE: NO
 156.154.70.1
 156.154.71.1
 
