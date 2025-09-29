@@ -132,6 +132,7 @@ def validate_server_address(dnsserver, address_family):
 
 
 def main():
+    global shutdown
     setup_signal_handler()
 
     if len(sys.argv) == 1:
@@ -431,6 +432,10 @@ def main():
             if not quiet:
                 print_stderr("Invalid Response", False)
                 continue
+        except KeyboardInterrupt:
+            # Handle Ctrl+C during DNS query
+            shutdown = True
+            break
         else:
             # convert time to milliseconds, considering that
             # time property is returned differently by query.https
@@ -555,9 +560,18 @@ def main():
 
                         print("%s (%d): %s" % (option_name, ans_opt.otype, option_details), flush=True)
 
+            # Check for shutdown signal after verbose output processing
+            if shutdown:
+                break
+
             time_to_next = (stime + interval) - etime
             if time_to_next > 0:
-                time.sleep(time_to_next)
+                # Interruptible sleep - check for shutdown signal every 0.1 seconds
+                sleep_start = time.time()
+                while time.time() - sleep_start < time_to_next:
+                    if shutdown:
+                        break
+                    time.sleep(min(0.1, time_to_next - (time.time() - sleep_start)))
 
     r_sent = i
     r_received = len(response_time)
