@@ -118,6 +118,38 @@ Here are a few interesting use cases for `dnsping`:
 - Comparing response times across different transport protocols (e.g., UDP vs. DoH).
 - Evaluating the reliability of your DNS server by measuring jitter and packet loss.
 - Measuring response times with DNSSEC enabled using the `--dnssec` flag.
+- Testing EDNS Client Subnet behavior for geolocation-aware responses:
+
+```shell
+./dnsping.py -c 3 --ecs 203.0.113.0/24 -s 94.140.14.14 google.com
+```
+
+```
+dnsping.py DNS: 94.140.14.14:53, hostname: google.com, proto: UDP, class: IN, type: A, flags: [RD]
+66  bytes from 94.140.14.14: seq=1   time=31.407 ms  NOERROR [ECS:203.0.113.0/24]
+66  bytes from 94.140.14.14: seq=2   time=29.156 ms  NOERROR [ECS:203.0.113.0/24]
+66  bytes from 94.140.14.14: seq=3   time=30.892 ms  NOERROR [ECS:203.0.113.0/24]
+
+--- 94.140.14.14 dnsping statistics ---
+3 requests transmitted, 3 responses received, 0% lost
+min=29.156 ms, avg=30.485 ms, max=31.407 ms, stddev=1.176 ms
+```
+
+- Identifying DNS servers using the NSID option:
+
+```shell
+./dnsping.py -c 2 --nsid -s 8.8.8.8 google.com
+```
+
+```
+dnsping.py DNS: 8.8.8.8:53, hostname: google.com, proto: UDP, class: IN, type: A, flags: [RD]
+68  bytes from 8.8.8.8: seq=1   time=36.399 ms  NOERROR [NSID:gpdns-ams]
+68  bytes from 8.8.8.8: seq=2   time=32.156 ms  NOERROR [NSID:gpdns-ams]
+
+--- 8.8.8.8 dnsping statistics ---
+2 requests transmitted, 2 responses received, 0% lost
+min=32.156 ms, avg=34.278 ms, max=36.399 ms, stddev=2.122 ms
+```
 
 
 # dnstraceroute
