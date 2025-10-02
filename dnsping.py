@@ -59,7 +59,7 @@ shutdown = False
 
 def usage():
     print("""%s version %s
-Usage: %s [-346aDeEFhLmqnrvTQxXHq] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
+Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] [--ecs client_subnet] hostname
 
   -h, --help        Show this help message
