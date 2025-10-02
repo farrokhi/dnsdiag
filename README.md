@@ -126,9 +126,9 @@ Here are a few interesting use cases for `dnsping`:
 
 ```
 dnsping.py DNS: 94.140.14.14:53, hostname: google.com, proto: UDP, class: IN, type: A, flags: [RD]
-66  bytes from 94.140.14.14: seq=1   time=31.407 ms  NOERROR [ECS:203.0.113.0/24]
-66  bytes from 94.140.14.14: seq=2   time=29.156 ms  NOERROR [ECS:203.0.113.0/24]
-66  bytes from 94.140.14.14: seq=3   time=30.892 ms  NOERROR [ECS:203.0.113.0/24]
+66  bytes from 94.140.14.14: seq=1   time=31.407 ms  NOERROR [ECS:203.0.113.0/24/24]
+66  bytes from 94.140.14.14: seq=2   time=29.156 ms  NOERROR [ECS:203.0.113.0/24/24]
+66  bytes from 94.140.14.14: seq=3   time=30.892 ms  NOERROR [ECS:203.0.113.0/24/24]
 
 --- 94.140.14.14 dnsping statistics ---
 3 requests transmitted, 3 responses received, 0% lost
