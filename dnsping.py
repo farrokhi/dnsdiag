@@ -370,8 +370,11 @@ def main():
                                         source=src_ip, source_port=src_port)
             elif proto is PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
-                    answers = dns.query.tls(query, dnsserver_hostname, timeout=timeout, port=dst_port,
-                                            source=src_ip, source_port=src_port)
+                    # Use resolved IP for connection, but provide hostname for SNI/certificate validation
+                    server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
+                    answers = dns.query.tls(query, dnsserver_ip, timeout=timeout, port=dst_port,
+                                            source=src_ip, source_port=src_port,
+                                            server_hostname=server_hostname)
                 else:
                     unsupported_feature("DNS-over-TLS")
 
@@ -410,8 +413,11 @@ def main():
             elif proto is PROTO_QUIC:
                 if hasattr(dns.query, 'quic'):
                     try:
-                        answers = dns.query.quic(query, dnsserver_hostname, timeout=timeout, port=dst_port,
-                                                 source=src_ip, source_port=src_port)
+                        # Use resolved IP for connection, but provide hostname for SNI/certificate validation
+                        server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
+                        answers = dns.query.quic(query, dnsserver_ip, timeout=timeout, port=dst_port,
+                                                 source=src_ip, source_port=src_port,
+                                                 server_hostname=server_hostname)
                     except dns.exception.Timeout:
                         print_stderr(f"The server did not respond to DoQ on port {dst_port}", should_die=True)
                     except ConnectionRefusedError:
