@@ -40,7 +40,7 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.dns
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, flags_to_text
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, getDefaultPort
 from dnsdiag.shared import __version__, Colors
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -66,7 +66,7 @@ def signal_handler(sig, frame):
 
 def usage():
     print("""%s version %s
-Usage: %s [-ehmvCTXHSDjf] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
+Usage: %s [-ehmvCTXHQ3SD] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
 
   -h, --help         Display this help message
   -f, --file         Specify a DNS server list file to use (default: system resolvers)
@@ -75,10 +75,12 @@ Usage: %s [-ehmvCTXHSDjf] [-f server-list] [-j output.json] [-c count] [-t type]
   -w, --wait         Set the maximum wait time for a reply in seconds (default: 2)
   -t, --type         Set the DNS request record type (default: A)
   -T, --tcp          Use TCP as the transport protocol instead of UDP
-  -X, --tls          Use TLS as the transport protocol
-  -j, --json         Save the results to a specified file in JSON format
+  -X, --tls          Use TLS as the transport protocol (DoT)
+  -Q, --quic         Use QUIC as the transport protocol (DoQ)
   -H, --doh          Use HTTPS as the transport protocol (DoH)
-  -p, --port         Specify the DNS server port number (default: 53 for TCP/UDP, 853 for TLS)
+  -3, --http3        Use HTTP/3 as the transport protocol (DoH3)
+  -j, --json         Save the results to a specified file in JSON format
+  -p, --port         Specify the DNS server port number (default: protocol-specific)
   -S, --srcip        Set the query source IP address
   -e, --edns         Enable EDNS0 in requests
   -D, --dnssec       Enable the 'DNSSEC desired' (DO flag) in requests
@@ -105,7 +107,8 @@ def main():
     rdatatype = 'A'
     proto = PROTO_UDP
     src_ip = None
-    dst_port = 53
+    dst_port = getDefaultPort(proto)
+    use_default_dst_port = True
     count = 10
     waittime = 2
     inputfilename = None
@@ -120,9 +123,9 @@ def main():
     qname = 'wikipedia.org'
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHDj:p:",
+        opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHQ3Dj:p:",
                                    ["help", "file=", "count=", "type=", "wait=", "json=", "tcp", "edns", "verbose",
-                                    "color", "cache-miss", "srcip=", "tls", "doh", "dnssec", "port=", "skip-warmup"])
+                                    "color", "cache-miss", "srcip=", "tls", "doh", "quic", "http3", "dnssec", "port=", "skip-warmup"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -148,6 +151,8 @@ def main():
             rdatatype = a
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
         elif o in ("-S", "--srcip"):
             src_ip = a
         elif o in ("-j", "--json"):
@@ -164,12 +169,23 @@ def main():
             verbose = True
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
-            dst_port = 853
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
-            dst_port = 443
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
+        elif o in ("-Q", "--quic"):
+            proto = PROTO_QUIC
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
+        elif o in ("-3", "--http3"):
+            proto = PROTO_HTTP3
+            if use_default_dst_port:
+                dst_port = getDefaultPort(proto)
         elif o in ("-p", "--port"):
             dst_port = int(a)
+            use_default_dst_port = False
         elif o in ("--skip-warmup",):
             warmup = False
 
