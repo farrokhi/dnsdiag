@@ -83,6 +83,8 @@ Options:
   -T, --tcp         Use TCP as the transport protocol
   -Q, --quic        Use QUIC as the transport protocol (DoQ)
   -3, --http3       Use HTTP/3 as the transport protocol (DoH3)
+  -4, --ipv4        Use IPv4 (only used when server is a hostname)
+  -6, --ipv6        Use IPv6 (only used when server is a hostname)
   -x, --expert      Display expert hints, if available
   -a, --asn         Enable AS# lookups for each encountered hop
   -s, --server      Specify the DNS server to use (default: first system resolver)
@@ -175,12 +177,13 @@ def main():
     should_resolve = True
     use_edns = False
     color_mode = False
+    af = None  # auto-detect from server address
 
     args = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCTQ3",
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCTQ346",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port=", "expert",
-                                    "color", "srcip=", "tcp", "quic", "http3"])
+                                    "color", "srcip=", "tcp", "quic", "http3", "ipv4", "ipv6"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -227,6 +230,10 @@ def main():
             proto = PROTO_HTTP3
             if use_default_dest_port:
                 dest_port = getDefaultPort(proto)
+        elif o in ("-4", "--ipv4"):
+            af = socket.AF_INET
+        elif o in ("-6", "--ipv6"):
+            af = socket.AF_INET6
         elif o in ("-a", "--asn"):
             as_lookup = True
         elif o in ("-e", "--edns"):
@@ -244,19 +251,69 @@ def main():
     # Use system DNS server if parameter is not specified
     # remember not all systems have /etc/resolv.conf (i.e. Android)
     if dnsserver is None:
-        dnsserver = dns.resolver.get_default_resolver().nameservers[0]
+        nameservers = dns.resolver.get_default_resolver().nameservers
+        # If user specified -4 or -6, filter for that address family
+        if af is not None:
+            filtered = []
+            for ns in nameservers:
+                try:
+                    addr = ipaddress.ip_address(ns)
+                    if (af == socket.AF_INET and isinstance(addr, ipaddress.IPv4Address)) or \
+                       (af == socket.AF_INET6 and isinstance(addr, ipaddress.IPv6Address)):
+                        filtered.append(ns)
+                except ValueError:
+                    pass
+            if not filtered:
+                af_name = "IPv4" if af == socket.AF_INET else "IPv6"
+                print("Error: No %s nameservers found in system resolver" % af_name)
+                sys.exit(1)
+            dnsserver = filtered[0]
+        else:
+            dnsserver = nameservers[0]
 
-    # check if we have a valid dns server address
+    # check if we have a valid dns server address and detect/set address family
     try:
-        ipaddress.ip_address(dnsserver)
+        addr = ipaddress.ip_address(dnsserver)
+        # Auto-detect address family from IP address (or verify it matches user request)
+        if isinstance(addr, ipaddress.IPv4Address):
+            if af is not None and af != socket.AF_INET:
+                print("Error: DNS server is IPv4 but -6 flag was specified")
+                sys.exit(1)
+            af = socket.AF_INET
+        else:  # IPv6
+            if af is not None and af != socket.AF_INET6:
+                print("Error: DNS server is IPv6 but -4 flag was specified")
+                sys.exit(1)
+            af = socket.AF_INET6
     except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
+        # If af not specified, default to IPv4
+        if af is None:
+            af = socket.AF_INET
         try:
-            dnsserver = socket.getaddrinfo(dnsserver, port=None, family=socket.AF_INET)[1][4][0]
+            dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af)[0][4][0]
         except OSError:
             print('Error: cannot resolve hostname:', dnsserver)
             sys.exit(1)
 
-    icmp = socket.getprotobyname('icmp')
+    # Validate source IP address family if specified
+    if src_ip:
+        try:
+            src_addr = ipaddress.ip_address(src_ip)
+            if (af == socket.AF_INET and not isinstance(src_addr, ipaddress.IPv4Address)) or \
+               (af == socket.AF_INET6 and not isinstance(src_addr, ipaddress.IPv6Address)):
+                af_name = "IPv4" if af == socket.AF_INET else "IPv6"
+                src_type = "IPv4" if isinstance(src_addr, ipaddress.IPv4Address) else "IPv6"
+                print("Error: Source IP is %s but target DNS server is %s" % (src_type, af_name))
+                sys.exit(1)
+        except ValueError:
+            print("Error: Invalid source IP address: %s" % src_ip)
+            sys.exit(1)
+
+    # Select correct ICMP protocol based on address family
+    if af == socket.AF_INET:
+        icmp_proto = socket.getprotobyname('icmp')
+    else:  # AF_INET6
+        icmp_proto = socket.getprotobyname('ipv6-icmp')
 
     ttl = 1
     reached = False
@@ -274,15 +331,19 @@ def main():
         # some platforms permit opening a DGRAM socket for ICMP without root permission
         # if not availble, we will fall back to RAW which explicitly requires root permission
         try:
-            icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
+            icmp_socket = socket.socket(af, socket.SOCK_RAW, icmp_proto)
         except OSError:
             try:
-                icmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, icmp)
+                icmp_socket = socket.socket(af, socket.SOCK_DGRAM, icmp_proto)
             except OSError:
                 print("Error: Unable to create ICMP socket with unprivileged user. Please run as root.")
                 sys.exit(1)
 
-        icmp_socket.bind(("", dest_port))
+        # Bind socket based on address family
+        if af == socket.AF_INET:
+            icmp_socket.bind(("", dest_port))
+        else:  # AF_INET6
+            icmp_socket.bind(("::", dest_port))
         icmp_socket.settimeout(timeout)
 
         curr_addr = None
@@ -294,11 +355,30 @@ def main():
 
             try:  # expect ICMP response
                 packet, curr_addr = icmp_socket.recvfrom(512)
-                if len(packet) > 51:
-                    icmp_type = packet[20]
-                    l4_dst_port = packet[50] << 8 | packet[51]
-                    if icmp_type == 11 and l4_dst_port == dest_port:
-                        curr_addr = curr_addr[0]
+                # Parse ICMP packet based on address family
+                if af == socket.AF_INET:
+                    # IPv4: IP header (20 bytes) + ICMP header (8 bytes) + IP header (20 bytes) + UDP header
+                    # ICMP Time Exceeded type = 11
+                    if len(packet) > 51:
+                        icmp_type = packet[20]
+                        l4_dst_port = packet[50] << 8 | packet[51]
+                        if icmp_type == 11 and l4_dst_port == dest_port:
+                            curr_addr = curr_addr[0]
+                        else:
+                            curr_addr = None
+                    else:
+                        curr_addr = None
+                else:  # AF_INET6
+                    # IPv6: kernel strips IPv6 header, so we get:
+                    # ICMPv6 header (8 bytes) + Original IPv6 header (40 bytes) + UDP header
+                    # ICMPv6 Time Exceeded type = 3
+                    if len(packet) > 50:
+                        icmp_type = packet[0]
+                        l4_dst_port = packet[50] << 8 | packet[51]
+                        if icmp_type == 3 and l4_dst_port == dest_port:
+                            curr_addr = curr_addr[0]
+                        else:
+                            curr_addr = None
                     else:
                         curr_addr = None
             except socket.error:
@@ -371,7 +451,11 @@ def main():
                 except Exception:
                     pass
 
-            print("%d\t%s (%s%s%s) %s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
+            # Don't show IP in parentheses if it's the same as the name (when -n is used)
+            if curr_name == curr_addr:
+                print("%d\t%s%s%s %s%.3f ms" % (ttl, c, curr_addr, color.N, as_name, elapsed), flush=True)
+            else:
+                print("%d\t%s (%s%s%s) %s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
             trace_path.append(curr_addr)
         else:
             print("%d\t *" % ttl, flush=True)

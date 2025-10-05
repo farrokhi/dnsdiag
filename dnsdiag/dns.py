@@ -91,7 +91,11 @@ class CustomSocket(socket.socket):
     def __init__(self, *args, **kwargs):
         super(CustomSocket, self).__init__(*args, **kwargs)
         if _TTL:
-            self.setsockopt(socket.SOL_IP, socket.IP_TTL, _TTL)
+            # Set TTL/hop limit based on address family
+            if self.family == socket.AF_INET:
+                self.setsockopt(socket.SOL_IP, socket.IP_TTL, _TTL)
+            elif self.family == socket.AF_INET6:
+                self.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_UNICAST_HOPS, _TTL)
 
 
 def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False,
