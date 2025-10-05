@@ -1,0 +1,20 @@
+# Test dependencies for dnsdiag test suite
+
+# Core testing framework
+pytest>=6.0.0
+
+# Additional pytest plugins (optional but recommended)
+pytest-timeout>=2.1.0           # Test timeout handling
+pytest-xdist>=2.4.0            # Parallel test execution
+pytest-cov>=3.0.0              # Code coverage reporting
+pytest-html>=3.1.0             # HTML test reports
+pytest-json-report>=1.5.0      # JSON test reports
+
+# For CI/CD integration
+pytest-github-actions-annotate-failures>=0.1.7  # GitHub Actions integration (optional)
+
+# Performance and profiling (optional)
+pytest-benchmark>=3.4.1        # Performance benchmarking (optional)
+
+# Better assertion introspection
+pytest-clarity>=1.0.1          # Better assertion failure messages (optional)
