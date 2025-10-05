@@ -29,6 +29,7 @@ import random
 import socket
 import sys
 from statistics import stdev
+from typing import Optional, List, Any
 
 import httpx
 import dns.message
@@ -38,31 +39,31 @@ import dns.rdataclass
 import string
 
 # Transport protocols
-PROTO_UDP = 0
-PROTO_TCP = 1
-PROTO_TLS = 2
-PROTO_HTTPS = 3
-PROTO_QUIC = 4
-PROTO_HTTP3 = 5
+PROTO_UDP: int = 0
+PROTO_TCP: int = 1
+PROTO_TLS: int = 2
+PROTO_HTTPS: int = 3
+PROTO_QUIC: int = 4
+PROTO_HTTP3: int = 5
 
-_TTL = None
+_TTL: Optional[int] = None
 
 
 class PingResponse:
-    def __init__(self):
-        self.r_avg = 0
-        self.r_min = 0
-        self.r_max = 0
-        self.r_stddev = 0
-        self.r_lost_percent = 0
-        self.flags = 0
-        self.ttl = None
-        self.answer = None
-        self.rcode = 0
-        self.rcode_text = ''
+    def __init__(self) -> None:
+        self.r_avg: float = 0
+        self.r_min: float = 0
+        self.r_max: float = 0
+        self.r_stddev: float = 0
+        self.r_lost_percent: float = 0
+        self.flags: int = 0
+        self.ttl: Optional[int] = None
+        self.answer: Optional[Any] = None
+        self.rcode: int = 0
+        self.rcode_text: str = ''
 
 
-def proto_to_text(proto):
+def proto_to_text(proto: int) -> str:
     _proto_name = {
         PROTO_UDP: 'UDP',
         PROTO_TCP: 'TCP',
@@ -74,7 +75,7 @@ def proto_to_text(proto):
     return _proto_name[proto]
 
 
-def getDefaultPort(proto):
+def getDefaultPort(proto: int) -> int:
     _proto_port = {
         PROTO_UDP: 53,
         PROTO_TCP: 53,
@@ -87,7 +88,7 @@ def getDefaultPort(proto):
 
 
 class CustomSocket(socket.socket):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(CustomSocket, self).__init__(*args, **kwargs)
         if _TTL:
             # Set TTL/hop limit based on address family
@@ -97,13 +98,14 @@ class CustomSocket(socket.socket):
                 self.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_UNICAST_HOPS, _TTL)
 
 
-def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False,
-         want_dnssec=False, socket_ttl=None):
+def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, count: int, proto: int,
+         src_ip: Optional[str], use_edns: bool = False, force_miss: bool = False,
+         want_dnssec: bool = False, socket_ttl: Optional[int] = None) -> PingResponse:
     retval = PingResponse()
     retval.rcode_text = "No Response"
 
-    response_times = []
-    i = 0
+    response_times: List[float] = []
+    i: int = 0
 
     if socket_ttl:
         global _TTL
@@ -202,13 +204,13 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
     return retval
 
 
-def random_string(min_length=5, max_length=10):
+def random_string(min_length: int = 5, max_length: int = 10) -> str:
     char_set = string.ascii_letters + string.digits
     length = random.randint(min_length, max_length)
     return ''.join(map(lambda unused: random.choice(char_set), range(length)))
 
 
-def unsupported_feature(feature=""):
+def unsupported_feature(feature: str = "") -> None:
     print("Error: You have an unsupported version of Python interpreter dnspython library.")
     print("       Some features such as DoT and DoH are not available. You should upgrade")
     print("       the Python interpreter to at least 3.10 and reinstall dependencies.")
@@ -217,7 +219,7 @@ def unsupported_feature(feature=""):
     sys.exit(127)
 
 
-def valid_rdatatype(rtype):
+def valid_rdatatype(rtype: str) -> bool:
     # validate RR type
     try:
         _ = dns.rdatatype.from_text(rtype)
@@ -226,7 +228,7 @@ def valid_rdatatype(rtype):
     return True
 
 
-def flags_to_text(flags):
+def flags_to_text(flags: int) -> str:
     # Standard DNS flags
 
     QR = 0x8000
