@@ -223,7 +223,9 @@ HTTPS), DoQ (DNS over QUIC), and DoH3 (DNS over HTTP/3) by using the `--tcp`,
 
 ```shell
 ./dnseval.py --skip-warmup --dnssec -c10 -f public-servers.txt ripe.net
+```
 
+```
 server                   avg(ms)  min(ms)  max(ms)  stddev(ms)  lost(%)  ttl      flags                      response
 ---------------------------------------------------------------------------------------------------------------------
 1.0.0.1                  29.01    14.15    45.36    8.60        %0       300      QR -- -- RD RA AD -- DO     NOERROR
