@@ -170,6 +170,20 @@ class TestProtocols:
         assert result.success, f"TLS evaluation failed: {result.error}"
         assert result.has_results
 
+    def test_quic_protocol(self, runner):
+        """Test evaluation with QUIC protocol"""
+        result = runner.run(['--quic', '-c', '2', '-f', '-', 'google.com'],
+                           stdin=b'94.140.14.14\n')
+        assert result.success, f"QUIC evaluation failed: {result.error}"
+        assert result.has_results
+
+    def test_http3_protocol(self, runner):
+        """Test evaluation with HTTP/3 protocol"""
+        result = runner.run(['--http3', '-c', '2', '-f', '-', 'google.com'],
+                           stdin=b'1.1.1.1\n')
+        assert result.success, f"HTTP/3 evaluation failed: {result.error}"
+        assert result.has_results
+
 
 class TestRecordTypes:
     """Tests for different DNS record types"""

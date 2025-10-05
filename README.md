@@ -207,8 +207,9 @@ list of DNS servers, allowing you to compare their response times
 simultaneously.
 
 You can use `dnseval` to evaluate response times across different transport
-protocols, including UDP (default), TCP, DoT (DNS over TLS), and DoH (DNS over
-HTTPS) by using the `--tcp`, `--tls`, and `--doh` flags, respectively.
+protocols, including UDP (default), TCP, DoT (DNS over TLS), DoH (DNS over
+HTTPS), DoQ (DNS over QUIC), and DoH3 (DNS over HTTP/3) by using the `--tcp`,
+`--tls`, `--doh`, `--quic`, and `--http3` flags, respectively.
 
 ## Protocol Support Summary
 
@@ -216,7 +217,7 @@ HTTPS) by using the `--tcp`, `--tls`, and `--doh` flags, respectively.
 |------|-----|-----|-----------|-----|-----|------|
 | `dnsping` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `dnstraceroute` | ✓ | ✓ | - | - | ✓ | ✓ |
-| `dnseval` | ✓ | ✓ | ✓ | ✓ | - | - |
+| `dnseval` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 *DoQ: DNS over QUIC, DoH3: DNS over HTTP/3*
 
