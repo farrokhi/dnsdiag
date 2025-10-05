@@ -76,7 +76,7 @@ def test_import():
 
 def usage():
     print("""%s version %s
-Usage: %s [-aenqhCxTSQ3] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
+Usage: %s [-aenqhCxTSQ346] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
 
 Options:
   -h, --help        Show this help message
