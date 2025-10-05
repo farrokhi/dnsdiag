@@ -31,7 +31,6 @@ import sys
 from statistics import stdev
 
 import httpx
-import dns.flags
 import dns.message
 import dns.query
 import dns.rcode
@@ -185,8 +184,7 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
 
     r_sent = i + 1
     r_received = len(response_times)
-    retval.r_lost_count = r_sent - r_received
-    retval.r_lost_percent = (100 * retval.r_lost_count) / r_sent
+    retval.r_lost_percent = (100 * (r_sent - r_received)) / r_sent
     if response_times:
         retval.r_min = min(response_times)
         retval.r_max = max(response_times)
