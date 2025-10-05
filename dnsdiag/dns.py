@@ -26,7 +26,6 @@
 
 import datetime
 import random
-import signal
 import socket
 import sys
 from statistics import stdev
@@ -38,8 +37,6 @@ import dns.query
 import dns.rcode
 import dns.rdataclass
 import string
-
-shutdown = False
 
 # Transport protocols
 PROTO_UDP = 0
@@ -94,7 +91,11 @@ class CustomSocket(socket.socket):
     def __init__(self, *args, **kwargs):
         super(CustomSocket, self).__init__(*args, **kwargs)
         if _TTL:
-            self.setsockopt(socket.SOL_IP, socket.IP_TTL, _TTL)
+            # Set TTL/hop limit based on address family
+            if self.family == socket.AF_INET:
+                self.setsockopt(socket.SOL_IP, socket.IP_TTL, _TTL)
+            elif self.family == socket.AF_INET6:
+                self.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_UNICAST_HOPS, _TTL)
 
 
 def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edns=False, force_miss=False,
@@ -111,9 +112,6 @@ def ping(qname, server, dst_port, rdtype, timeout, count, proto, src_ip, use_edn
         dns.query.socket_factory = CustomSocket
 
     for i in range(count):
-
-        if shutdown:  # user pressed CTRL+C
-            raise SystemExit
 
         if force_miss:
             fqdn = "_dnsdiag_%s_.%s" % (random_string(), qname)
@@ -212,13 +210,6 @@ def random_string(min_length=5, max_length=10):
     return ''.join(map(lambda unused: random.choice(char_set), range(length)))
 
 
-def signal_handler(sig, frame):
-    global shutdown
-    if shutdown:  # pressed twice, so exit immediately
-        sys.exit(0)
-    shutdown = True  # pressed once, exit gracefully
-
-
 def unsupported_feature(feature=""):
     print("Error: You have an unsupported version of Python interpreter dnspython library.")
     print("       Some features such as DoT and DoH are not available. You should upgrade")
@@ -275,11 +266,3 @@ def flags_to_text(flags):
             text_flags.append('--')
 
     return ' '.join(text_flags)
-
-
-def setup_signal_handler():
-    try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError:  # not all signals are supported on all platforms
-        pass
