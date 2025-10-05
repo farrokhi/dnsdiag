@@ -33,6 +33,7 @@ import os
 import signal
 import socket
 import sys
+import time
 
 import dns.rcode
 import dns.rdatatype
@@ -83,6 +84,7 @@ Usage: %s [-ehmvCTXHSDjf] [-f server-list] [-j output.json] [-c count] [-t type]
   -D, --dnssec       Enable the 'DNSSEC desired' (DO flag) in requests
   -C, --color        Enable colorful output
   -v, --verbose      Print the full DNS response details
+      --skip-warmup  Disable cache warmup (default: warmup enabled)
 """ % (__progname__, __version__, __progname__))
     sys.exit()
 
@@ -103,7 +105,7 @@ def main():
     rdatatype = 'A'
     proto = PROTO_UDP
     src_ip = None
-    dst_port = 53  # default for UDP and TCP
+    dst_port = 53
     count = 10
     waittime = 2
     inputfilename = None
@@ -114,12 +116,13 @@ def main():
     force_miss = False
     verbose = False
     color_mode = False
+    warmup = True
     qname = 'wikipedia.org'
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHDj:p:",
                                    ["help", "file=", "count=", "type=", "wait=", "json=", "tcp", "edns", "verbose",
-                                    "color", "cache-miss", "srcip=", "tls", "doh", "dnssec", "port="])
+                                    "color", "cache-miss", "srcip=", "tls", "doh", "dnssec", "port=", "skip-warmup"])
     except getopt.GetoptError as err:
         print(err)
         usage()
@@ -154,19 +157,21 @@ def main():
             use_edns = True
         elif o in ("-D", "--dnssec"):
             want_dnssec = True
-            use_edns = True  # implied
+            use_edns = True
         elif o in ("-C", "--color"):
             color_mode = True
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
-            dst_port = 853  # default for DoT, unless overridden using -p
+            dst_port = 853
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
-            dst_port = 443  # default for DoH, unless overridden using -p
+            dst_port = 443
         elif o in ("-p", "--port"):
             dst_port = int(a)
+        elif o in ("--skip-warmup",):
+            warmup = False
 
         else:
             print("Invalid option: %s" % o)
@@ -203,6 +208,36 @@ def main():
 
         width = maxlen(f)
         blanks = (width - 5) * ' '
+
+        if warmup and not json_output:
+            print("Warming up DNS caches...")
+            for server in f:
+                if shutdown:
+                    break
+                if server.lstrip() == '':
+                    continue
+                server = server.replace(' ', '')
+                try:
+                    ipaddress.ip_address(server)
+                except ValueError:
+                    try:
+                        resolver = socket.getaddrinfo(server, port=None)[1][4][0]
+                    except (OSError, Exception):
+                        resolver = None
+                else:
+                    resolver = server
+
+                if resolver:
+                    try:
+                        dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, 1, proto, src_ip,
+                                        use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
+                    except (KeyboardInterrupt, SystemExit):
+                        shutdown = True
+                        break
+                    except Exception:
+                        pass
+            if not shutdown:
+                time.sleep(1)
 
         if not json_output:
             print('server ', blanks,
