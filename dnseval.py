@@ -256,9 +256,9 @@ def main():
                 time.sleep(1)
 
         if not json_output:
-            print('server ', blanks,
-                  ' avg(ms)     min(ms)     max(ms)     stddev(ms)  lost(%)  ttl        flags                  response')
-            print((104 + width) * '-')
+            print('server' + blanks +
+                  '  avg(ms)  min(ms)  max(ms)  stddev(ms)  lost(%)  ttl      flags                      response')
+            print((95 + width) * '-')
 
         for server in f:
             # Check for shutdown signal
@@ -301,6 +301,11 @@ def main():
 
             resolver = server.ljust(width + 1)
             text_flags = flags_to_text(retval.flags)
+            edns_flags_text = dns.flags.edns_to_text(retval.ednsflags)
+            if edns_flags_text:
+                text_flags = " ".join([text_flags, edns_flags_text])
+            else:
+                text_flags = " ".join([text_flags, "--"])
 
             s_ttl = str(retval.ttl)
             if s_ttl == "None":
@@ -323,6 +328,7 @@ def main():
                     's_ttl': s_ttl,
                     'text_flags': text_flags,
                     'flags': retval.flags,
+                    'ednsflags': retval.ednsflags,
                     'rcode': retval.rcode,
                     'rcode_text': retval.rcode_text,
                 }
@@ -338,7 +344,7 @@ def main():
                         json.dump(outer_data, outfile, indent=2)
 
             else:
-                result = "%s    %-8.3f    %-8.3f    %-8.3f    %-8.3f    %s%%%-3d%s     %-8s  %21s   %-20s" % (
+                result = "%s  %-7.2f  %-7.2f  %-7.2f  %-10.2f  %s%%%-3d%s     %-7s  %-26s  %-12s" % (
                     resolver, retval.r_avg, retval.r_min, retval.r_max, retval.r_stddev, l_color, retval.r_lost_percent,
                     color.N, s_ttl, text_flags, retval.rcode_text)
                 print(result.rstrip(), flush=True)

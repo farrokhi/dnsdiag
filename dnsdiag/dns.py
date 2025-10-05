@@ -57,6 +57,7 @@ class PingResponse:
         self.r_stddev: float = 0
         self.r_lost_percent: float = 0
         self.flags: int = 0
+        self.ednsflags: int = 0
         self.ttl: Optional[int] = None
         self.answer: Optional[Any] = None
         self.rcode: int = 0
@@ -178,6 +179,7 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             response_times.append(elapsed)
             if response:
                 retval.flags = response.flags
+                retval.ednsflags = response.ednsflags
                 retval.answer = response.answer
                 retval.rcode = response.rcode()
                 retval.rcode_text = dns.rcode.to_text(response.rcode())
