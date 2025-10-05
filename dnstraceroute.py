@@ -29,6 +29,7 @@ import concurrent.futures
 import getopt
 import ipaddress
 import os
+import signal
 import socket
 import sys
 import time
@@ -38,17 +39,33 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.whois
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort, setup_signal_handler
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort
 from dnsdiag.shared import __version__, Colors
 
 # Global Variables
 quiet = False
 whois_cache = {}
+shutdown = False
 
 # Constants
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __progname__ = os.path.basename(sys.argv[0])
+
+
+def setup_signal_handler():
+    try:
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
+    except AttributeError:  # not all signals are supported on all platforms
+        pass
+
+
+def signal_handler(sig, frame):
+    global shutdown
+    if shutdown:  # pressed twice, so exit immediately
+        sys.exit(0)
+    shutdown = True  # pressed once, exit gracefully
 
 
 def test_import():
@@ -137,8 +154,7 @@ def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
 
 
 def main():
-    global quiet
-    shutdown = False
+    global quiet, shutdown
 
     setup_signal_handler()
 
@@ -251,6 +267,9 @@ def main():
               flush=True)
 
     while True:
+        # Check for shutdown signal
+        if shutdown:
+            break
 
         # some platforms permit opening a DGRAM socket for ICMP without root permission
         # if not availble, we will fall back to RAW which explicitly requires root permission
@@ -284,6 +303,9 @@ def main():
                         curr_addr = None
             except socket.error:
                 pass
+            except KeyboardInterrupt:
+                shutdown = True
+                break
             except SystemExit:
                 shutdown = True
                 break
@@ -291,7 +313,11 @@ def main():
                 etime = time.perf_counter()
                 icmp_socket.close()
 
-        reached, resp_time = thr.result()
+        try:
+            reached, resp_time = thr.result()
+        except KeyboardInterrupt:
+            shutdown = True
+            break
 
         if reached:
             curr_addr = dnsserver
@@ -306,10 +332,18 @@ def main():
                     curr_name = socket.gethostbyaddr(curr_addr)[0]
             except socket.error:
                 curr_name = curr_addr
+            except KeyboardInterrupt:
+                shutdown = True
+                break
             except SystemExit:
-                pass
+                shutdown = True
+                break
             except Exception:
                 print("unxpected error: ", sys.exc_info()[0])
+
+        # Check for shutdown signal after hostname resolution
+        if shutdown:
+            break
 
         global whois_cache
         if curr_addr:

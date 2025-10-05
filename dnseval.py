@@ -30,6 +30,7 @@ import getopt
 import ipaddress
 import json
 import os
+import signal
 import socket
 import sys
 
@@ -38,13 +39,28 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.dns
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, flags_to_text
+from dnsdiag.shared import __version__, Colors
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __progname__ = os.path.basename(sys.argv[0])
+shutdown = False
 
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, setup_signal_handler, flags_to_text
-from dnsdiag.shared import __version__, Colors
+
+def setup_signal_handler():
+    try:
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
+    except AttributeError:  # not all signals are supported on all platforms
+        pass
+
+
+def signal_handler(sig, frame):
+    global shutdown
+    if shutdown:  # pressed twice, so exit immediately
+        sys.exit(0)
+    shutdown = True  # pressed once, exit gracefully
 
 
 def usage():
@@ -77,6 +93,7 @@ def maxlen(names):
 
 
 def main():
+    global shutdown
     setup_signal_handler()
 
     if len(sys.argv) == 1:
@@ -193,6 +210,10 @@ def main():
             print((104 + width) * '-')
 
         for server in f:
+            # Check for shutdown signal
+            if shutdown:
+                break
+
             # check if we have a valid dns server address
             if server.lstrip() == '':  # deal with empty lines
                 continue
@@ -217,7 +238,11 @@ def main():
                 retval = dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
                                        use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
 
+            except KeyboardInterrupt:
+                shutdown = True
+                break
             except SystemExit:
+                shutdown = True
                 break
             except Exception as e:
                 print('%s: %s' % (server, e))
