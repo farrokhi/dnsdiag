@@ -208,6 +208,70 @@ class TestErrorHandling:
         assert 'Invalid record type' in result.output
 
 
+class TestJSONOutput:
+    """Tests for JSON output functionality"""
+
+    def test_json_output_format(self, runner):
+        """Test JSON output is valid and contains expected fields"""
+        result = runner.run(['--skip-warmup', '-c', '2', '-f', '-', '-j', '-', 'google.com'],
+                           stdin=b'8.8.8.8\n')
+        assert result.success, f"JSON evaluation failed: {result.error}"
+
+        # Parse JSON output
+        try:
+            data = json.loads(result.output)
+        except json.JSONDecodeError as e:
+            pytest.fail(f"Invalid JSON output: {e}\nOutput: {result.output}")
+
+        # Verify structure
+        assert 'hostname' in data, "Missing hostname field"
+        assert 'data' in data, "Missing data field"
+        assert data['hostname'] == 'google.com'
+
+        # Verify data fields
+        dns_data = data['data']
+        expected_fields = ['hostname', 'timestamp', 'r_min', 'r_avg', 'r_max',
+                          'resolver', 'r_lost_percent', 's_ttl', 'text_flags',
+                          'flags', 'ednsflags', 'rcode', 'rcode_text']
+        for field in expected_fields:
+            assert field in dns_data, f"Missing field: {field}"
+
+        # Verify data types
+        assert isinstance(dns_data['r_avg'], float)
+        assert isinstance(dns_data['flags'], int)
+        assert isinstance(dns_data['ednsflags'], int)
+        assert dns_data['resolver'] == '8.8.8.8'
+
+    def test_json_output_with_dnssec(self, runner):
+        """Test JSON output with DNSSEC includes EDNS flags"""
+        result = runner.run(['--skip-warmup', '--dnssec', '-c', '2', '-f', '-', '-j', '-', 'google.com'],
+                           stdin=b'8.8.8.8\n')
+        assert result.success, f"DNSSEC JSON evaluation failed: {result.error}"
+
+        # Parse JSON output
+        data = json.loads(result.output)
+        dns_data = data['data']
+
+        # Verify EDNS flags are present
+        assert 'ednsflags' in dns_data, "Missing ednsflags field"
+        assert dns_data['ednsflags'] != 0, "EDNS flags should be set with --dnssec"
+
+        # Verify DO flag in text representation
+        assert 'DO' in dns_data['text_flags'], "DO flag should be in text_flags with --dnssec"
+
+    def test_json_output_multiple_servers(self, runner):
+        """Test JSON output with multiple servers produces multiple JSON objects"""
+        servers = '\n'.join([RESOLVERS['google'], RESOLVERS['cloudflare']])
+        result = runner.run(['--skip-warmup', '-c', '2', '-f', '-', '-j', '-', 'google.com'],
+                           stdin=servers.encode())
+        assert result.success, f"Multi-server JSON evaluation failed: {result.error}"
+
+        # Should contain two JSON objects (one per line or concatenated)
+        # Note: dnseval currently outputs concatenated JSON objects, not a JSON array
+        assert RESOLVERS['google'] in result.output
+        assert RESOLVERS['cloudflare'] in result.output
+
+
 pytestmark = pytest.mark.network
 
 
