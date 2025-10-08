@@ -144,13 +144,13 @@ class TestAddressFamilyHandling:
         """Test error when -6 flag is used with IPv4 server"""
         result = runner.run(['-6', '-s', '8.8.8.8', 'google.com'])
         assert not result.success, "Should fail with conflicting flags"
-        assert "Error" in result.output
+        assert "ERROR" in result.output
 
     def test_conflicting_ipv6_server_with_ipv4_flag(self, runner):
         """Test error when -4 flag is used with IPv6 server"""
         result = runner.run(['-4', '-s', '2001:4860:4860::8888', 'google.com'])
         assert not result.success, "Should fail with conflicting flags"
-        assert "Error" in result.output
+        assert "ERROR" in result.output
 
     def test_auto_detect_ipv4(self, runner):
         """Test auto-detection of IPv4 address family"""
@@ -217,13 +217,13 @@ class TestSourceIPValidation:
         result = runner.run(['-S', '127.0.0.1', '-c', '1', '-s', '8.8.8.8', 'google.com'])
         # Either succeeds or fails with permission error
         if not result.success:
-            assert ("Error" in result.output or "Permission" in result.output)
+            assert ("ERROR" in result.output or "Permission" in result.output)
 
     def test_ipv4_source_with_ipv6_target(self, runner):
         """Test error when IPv4 source is used with IPv6 target"""
         result = runner.run(['-S', '127.0.0.1', '-s', '2001:4860:4860::8888', 'google.com'])
         assert not result.success, "Should fail with mismatched address families"
-        assert "Error" in result.output
+        assert "ERROR" in result.output
 
 
 class TestErrorHandling:
@@ -233,13 +233,13 @@ class TestErrorHandling:
         """Test handling of invalid server address"""
         result = runner.run(['-c', '1', '-s', 'not.a.valid.ip.address', 'google.com'])
         assert not result.success, "Should fail with invalid server"
-        assert "Error" in result.output
+        assert "ERROR" in result.output
 
     def test_invalid_record_type(self, runner):
         """Test handling of invalid record type"""
         result = runner.run(['-c', '1', '-s', '8.8.8.8', '-t', 'INVALID', 'google.com'])
         assert not result.success, "Should fail with invalid record type"
-        assert "Error" in result.output
+        assert "ERROR" in result.output
 
 
 class TestRegressionBugs:

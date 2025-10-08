@@ -155,7 +155,6 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
                     unsupported_feature()
 
         except dns.query.NoDOH:
-            print("DNS-over-HTTPS requires the httpx module. Install it with: pip install httpx", file=sys.stderr, flush=True)
             raise
         except (httpx.ConnectTimeout, httpx.ReadTimeout,
                 httpx.ConnectError):
@@ -168,10 +167,10 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
         except OSError as e:
             if socket_ttl:  # this is an acceptable error while doing traceroute
                 break
-            print("error: %s" % e.strerror, file=sys.stderr, flush=True)
+            err(f"ERROR: {e.strerror}")
             raise OSError(e)
         except Exception as e:
-            print("error: %s" % e, file=sys.stderr, flush=True)
+            err(f"ERROR: {e}")
             break
         else:
             # convert time to milliseconds, considering that
@@ -216,13 +215,20 @@ def random_string(min_length: int = 5, max_length: int = 10) -> str:
     return ''.join(map(lambda unused: random.choice(char_set), range(length)))
 
 
+def die(s, exit_code=1):
+    err(s)
+    sys.exit(exit_code)
+
+
+def err(s):
+    print(s, file=sys.stderr, flush=True)
+
+
 def unsupported_feature(feature: str = "") -> None:
-    print("Error: You have an unsupported version of Python interpreter dnspython library.")
-    print("       Some features such as DoT and DoH are not available. You should upgrade")
-    print("       the Python interpreter to at least 3.10 and reinstall dependencies.")
     if feature:
-        print("Missing Feature: %s" % feature)
-    sys.exit(127)
+        die(f"{feature} not available", exit_code=127)
+    else:
+        die("feature not available", exit_code=127)
 
 
 def valid_rdatatype(rtype: str) -> bool:

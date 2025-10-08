@@ -48,7 +48,7 @@ import dns.resolver
 import httpx
 
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
-    unsupported_feature, random_string, getDefaultPort, valid_rdatatype
+    unsupported_feature, random_string, getDefaultPort, valid_rdatatype, die, err
 from dnsdiag.shared import __version__
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -112,10 +112,6 @@ def signal_handler(sig, frame):
     shutdown = True  # pressed once, exit gracefully
 
 
-def print_stderr(s, should_die):
-    print(s, file=sys.stderr, flush=True)
-    if should_die:
-        sys.exit(1)
 
 
 def validate_server_address(dnsserver, address_family):
@@ -128,7 +124,7 @@ def validate_server_address(dnsserver, address_family):
         try:
             dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family)[1][4][0]
         except OSError:
-            print_stderr('Error: cannot resolve hostname: %s' % dnsserver, True)
+            die(f'ERROR: cannot resolve hostname: {dnsserver}')
     return dnsserver, original_server
 
 
@@ -175,7 +171,7 @@ def main():
                                     "expert", "answer", "quic", "http3", "ecs=", "cookie"])
     except getopt.GetoptError as err:
         # print help information and exit:
-        print_stderr(err, False)  # will print something like "option -a not recognized"
+        err(err)  # will print something like "option -a not recognized"
         usage()
 
     if args and len(args) == 1:
@@ -191,7 +187,7 @@ def main():
             if a.isdigit():
                 count = abs(int(a))
             else:
-                print_stderr("Invalid count of requests: %s" % a, True)
+                die(f"ERROR: invalid count of requests: {a}")
 
         elif o in ("-v", "--verbose"):
             verbose = True
@@ -229,7 +225,7 @@ def main():
             try:
                 rdata_class = dns.rdataclass.from_text(a)
             except dns.rdataclass.UnknownRdataclass:
-                print_stderr("Invalid RR class: %s" % a, True)
+                die(f"ERROR: invalid RR class: {a}")
 
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
@@ -293,7 +289,7 @@ def main():
         elif o in ("-P", "--srcport"):
             src_port = int(a)
             if src_port < 1024 and not quiet:
-                print_stderr("WARNING: Source ports below 1024 are only available to superuser", False)
+                err("WARNING: Source ports below 1024 are only available to superuser")
 
         elif o in ("-S", "--srcip"):
             src_ip = a
@@ -317,7 +313,7 @@ def main():
 
     # validate RR type
     if not valid_rdatatype(rdatatype):
-        print_stderr('Error: Invalid record type: %s ' % rdatatype, True)
+        die(f'ERROR: invalid record type: {rdatatype}')
 
     # Display the hostname if it differs from the resolved IP, otherwise just the IP
     server_display = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else dnsserver_ip
@@ -346,7 +342,7 @@ def main():
                     ecs_option = dns.edns.ECSOption.from_text(client_subnet)
                     edns_options.append(ecs_option)
                 except Exception as e:
-                    print_stderr("Error: Invalid ECS format '%s': %s" % (client_subnet, e), True)
+                    die(f"ERROR: invalid ECS format '{client_subnet}': {e}")
             if show_cookie:
                 # Send a client cookie (8 random bytes as per RFC 7873)
                 import os
@@ -390,9 +386,9 @@ def main():
                                                   source=src_ip, source_port=src_port,
                                                   http_version=dns.query.HTTPVersion.HTTP_2)
                     except dns.query.NoDOH:
-                        print_stderr("DNS-over-HTTPS requires the httpx module. Install it with: pip install httpx", should_die=True)
+                        die("ERROR: python httpx module not available")
                     except httpx.ConnectError:
-                        print_stderr(f"The server did not respond to DoH on port {dst_port}", should_die=True)
+                        die(f"DoH connection failed on port {dst_port}")
                 else:
                     unsupported_feature("DNS-over-HTTPS (DoH)")
 
@@ -408,8 +404,7 @@ def main():
                                                   source=src_ip, source_port=src_port,
                                                   http_version=dns.query.HTTPVersion.H3)
                     except ConnectionRefusedError:
-                        print_stderr(f"The server did not respond to DNS-over-HTTPS/3 on port {dst_port}",
-                                     should_die=True)
+                        die(f"DoH3 connection refused on port {dst_port}")
                 else:
                     unsupported_feature("DNS-over-HTTPS/3 (DoH3)")
 
@@ -422,19 +417,18 @@ def main():
                                                  source=src_ip, source_port=src_port,
                                                  server_hostname=server_hostname)
                     except dns.exception.Timeout:
-                        print_stderr(f"The server did not respond to DoQ on port {dst_port}", should_die=True)
+                        die(f"DoQ connection timeout on port {dst_port}")
                     except ConnectionRefusedError:
-                        print_stderr(f"The server did not respond to DNS-over-HTTPS/3 on port {dst_port}",
-                                     should_die=True)
+                        die(f"DoQ connection refused on port {dst_port}")
                 else:
                     unsupported_feature("DNS-over-QUIC (DoQ)")
 
             etime = time.perf_counter()
         except dns.resolver.NoNameservers as e:
             if not quiet:
-                print_stderr("No response to DNS request", False)
+                err("No response to DNS request")
                 if verbose:
-                    print_stderr("error: %s" % e, False)
+                    err(f"ERROR: {e}")
             sys.exit(1)
         except (httpx.ConnectTimeout, dns.exception.Timeout):
             if not quiet:
@@ -444,18 +438,20 @@ def main():
                 print("Read timeout", flush=True)
         except EOFError:
             if not quiet:
-                print_stderr("Connection closed by server", False)
+                err("Connection closed by server")
         except PermissionError:
             if not quiet:
-                print_stderr("Permission denied", True)
-            sys.exit(1)
+                die("ERROR: permission denied")
+            else:
+                sys.exit(1)
         except OSError as e:
             if not quiet:
-                print_stderr("%s" % e, True)
-            sys.exit(1)
+                die(f"ERROR: {e}")
+            else:
+                sys.exit(1)
         except ValueError:
             if not quiet:
-                print_stderr("Invalid Response", False)
+                err("ERROR: invalid response")
                 continue
         except KeyboardInterrupt:
             # Handle Ctrl+C during DNS query

@@ -40,7 +40,7 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.dns
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, getDefaultPort
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, getDefaultPort, die, err
 from dnsdiag.shared import __version__, Colors
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -195,8 +195,7 @@ def main():
 
     # validate RR type
     if not dnsdiag.dns.valid_rdatatype(rdatatype):
-        print('Error: Invalid record type "%s" ' % rdatatype)
-        sys.exit(1)
+        die(f'ERROR: invalid record type "{rdatatype}"')
 
     color = Colors(color_mode)
 
@@ -211,13 +210,12 @@ def main():
                     with open(inputfilename, 'rt') as flist:
                         f = flist.read().splitlines()
                 except Exception as e:
-                    print(e)
-                    sys.exit(1)
+                    die(str(e))
         else:
             f = dns.resolver.get_default_resolver().nameservers
 
         if len(f) == 0:
-            print("Error: No nameserver specified")
+            print("ERROR: No nameserver specified")
 
         f = [name.strip() for name in f]  # remove annoying blanks
         f = [x for x in f if not x.startswith('#') and len(x)]  # remove comments and empty entries
@@ -275,7 +273,7 @@ def main():
                 try:
                     resolver = socket.getaddrinfo(server, port=None)[1][4][0]
                 except OSError:
-                    print('Error: cannot resolve hostname:', server)
+                    print('ERROR: cannot resolve hostname:', server)
                     resolver = None
                 except Exception:
                     pass
@@ -357,8 +355,7 @@ def main():
                 print("")
 
     except Exception as e:
-        print('%s: %s' % (server, e))
-        sys.exit(1)
+        die(f'{server}: {e}')
 
 
 if __name__ == '__main__':
