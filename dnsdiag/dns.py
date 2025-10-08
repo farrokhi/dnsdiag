@@ -138,7 +138,8 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
                     unsupported_feature()
             elif proto is PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
-                    response = dns.query.https(query, server, timeout, dst_port, src_ip)
+                    response = dns.query.https(query, server, timeout, dst_port, src_ip,
+                                              http_version=dns.query.HTTPVersion.HTTP_2)
                 else:
                     unsupported_feature()
             elif proto is PROTO_QUIC:
