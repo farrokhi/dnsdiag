@@ -387,7 +387,10 @@ def main():
                         else:
                             https_server = dnsserver_ip
                         answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
-                                                  source=src_ip, source_port=src_port)
+                                                  source=src_ip, source_port=src_port,
+                                                  http_version=dns.query.HTTPVersion.HTTP_2)
+                    except dns.query.NoDOH:
+                        print_stderr("DNS-over-HTTPS requires the httpx module. Install it with: pip install httpx", should_die=True)
                     except httpx.ConnectError:
                         print_stderr(f"The server did not respond to DoH on port {dst_port}", should_die=True)
                 else:
