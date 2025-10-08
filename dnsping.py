@@ -439,6 +439,9 @@ def main():
         except httpx.ReadTimeout:
             if not quiet:
                 print("Read timeout", flush=True)
+        except EOFError:
+            if not quiet:
+                print_stderr("Connection closed by server", False)
         except PermissionError:
             if not quiet:
                 print_stderr("Permission denied", True)
