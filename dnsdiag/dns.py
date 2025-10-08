@@ -154,6 +154,9 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
                 else:
                     unsupported_feature()
 
+        except dns.query.NoDOH:
+            print("DNS-over-HTTPS requires the httpx module. Install it with: pip install httpx", file=sys.stderr, flush=True)
+            raise
         except (httpx.ConnectTimeout, httpx.ReadTimeout,
                 httpx.ConnectError):
             raise ConnectionError('Connection failed')
