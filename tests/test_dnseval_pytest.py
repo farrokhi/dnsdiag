@@ -205,7 +205,7 @@ class TestErrorHandling:
         result = runner.run(['-c', '2', '-t', 'INVALID', '-f', '-', 'google.com'],
                            stdin=b'8.8.8.8\n')
         assert not result.success, "Should fail with invalid record type"
-        assert 'Invalid record type' in result.output
+        assert 'invalid record type' in result.output
 
 
 class TestJSONOutput:

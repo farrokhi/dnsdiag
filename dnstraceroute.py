@@ -40,7 +40,7 @@ import dns.resolver
 
 import dnsdiag.whois
 from typing import Any, Dict
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort, die, err
 from dnsdiag.shared import __version__, Colors
 
 # Global Variables
@@ -146,8 +146,7 @@ def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
     except SystemExit:
         pass
     except Exception as e:
-        print("unxpected error: ", e)
-        sys.exit(1)
+        die(f"unexpected error: {e}")
     else:
         if resp and resp.answer:
             reached = True
@@ -246,8 +245,7 @@ def main():
 
     # validate RR type
     if not dnsdiag.dns.valid_rdatatype(rdatatype):
-        print('Error: Invalid record type "%s" ' % rdatatype)
-        sys.exit(1)
+        die(f'ERROR: invalid record type "{rdatatype}"')
 
     # Use system DNS server if parameter is not specified
     # remember not all systems have /etc/resolv.conf (i.e. Android)
@@ -266,8 +264,7 @@ def main():
                     pass
             if not filtered:
                 af_name = "IPv4" if af == socket.AF_INET else "IPv6"
-                print("Error: No %s nameservers found in system resolver" % af_name)
-                sys.exit(1)
+                die(f"ERROR: no {af_name} nameservers found in system resolver")
             dnsserver = filtered[0]
         else:
             dnsserver = nameservers[0]
@@ -278,13 +275,11 @@ def main():
         # Auto-detect address family from IP address (or verify it matches user request)
         if isinstance(addr, ipaddress.IPv4Address):
             if af is not None and af != socket.AF_INET:
-                print("Error: DNS server is IPv4 but -6 flag was specified")
-                sys.exit(1)
+                die("ERROR: DNS server is IPv4 but -6 flag was specified")
             af = socket.AF_INET
         else:  # IPv6
             if af is not None and af != socket.AF_INET6:
-                print("Error: DNS server is IPv6 but -4 flag was specified")
-                sys.exit(1)
+                die("ERROR: DNS server is IPv6 but -4 flag was specified")
             af = socket.AF_INET6
     except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
         # If af not specified, default to IPv4
@@ -293,8 +288,7 @@ def main():
         try:
             dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af)[0][4][0]
         except OSError:
-            print('Error: cannot resolve hostname:', dnsserver)
-            sys.exit(1)
+            die(f'ERROR: cannot resolve hostname: {dnsserver}')
 
     # Validate source IP address family if specified
     if src_ip:
@@ -304,11 +298,9 @@ def main():
                (af == socket.AF_INET6 and not isinstance(src_addr, ipaddress.IPv6Address)):
                 af_name = "IPv4" if af == socket.AF_INET else "IPv6"
                 src_type = "IPv4" if isinstance(src_addr, ipaddress.IPv4Address) else "IPv6"
-                print("Error: Source IP is %s but target DNS server is %s" % (src_type, af_name))
-                sys.exit(1)
+                die(f"ERROR: source IP is {src_type} but target DNS server is {af_name}")
         except ValueError:
-            print("Error: Invalid source IP address: %s" % src_ip)
-            sys.exit(1)
+            die(f"ERROR: invalid source IP address: {src_ip}")
 
     # Select correct ICMP protocol based on address family
     if af == socket.AF_INET:
@@ -337,8 +329,7 @@ def main():
             try:
                 icmp_socket = socket.socket(af, socket.SOCK_DGRAM, icmp_proto)
             except OSError:
-                print("Error: Unable to create ICMP socket with unprivileged user. Please run as root.")
-                sys.exit(1)
+                die("ERROR: unable to create ICMP socket with unprivileged user. Please run as root.")
 
         # Bind socket based on address family
         if af == socket.AF_INET:
