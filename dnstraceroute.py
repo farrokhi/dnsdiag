@@ -390,6 +390,9 @@ def main():
 
         try:
             reached, resp_time = thr.result()
+        except SystemExit:
+            shutdown = True
+            break
         except KeyboardInterrupt:
             shutdown = True
             break

@@ -165,7 +165,12 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
         except dns.exception.Timeout:
             break
         except OSError as e:
-            if socket_ttl:  # this is an acceptable error while doing traceroute
+            # Check for fatal network errors
+            if e.errno == 65:  # EHOSTUNREACH
+                die("ERROR: No route to host")
+            elif e.errno == 51:  # ENETUNREACH
+                die("ERROR: Network unreachable")
+            elif socket_ttl:  # other acceptable errors while doing traceroute
                 break
             err(f"ERROR: {e.strerror}")
             raise OSError(e)

@@ -448,7 +448,11 @@ def main():
             else:
                 sys.exit(1)
         except OSError as e:
-            if not quiet:
+            if e.errno == 65:  # EHOSTUNREACH
+                die("ERROR: No route to host")
+            elif e.errno == 51:  # ENETUNREACH
+                die("ERROR: Network unreachable")
+            elif not quiet:
                 die(f"ERROR: {e}")
             else:
                 sys.exit(1)
