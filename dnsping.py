@@ -320,6 +320,9 @@ def main():
 
     # Display the hostname if it differs from the resolved IP, otherwise just the IP
     server_display = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else dnsserver_ip
+    # Wrap IPv6 addresses in brackets for better readability
+    if ':' in server_display and not server_display.startswith('['):
+        server_display = f"[{server_display}]"
     print("%s DNS: %s:%d, hostname: %s, proto: %s, class: %s, type: %s, flags: [%s]" %
           (__progname__, server_display, dst_port, qname, proto_to_text(proto), dns.rdataclass.to_text(rdata_class),
            rdatatype, dns.flags.to_text(request_flags)), flush=True)

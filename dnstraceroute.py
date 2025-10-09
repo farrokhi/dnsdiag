@@ -316,7 +316,9 @@ def main():
     trace_path = []
 
     if not quiet:
-        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, dnsserver, dest_port, qname, rdatatype),
+        # Wrap IPv6 addresses in brackets for better readability
+        server_display = f"[{dnsserver}]" if ':' in dnsserver else dnsserver
+        print("%s DNS: %s:%d, hostname: %s, rdatatype: %s" % (__progname__, server_display, dest_port, qname, rdatatype),
               flush=True)
 
     while True:
