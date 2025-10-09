@@ -122,7 +122,10 @@ def validate_server_address(dnsserver, address_family):
         ipaddress.ip_address(dnsserver)
     except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
         try:
-            dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family)[1][4][0]
+            if address_family == socket.AF_INET6:
+                dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family, flags=socket.AI_V4MAPPED)[1][4][0]
+            else:
+                dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family)[1][4][0]
         except OSError:
             die(f'ERROR: cannot resolve hostname: {dnsserver}')
     return dnsserver, original_server
