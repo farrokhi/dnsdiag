@@ -144,7 +144,7 @@ def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
                              want_dnssec=False, socket_ttl=ttl)
 
     except SystemExit:
-        pass
+        raise
     except Exception as e:
         die(f"unexpected error: {e}")
     else:
