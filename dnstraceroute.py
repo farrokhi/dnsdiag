@@ -286,7 +286,10 @@ def main():
         if af is None:
             af = socket.AF_INET
         try:
-            dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af)[0][4][0]
+            if af == socket.AF_INET6:
+                dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af, flags=socket.AI_V4MAPPED)[0][4][0]
+            else:
+                dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af)[0][4][0]
         except OSError:
             die(f'ERROR: cannot resolve hostname: {dnsserver}')
 
