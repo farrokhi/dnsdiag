@@ -446,11 +446,7 @@ def main():
                 except Exception:
                     pass
 
-            # Don't show IP in parentheses if it's the same as the name (when -n is used)
-            if curr_name == curr_addr:
-                print("%d\t%s%s%s %s%.3f ms" % (ttl, c, curr_addr, color.N, as_name, elapsed), flush=True)
-            else:
-                print("%d\t%s (%s%s%s) %s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
+            print("%d\t%s (%s%s%s) %s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
             trace_path.append(curr_addr)
         else:
             print("%d\t *" % ttl, flush=True)
