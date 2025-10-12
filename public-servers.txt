@@ -5,6 +5,9 @@
 # Offers standard DNS, malware blocking, and family protection variants
 # Website: https://1.1.1.1/
 # DNSSEC: YES | ECS: NO | EDE: NO
+# Protocols: UDP, TCP, DoT, DoH
+# DoT: one.one.one.one (port 853)
+# DoH: https://cloudflare-dns.com/dns-query
 1.0.0.1
 1.1.1.1
 1.0.0.2
@@ -72,6 +75,8 @@
 # Website: https://developers.google.com/speed/public-dns
 # DNSSEC: YES | ECS: YES | EDE: NO
 # Protocols: UDP, TCP, DoT, DoH, DoH3 (HTTP/3)
+# DoT: dns.google (port 853)
+# DoH: https://dns.google/dns-query
 8.8.4.4
 8.8.8.8
 2001:4860:4860::8844
@@ -82,6 +87,9 @@
 # Variants: .9 (secure with blocking), .10 (unsecured, no blocking), .11 (ECS-enabled)
 # Website: https://quad9.net/
 # DNSSEC: YES (.9/.11), NO (.10) | ECS: YES (.11), NO (.9/.10) | EDE: NO
+# Protocols: UDP, TCP, DoT, DoH
+# DoT: dns.quad9.net (port 853)
+# DoH: https://dns.quad9.net/dns-query
 9.9.9.9
 9.9.9.10
 9.9.9.11
@@ -152,6 +160,8 @@
 # Website: https://adguard-dns.io/
 # DNSSEC: YES | ECS: YES | EDE: YES
 # Protocols: UDP, TCP, DoT, DoH, DoQ (QUIC)
+# DoT: dns-unfiltered.adguard.com (port 853)
+# DoH: https://dns-unfiltered.adguard.com/dns-query
 94.140.14.14
 94.140.15.15
 94.140.14.15
@@ -193,10 +203,12 @@
 # European Union's public DNS resolver initiative
 # GDPR-compliant DNS service for EU citizens and organizations
 # Website: https://dns4eu.eu/
+# Protocols: UDP, TCP, DoT
+# DoT: unfiltered.joindns4.eu (port 853)
 86.54.11.100
 86.54.11.200
-2a01:7a0:2::64
-2a01:7a0:2::c8
+2a13:1001::86:54:11:100
+2a13:1001::86:54:11:200
 
 ## DNS.SB
 # Privacy-focused European DNS with no logging policy
@@ -241,9 +253,11 @@
 # Censorship-resistant DNS service
 # Provides unfiltered internet access without content blocking
 # Website: https://blog.uncensoreddns.org/
-# NOTE: All servers not responding (tested Sept 2025)
+# NOTE: Do53 (UDP/TCP) not responding, but DoT works (tested Oct 2025)
+# Protocols: DoT
+# DoT: unicast.censurfridns.dk (port 853)
 # 91.239.100.100 (not responding)
-# 89.233.43.71 (not responding)
+89.233.43.71
 2001:67c:28a4::
 2a01:3a0:53:53::
 
@@ -266,6 +280,15 @@
 156.154.71.1
 2610:a1:1018::1
 2610:a1:1019::1
+
+## Dismail DNS
+# Privacy-focused German DNS service
+# Community-run DNS resolver with no logging
+# Website: https://dismail.de/
+# Protocols: UDP, TCP, DoT
+# DoT: fdns1.dismail.de (port 853)
+116.203.32.217
+2a01:4f8:1c1b:44aa::32:217
 
 ## Comcast DNS
 # Major ISP's public DNS resolvers

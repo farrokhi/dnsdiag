@@ -1,10 +1,7 @@
-# Last tested and validated: September 2025
+# Last tested and validated: October 2025
 
 ## Cloudflare
 # Fast, privacy-focused DNS with no logging policy
-# Offers standard DNS, malware blocking, and family protection variants
-# Website: https://1.1.1.1/
-# DNSSEC: YES | ECS: NO | EDE: NO
 1.0.0.1
 1.1.1.1
 1.0.0.2
@@ -14,34 +11,23 @@
 
 ## SafeDNS
 # DNS filtering service with malware and content blocking
-# Provides web security and parental control features
-# Website: https://www.safedns.com/
 195.46.39.39
 195.46.39.40
 
 ## OpenDNS
-# Cisco-owned DNS service with content filtering and security features
-# Provides phishing protection and customizable content blocking
-# Website: https://www.opendns.com/
-# DNSSEC: YES | ECS: NO | EDE: NO
+# Cisco-owned DNS service with content filtering
 208.67.220.220
 208.67.222.222
 208.67.220.123
 208.67.222.123
 
 ## DYN DNS
-# Legacy DNS service, now part of Oracle's infrastructure
-# Basic DNS resolution without advanced filtering
-# Website: https://dyn.com/
-# DNSSEC: YES | ECS: NO | EDE: NO
+# Legacy DNS service, now part of Oracle
 216.146.35.35
 216.146.36.36
 
 ## Level3
-# Legacy telecommunications company DNS servers
-# Now part of Lumen Technologies (formerly CenturyLink)
-# Website: https://www.lumen.com/
-# DNSSEC: NO | ECS: NO | EDE: NO
+# Legacy telecommunications DNS (now Lumen Technologies)
 209.244.0.3
 209.244.0.4
 4.2.2.1
@@ -51,27 +37,17 @@
 4.2.2.5
 
 ## Freenom World
-# Free DNS service from domain registrar Freenom
-# Basic DNS resolution service
-# Website: https://www.freenom.com/
-# DNSSEC: YES | ECS: NO | EDE: NO
+# Free DNS service from domain registrar
 80.80.80.80
 80.80.81.81
 
 ## Google
-# Google's public DNS service with high performance and reliability
-# Features DNS-over-HTTPS, DNS-over-TLS, and DNSSEC validation
-# Website: https://developers.google.com/speed/public-dns
-# DNSSEC: YES | ECS: YES | EDE: NO
-# Protocols: UDP, TCP, DoT, DoH, DoH3 (HTTP/3)
+# Google's public DNS service
 8.8.4.4
 8.8.8.8
 
 ## Quad9
-# Security-focused DNS with malware blocking and privacy protection
-# Offers secure (.9), unsecured (.10), and ECS-enabled (.11) variants
-# Website: https://quad9.net/
-# DNSSEC: YES (.9/.11), NO (.10) | ECS: YES (.11), NO (.9/.10) | EDE: NO
+# Security-focused DNS with malware blocking
 9.9.9.9
 9.9.9.10
 9.9.9.11
@@ -80,148 +56,98 @@
 149.112.112.11
 
 ## Verisign
-# Enterprise-grade public DNS with high availability and security
-# Provides stable, reliable DNS resolution worldwide
-# Website: https://www.verisign.com/en_US/security-services/public-dns/index.xhtml
-# DNSSEC: YES | ECS: YES | EDE: NO
+# Enterprise-grade public DNS
 64.6.64.6
 64.6.65.6
 
 ## Comodo
-# Cybersecurity company's DNS service with threat protection
-# Blocks malicious domains and provides security filtering
-# Website: https://www.comodo.com/secure-dns/
+# Cybersecurity company's DNS service
 8.26.56.26
 8.20.247.20
 
 ## DNS0.eu
 # European sovereign DNS resolver with GDPR compliance
-# Privacy-focused service with infrastructure located in the EU
-# Website: https://www.dns0.eu/
-# DNSSEC: YES | ECS: NO | EDE: NO
 193.110.81.0
 185.253.5.0
 
 ## Hurricane Electric
-# Internet backbone provider's public DNS service
-# Basic DNS resolution from major internet infrastructure company
-# Website: https://he.net/
+# Internet backbone provider's public DNS
 74.82.42.42
 
 ## Yandex.DNS
 # Russian search engine company's DNS service
-# Offers basic, safe, and family protection modes
-# Website: https://dns.yandex.com/
-# DNSSEC: NO | ECS: NO | EDE: NO
 77.88.8.88
 77.88.8.2
 
 ## DNS4all
-# European DNS service with focus on neutrality and performance
-# Provides unfiltered DNS resolution
-# Website: http://dns4all.eu/
+# European DNS service with focus on neutrality
 194.0.5.3
 
 ## AdGuard DNS
 # Ad-blocking DNS service with privacy protection
-# Blocks ads, trackers, and malicious domains at DNS level
-# Website: https://adguard-dns.io/
-# DNSSEC: YES | ECS: YES | EDE: YES
-# Protocols: UDP, TCP, DoT, DoH, DoQ (QUIC)
 94.140.14.14
 94.140.15.15
 94.140.14.15
 94.140.15.16
 
 ## Control D
-# Customizable DNS service with filtering and unblocking capabilities
-# Offers granular control over content filtering and geographic unblocking
-# Website: https://controld.com/
-# DNSSEC: YES | ECS: YES | EDE: NO
+# Customizable DNS service with filtering
 76.76.2.11
 76.76.10.11
 
 ## Wikimedia DNS (Formerly Wikidough)
-# Wikimedia Foundation's public DNS resolver
-# Privacy-focused DNS service from the Wikipedia organization
-# Website: https://meta.wikimedia.org/wiki/Wikimedia_DNS
-# NOTE: Service discontinued - server not responding (tested Sept 2025)
+# NOTE: Service discontinued (tested Sept 2025)
 # 185.71.138.138
 
 ## NextDNS
-# Highly customizable DNS service with extensive filtering options
-# Cloud-based DNS with detailed analytics and custom block lists
-# Website: https://nextdns.io/
-# DNSSEC: YES | ECS: NO | EDE: NO
+# Highly customizable DNS service
 45.90.28.157
 45.90.30.157
 
 ## DNS4EU
-# European Union's public DNS resolver initiative
-# GDPR-compliant DNS service for EU citizens and organizations
-# Website: https://dns4eu.eu/
+# European Union's public DNS resolver
 86.54.11.100
 86.54.11.200
 
 ## DNS.SB
-# Privacy-focused European DNS with no logging policy
-# Open source DNS resolver with strong privacy protection
-# Website: https://dns.sb/
-# DNSSEC: YES | ECS: NO | EDE: NO
+# Privacy-focused European DNS
 185.222.222.222
 45.11.45.11
 
 ## Mullvad DNS
-# VPN provider's public DNS service with privacy focus
-# Website: https://mullvad.net/en/help/dns-over-https-and-dns-over-tls
-# NOTE: Servers respond but return REFUSED - may require VPN subscription or special config
-# 194.242.2.2 (returns REFUSED)
-# 194.242.2.3 (returns REFUSED)
+# NOTE: Returns REFUSED - may require VPN subscription
+# 194.242.2.2
+# 194.242.2.3
 
 ## BlahDNS
-# Hobby adblock DNS project with DoH, DoT, and DoQ support
-# Open source DNS service with ad and malware blocking
-# Website: https://blahdns.com/
-# NOTE: Hobby project - servers intermittently available (tested Sept 2025)
-# 78.46.244.143 (not responding)
-# 178.82.102.190 (not responding)
+# NOTE: Hobby project - intermittently available (tested Sept 2025)
+# 78.46.244.143
+# 178.82.102.190
 
 ## Alternate DNS
-# Alternative public DNS service with basic resolution
-# Provides unfiltered DNS queries without logging
-# Website: https://alternate-dns.com/
-# NOTE: All servers not responding (tested Sept 2025)
-# 76.76.19.19 (not responding)
-# 76.223.100.101 (not responding)
+# NOTE: Not responding (tested Sept 2025)
+# 76.76.19.19
+# 76.223.100.101
 
 ## UncensoredDNS
-# Censorship-resistant DNS service
-# Provides unfiltered internet access without content blocking
-# Website: https://blog.uncensoreddns.org/
-# NOTE: All servers not responding (tested Sept 2025)
-# 91.239.100.100 (not responding)
-# 89.233.43.71 (not responding)
+# NOTE: Do53 not responding, but DoT works (tested Oct 2025)
+89.233.43.71
 
 ## LibreDNS
-# Open source DNS service with ad blocking capabilities
-# Community-driven DNS resolver with privacy focus
-# Website: https://libredns.gr/
-# NOTE: All servers not responding (tested Sept 2025)
-# 116.203.115.192 (not responding)
-# 116.202.176.26 (not responding)
+# NOTE: Not responding (tested Sept 2025)
+# 116.203.115.192
+# 116.202.176.26
 
 ## Neustar DNS
-# Enterprise-grade DNS with threat protection and filtering options
-# Now part of Vercara, offers multiple security service tiers
-# Website: https://vercara.com/public-dns
-# DNSSEC: YES | ECS: YES | EDE: NO
+# Enterprise-grade DNS with threat protection
 156.154.70.1
 156.154.71.1
 
+## Dismail DNS
+# Privacy-focused German DNS service
+116.203.32.217
+
 ## Comcast DNS
-# Major ISP's public DNS resolvers
-# Basic DNS resolution from large US telecommunications provider
-# Website: https://www.xfinity.com/
-# NOTE: Servers not responding - likely restricted to Comcast customers only
-# 75.75.75.75 (access restricted)
-# 75.75.76.76 (access restricted)
+# NOTE: Access restricted to Comcast customers only
+# 75.75.75.75
+# 75.75.76.76
