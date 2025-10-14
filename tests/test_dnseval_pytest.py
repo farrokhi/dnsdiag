@@ -208,6 +208,101 @@ class TestErrorHandling:
         assert 'invalid record type' in result.output
 
 
+class TestCLIParameterValidation:
+    """Test CLI parameter validation and error handling"""
+
+    def test_invalid_long_option(self, runner):
+        """Test handling of invalid long option"""
+        result = runner.run(['--invalid-option', 'google.com'])
+        assert not result.success, "Invalid option should fail gracefully"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_short_option(self, runner):
+        """Test handling of invalid short option"""
+        result = runner.run(['-Z', 'google.com'])
+        assert not result.success, "Invalid option should fail gracefully"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_count_negative(self, runner):
+        """Test handling of negative count value"""
+        result = runner.run(['-c', '-5', 'google.com'])
+        assert not result.success, "Negative count should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_count_zero(self, runner):
+        """Test handling of zero count value"""
+        result = runner.run(['-c', '0', 'google.com'])
+        assert not result.success, "Zero count should fail"
+        assert "positive" in result.output.lower() or "ERROR" in result.output
+
+    def test_invalid_count_non_numeric(self, runner):
+        """Test handling of non-numeric count value"""
+        result = runner.run(['-c', 'abc', 'google.com'])
+        assert not result.success, "Non-numeric count should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_port_too_high(self, runner):
+        """Test handling of port value above 65535"""
+        result = runner.run(['-p', '99999', 'google.com'])
+        assert not result.success, "Port above 65535 should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "port" in result.output.lower()
+
+    def test_invalid_port_negative(self, runner):
+        """Test handling of negative port value"""
+        result = runner.run(['-p', '-1', 'google.com'])
+        assert not result.success, "Negative port should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_port_non_numeric(self, runner):
+        """Test handling of non-numeric port value"""
+        result = runner.run(['-p', 'abc', 'google.com'])
+        assert not result.success, "Non-numeric port should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_wait_negative(self, runner):
+        """Test handling of negative wait value"""
+        result = runner.run(['-w', '-5', 'google.com'])
+        assert not result.success, "Negative wait should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_wait_non_numeric(self, runner):
+        """Test handling of non-numeric wait value"""
+        result = runner.run(['-w', 'xyz', 'google.com'])
+        assert not result.success, "Non-numeric wait should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_source_ip(self, runner):
+        """Test handling of invalid source IP address"""
+        result = runner.run(['-S', 'not.an.ip', 'google.com'])
+        assert not result.success, "Invalid source IP should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_no_hostname_provided(self, runner):
+        """Test handling of missing hostname"""
+        result = runner.run(['-c', '5'])
+        assert not result.success, "Missing hostname should fail"
+        assert "Usage:" in result.output, "Should show usage message"
+
+    def test_empty_hostname(self, runner):
+        """Test handling of empty hostname"""
+        result = runner.run([''])
+        assert not result.success, "Empty hostname should fail"
+
+    def test_invalid_hostname_double_dots(self, runner):
+        """Test handling of hostname with double dots"""
+        result = runner.run(['invalid..hostname'])
+        assert not result.success, "Hostname with double dots should fail"
+        assert "invalid hostname" in result.output.lower()
+
+    def test_invalid_hostname_special_chars(self, runner):
+        """Test handling of hostname with special characters"""
+        result = runner.run(['exam@ple.com'])
+        assert not result.success, "Hostname with @ should fail"
+        assert "invalid hostname" in result.output.lower()
+
+
 class TestJSONOutput:
     """Tests for JSON output functionality"""
 

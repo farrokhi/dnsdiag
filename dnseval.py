@@ -41,7 +41,7 @@ import dns.resolver
 
 import dnsdiag.dns
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, getDefaultPort, die, err
-from dnsdiag.shared import __version__, Colors
+from dnsdiag.shared import __version__, Colors, valid_hostname
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
@@ -64,7 +64,7 @@ def signal_handler(sig, frame):
     shutdown = True  # pressed once, exit gracefully
 
 
-def usage():
+def usage(exit_code=0):
     print("""%s version %s
 Usage: %s [-ehmvCTXHQ3SD] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
 
@@ -88,7 +88,7 @@ Usage: %s [-ehmvCTXHQ3SD] [-f server-list] [-j output.json] [-c count] [-t type]
   -v, --verbose      Print the full DNS response details
       --skip-warmup  Disable cache warmup (default: warmup enabled)
 """ % (__progname__, __version__, __progname__))
-    sys.exit()
+    sys.exit(exit_code)
 
 
 def maxlen(names):
@@ -126,25 +126,37 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHQ3Dj:p:",
                                    ["help", "file=", "count=", "type=", "wait=", "json=", "tcp", "edns", "verbose",
                                     "color", "cache-miss", "srcip=", "tls", "doh", "quic", "http3", "dnssec", "port=", "skip-warmup"])
-    except getopt.GetoptError as err:
-        print(err)
-        usage()
+    except getopt.GetoptError as getopt_err:
+        err(str(getopt_err))
+        usage(1)
 
     if args and len(args) == 1:
         qname = args[0]
+        if not valid_hostname(qname, allow_underscore=True):
+            die(f"ERROR: invalid hostname: {qname}")
     else:
-        usage()
+        usage(1)
 
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-c", "--count"):
-            count = int(a)
+            try:
+                count = int(a)
+                if count < 1:
+                    die(f"ERROR: count must be positive: {a}")
+            except ValueError:
+                die(f"ERROR: invalid count value: {a}")
         elif o in ("-f", "--file"):
             inputfilename = a
             fromfile = True
         elif o in ("-w", "--wait"):
-            waittime = int(a)
+            try:
+                waittime = int(a)
+                if waittime < 0:
+                    die(f"ERROR: wait time must be non-negative: {a}")
+            except ValueError:
+                die(f"ERROR: invalid wait time value: {a}")
         elif o in ("-m", "--cache-miss"):
             force_miss = True
         elif o in ("-t", "--type"):
@@ -154,7 +166,11 @@ def main():
             if use_default_dst_port:
                 dst_port = getDefaultPort(proto)
         elif o in ("-S", "--srcip"):
-            src_ip = a
+            try:
+                ipaddress.ip_address(a)
+                src_ip = a
+            except ValueError:
+                die(f"ERROR: invalid source IP address: {a}")
         elif o in ("-j", "--json"):
             json_output = True
             json_filename = a
@@ -184,14 +200,19 @@ def main():
             if use_default_dst_port:
                 dst_port = getDefaultPort(proto)
         elif o in ("-p", "--port"):
-            dst_port = int(a)
-            use_default_dst_port = False
+            try:
+                dst_port = int(a)
+                if not (0 < dst_port <= 65535):
+                    die(f"ERROR: port must be between 1 and 65535: {a}")
+                use_default_dst_port = False
+            except ValueError:
+                die(f"ERROR: invalid port value: {a}")
         elif o in ("--skip-warmup",):
             warmup = False
 
         else:
             print("Invalid option: %s" % o)
-            usage()
+            usage(1)
 
     # validate RR type
     if not dnsdiag.dns.valid_rdatatype(rdatatype):
