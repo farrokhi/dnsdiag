@@ -302,6 +302,7 @@ def main():
             pass
 
         elif o == "--cookie":
+            use_edns = True  # required
             show_cookie = True
 
         elif o in ("-p", "--port"):
@@ -384,9 +385,8 @@ def main():
                     die(f"ERROR: invalid ECS format '{client_subnet}': {e}")
             if show_cookie:
                 # Send a client cookie (8 random bytes as per RFC 7873)
-                import os
                 client_cookie = os.urandom(8)
-                edns_options.append(dns.edns.GenericOption(10, client_cookie))  # COOKIE = 10
+                edns_options.append(dns.edns.CookieOption(client_cookie, b''))
 
             query = dns.message.make_query(fqdn, rdatatype, rdata_class, flags=request_flags,
                                            use_edns=True, want_dnssec=want_dnssec, payload=1232,
@@ -555,10 +555,11 @@ def main():
                                 edns_parts.append("ECS:auto")
 
                 # Always show cookies when present (echoed back from server)
-                if answers.options:
+                if show_cookie and answers.options:
                     for ans_opt in answers.options:
                         if ans_opt.otype == 10:  # COOKIE
-                            edns_parts.append("COOKIE:%d" % len(ans_opt.data))
+                            cookie_hex = ans_opt.client.hex() + ans_opt.server.hex()
+                            edns_parts.append("COOKIE:%s" % cookie_hex)
 
                 if edns_parts:
                     extras += " [%s]" % ", ".join(edns_parts)
@@ -596,7 +597,9 @@ def main():
                             option_details = "code=%d, text=\"%s\"" % (ans_opt.code, ans_opt.text or "")
                         elif ans_opt.otype == 10:  # COOKIE
                             option_name = "COOKIE"
-                            option_details = "length=%d" % len(ans_opt.data)
+                            client_hex = ans_opt.client.hex()
+                            server_hex = ans_opt.server.hex()
+                            option_details = "client=%s, server=%s" % (client_hex, server_hex)
                         elif ans_opt.otype == 11:  # TCP-KEEPALIVE
                             option_name = "TCP-KEEPALIVE"
                             if len(ans_opt.data) >= 2:
