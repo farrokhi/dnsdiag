@@ -49,7 +49,7 @@ import httpx
 
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
     unsupported_feature, random_string, getDefaultPort, valid_rdatatype, die, err
-from dnsdiag.shared import __version__
+from dnsdiag.shared import __version__, valid_hostname
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
@@ -180,8 +180,8 @@ def main():
 
     if args and len(args) == 1:
         qname = args[0]
-        if not qname or qname.strip() == '':
-            die("ERROR: hostname cannot be empty")
+        if not valid_hostname(qname, allow_underscore=True):
+            die(f"ERROR: invalid hostname: {qname}")
     else:
         usage(1)
 
