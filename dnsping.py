@@ -88,9 +88,9 @@ Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_
   -e, --edns        Enable EDNS0 and set its options
   -E, --ede         (Ignored - EDE messages now always displayed when present)
   -n, --nsid        Enable the NSID bit to retrieve resolver identification (implies EDNS)
-      --cookie      Display EDNS cookies when present
+      --cookie      Display EDNS cookies when present (implies EDNS)
   -D, --dnssec      Enable the DNSSEC desired flag (implies EDNS)
-      --ecs         Set EDNS Client Subnet option (format: IP/prefix, e.g., 192.168.1.0/24)
+      --ecs         Set EDNS Client Subnet option (format: IP/prefix, e.g., 192.168.1.0/24) (implies EDNS)
   -F, --flags       Display response flags
   -x, --expert      Display additional information (implies --ttl, --flags)
 """ % (__progname__, __version__, __progname__, ' ' * len(__progname__)))
