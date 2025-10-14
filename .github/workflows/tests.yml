@@ -59,7 +59,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          python -m pytest tests/ -v --tb=short --timeout=120 -m network
+          python -m pytest tests/ -v --tb=short --timeout=120 -m "network and not privileged"
         env:
           PYTHONPATH: .
 
@@ -68,11 +68,9 @@ jobs:
         run: |
           python3 dnsping.py -c 1 -s 8.8.8.8 google.com
           echo "8.8.8.8" | python3 dnseval.py -c 1 --skip-warmup -f - google.com
-          python3 dnstraceroute.py -c 1 -s 8.8.8.8 google.com
 
       - name: CLI smoke tests (Windows)
         if: runner.os == 'Windows'
         run: |
           python dnsping.py -c 1 -s 8.8.8.8 google.com
           echo 8.8.8.8 | python dnseval.py -c 1 --skip-warmup -f - google.com
-          python dnstraceroute.py -c 1 -s 8.8.8.8 google.com

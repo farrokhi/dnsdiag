@@ -98,6 +98,7 @@ def runner():
 class TestBasicFunctionality:
     """Basic functionality tests for dnstraceroute"""
 
+    @pytest.mark.privileged
     @pytest.mark.parametrize("resolver_name,resolver_ip", [
         ('google', RESOLVERS_IPV4['google']),
         ('cloudflare', RESOLVERS_IPV4['cloudflare']),
@@ -109,6 +110,7 @@ class TestBasicFunctionality:
         assert "DNS:" in result.output
         assert resolver_ip in result.output
 
+    @pytest.mark.privileged
     @pytest.mark.parametrize("resolver_name,resolver_ip", [
         ('google', RESOLVERS_IPV6['google']),
         ('cloudflare', RESOLVERS_IPV6['cloudflare']),
