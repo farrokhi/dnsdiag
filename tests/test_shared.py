@@ -138,6 +138,26 @@ class TestHostnameValidation:
         assert valid_hostname('server.sub1.example.com')
         assert valid_hostname('server1.example.com')
 
+    def test_underscore_strict_mode(self):
+        """Test underscores are rejected in strict mode (default)"""
+        assert not valid_hostname('_dmarc.example.com')
+        assert not valid_hostname('_acme-challenge.example.com')
+        assert not valid_hostname('example_test.com')
+        assert not valid_hostname('_service._proto.example.com')
+
+    def test_underscore_dns_mode(self):
+        """Test underscores are allowed with allow_underscore=True"""
+        assert valid_hostname('_dmarc.example.com', allow_underscore=True)
+        assert valid_hostname('_acme-challenge.example.com', allow_underscore=True)
+        assert valid_hostname('_service._proto.example.com', allow_underscore=True)
+        assert valid_hostname('_domainkey.example.com', allow_underscore=True)
+
+        # Underscores can be at start but not end
+        assert not valid_hostname('test_.example.com', allow_underscore=True)
+
+        # Mixed with other valid chars
+        assert valid_hostname('_test-123.example.com', allow_underscore=True)
+
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

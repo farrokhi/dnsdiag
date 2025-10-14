@@ -192,9 +192,7 @@ def main():
 
     if args and len(args) == 1:
         qname = args[0]
-        if not qname or qname.strip() == '':
-            die("ERROR: hostname cannot be empty")
-        if not valid_hostname(qname):
+        if not valid_hostname(qname, allow_underscore=True):
             die(f"ERROR: invalid hostname: {qname}")
     else:
         usage(1)

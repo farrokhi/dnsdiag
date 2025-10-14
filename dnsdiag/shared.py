@@ -28,14 +28,17 @@
 __version__ = '2.8.1'
 
 
-def valid_hostname(hostname):
+def valid_hostname(hostname, allow_underscore=False):
     """
-    Validate a hostname or FQDN according to RFC 1123 and RFC 952.
+    Validate a hostname or FQDN.
 
-    Accepts:
-    - Simple hostnames (e.g., 'localhost', 'server1')
-    - Fully qualified domain names (e.g., 'example.com', 'www.example.com')
-    - Internationalized domain names in ASCII-compatible encoding (e.g., 'xn--...')
+    For strict RFC 1123/952 validation (hostnames), underscores are rejected.
+    For DNS queries (allow_underscore=True), underscores are allowed to support
+    special DNS records like _dmarc, _acme-challenge, etc.
+
+    Args:
+        hostname: The hostname or FQDN to validate
+        allow_underscore: If True, allow underscores in labels (for DNS queries)
 
     Returns:
         bool: True if hostname is valid, False otherwise
@@ -63,17 +66,22 @@ def valid_hostname(hostname):
         if not label or len(label) > 63:
             return False
 
-        # Label must start with alphanumeric
-        if not label[0].isalnum():
-            return False
+        # Label must start with alphanumeric or underscore (if allowed)
+        if allow_underscore:
+            if not (label[0].isalnum() or label[0] == '_'):
+                return False
+        else:
+            if not label[0].isalnum():
+                return False
 
         # Label must end with alphanumeric
         if not label[-1].isalnum():
             return False
 
-        # Label can only contain alphanumeric and hyphens
+        # Label can contain alphanumeric, hyphens, and optionally underscores
+        allowed_chars = {'-', '_'} if allow_underscore else {'-'}
         for char in label:
-            if not (char.isalnum() or char == '-'):
+            if not (char.isalnum() or char in allowed_chars):
                 return False
 
     return True
