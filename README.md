@@ -100,6 +100,7 @@ docker run --network host -it --rm farrokhi/dnsdiag dnsping.py
 - Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914)) are automatically displayed when present.
 - Use `--nsid` to display the Name Server Identifier (NSID) if available ([RFC 5001](https://www.rfc-editor.org/rfc/rfc5001)).
 - Use `--ecs` to include EDNS Client Subnet information for geographic routing optimization.
+- Use `--cookie` to display DNS cookies ([RFC 7873](https://www.rfc-editor.org/rfc/rfc7873)) when present in responses.
 
 ```shell
 ./dnsping.py -c 5 --dnssec --flags --tls -t AAAA -s 8.8.8.8 brokendnssec.net
@@ -157,6 +158,22 @@ dnsping.py DNS: 8.8.8.8:53, hostname: google.com, proto: UDP, class: IN, type: A
 --- 8.8.8.8 dnsping statistics ---
 2 requests transmitted, 2 responses received, 0% lost
 min=32.156 ms, avg=34.278 ms, max=36.399 ms, stddev=2.122 ms
+```
+
+- Testing DNS cookies for enhanced security and cache optimization:
+
+```shell
+./dnsping.py -c 2 --cookie -s anyns.pch.net quad9.net
+```
+
+```
+dnsping.py DNS: anyns.pch.net:53, hostname: quad9.net, proto: UDP, class: IN, type: A, flags: [RD]
+82  bytes from anyns.pch.net: seq=1   time=30.552  ms  NOERROR [COOKIE:27f609c017bb2ec4ea70de5c68eec3fc39f6a53ee49c55f8]
+82  bytes from anyns.pch.net: seq=2   time=24.794  ms  NOERROR [COOKIE:719631dd9fcce722d3ac859b68eec3fd2e5430b5c8a7f8cf]
+
+--- anyns.pch.net dnsping statistics ---
+2 requests transmitted, 2 responses received, 0% lost
+min=24.794 ms, avg=27.673 ms, max=30.552 ms, stddev=4.072 ms
 ```
 
 
