@@ -41,7 +41,7 @@ import dns.resolver
 import dnsdiag.whois
 from typing import Any, Dict
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort, die, err
-from dnsdiag.shared import __version__, Colors
+from dnsdiag.shared import __version__, Colors, valid_hostname
 
 # Global Variables
 quiet = False
@@ -74,7 +74,7 @@ def test_import():
     pass
 
 
-def usage():
+def usage(exit_code=0):
     print("""%s version %s
 Usage: %s [-aenqhCxTSQ346] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
 
@@ -98,7 +98,7 @@ Options:
   -e, --edns        Enable EDNS0 (default: disabled)
   -n                Disable hostname resolution for IP addresses
 """ % (__progname__, __version__, __progname__))
-    sys.exit()
+    sys.exit(exit_code)
 
 
 def expert_report(trace_path, color_mode):
@@ -178,27 +178,37 @@ def main():
     use_edns = False
     color_mode = False
     af = None  # auto-detect from server address
+    af_ipv4_set = False
+    af_ipv6_set = False
 
     args = None
     try:
         opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCTQ346",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port=", "expert",
                                     "color", "srcip=", "tcp", "quic", "http3", "ipv4", "ipv6"])
-    except getopt.GetoptError as err:
-        # print help information and exit:
-        print(err)  # will print something like "option -a not recognized"
-        usage()
+    except getopt.GetoptError as getopt_err:
+        err(str(getopt_err))
+        usage(1)
 
     if args and len(args) == 1:
         qname = args[0]
+        if not qname or qname.strip() == '':
+            die("ERROR: hostname cannot be empty")
+        if not valid_hostname(qname):
+            die(f"ERROR: invalid hostname: {qname}")
     else:
-        usage()
+        usage(1)
 
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
         elif o in ("-c", "--count"):
-            count = int(a)
+            try:
+                count = int(a)
+                if count < 1:
+                    die(f"ERROR: count must be positive: {a}")
+            except ValueError:
+                die(f"ERROR: invalid count value: {a}")
         elif o in ("-x", "--expert"):
             expert_mode = True
         elif o in ("-s", "--server"):
@@ -206,14 +216,28 @@ def main():
         elif o in ("-q", "--quiet"):
             quiet = True
         elif o in ("-S", "--srcip"):
-            src_ip = a
+            try:
+                ipaddress.ip_address(a)
+                src_ip = a
+            except ValueError:
+                die(f"ERROR: invalid source IP address: {a}")
         elif o in ("-w", "--wait"):
-            timeout = int(a)
+            try:
+                timeout = int(a)
+                if timeout < 0:
+                    die(f"ERROR: wait time must be non-negative: {a}")
+            except ValueError:
+                die(f"ERROR: invalid wait time value: {a}")
         elif o in ("-t", "--type"):
             rdatatype = a
         elif o in ("-p", "--port"):
-            dest_port = int(a)
-            use_default_dest_port = False
+            try:
+                dest_port = int(a)
+                if not (0 < dest_port <= 65535):
+                    die(f"ERROR: port must be between 1 and 65535: {a}")
+                use_default_dest_port = False
+            except ValueError:
+                die(f"ERROR: invalid port value: {a}")
         elif o in ("-C", "--color"):
             color_mode = True
         elif o in "-n":
@@ -231,15 +255,21 @@ def main():
             if use_default_dest_port:
                 dest_port = getDefaultPort(proto)
         elif o in ("-4", "--ipv4"):
+            if af_ipv6_set:
+                die("ERROR: cannot specify both -4 and -6")
             af = socket.AF_INET
+            af_ipv4_set = True
         elif o in ("-6", "--ipv6"):
+            if af_ipv4_set:
+                die("ERROR: cannot specify both -4 and -6")
             af = socket.AF_INET6
+            af_ipv6_set = True
         elif o in ("-a", "--asn"):
             as_lookup = True
         elif o in ("-e", "--edns"):
             use_edns = True
         else:
-            usage()
+            usage(1)
 
     color = Colors(color_mode)
 

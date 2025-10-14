@@ -28,6 +28,57 @@
 __version__ = '2.8.1'
 
 
+def valid_hostname(hostname):
+    """
+    Validate a hostname or FQDN according to RFC 1123 and RFC 952.
+
+    Accepts:
+    - Simple hostnames (e.g., 'localhost', 'server1')
+    - Fully qualified domain names (e.g., 'example.com', 'www.example.com')
+    - Internationalized domain names in ASCII-compatible encoding (e.g., 'xn--...')
+
+    Returns:
+        bool: True if hostname is valid, False otherwise
+    """
+    if not hostname or not isinstance(hostname, str):
+        return False
+
+    # Remove trailing dot if present (FQDN notation)
+    if hostname.endswith('.'):
+        hostname = hostname[:-1]
+
+    # Check overall length (max 253 characters for FQDN)
+    if len(hostname) > 253:
+        return False
+
+    # Empty after removing trailing dot
+    if not hostname:
+        return False
+
+    # Split into labels
+    labels = hostname.split('.')
+
+    # Each label must be 1-63 characters
+    for label in labels:
+        if not label or len(label) > 63:
+            return False
+
+        # Label must start with alphanumeric
+        if not label[0].isalnum():
+            return False
+
+        # Label must end with alphanumeric
+        if not label[-1].isalnum():
+            return False
+
+        # Label can only contain alphanumeric and hyphens
+        for char in label:
+            if not (char.isalnum() or char == '-'):
+                return False
+
+    return True
+
+
 class Colors(object):
     N = '\033[m'  # native
     R = '\033[31m'  # red
