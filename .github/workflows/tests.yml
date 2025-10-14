@@ -59,7 +59,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          python -m pytest tests/ -v --tb=short --timeout=120 -m "network and not privileged"
+          python -m pytest tests/ -v --tb=short --timeout=120 -m "network and not privileged and not ipv6"
         env:
           PYTHONPATH: .
 

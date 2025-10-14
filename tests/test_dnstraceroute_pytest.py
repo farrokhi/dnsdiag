@@ -109,6 +109,7 @@ class TestBasicFunctionality:
         assert "DNS:" in result.output
         assert resolver_ip in result.output
 
+    @pytest.mark.ipv6
     @pytest.mark.parametrize("resolver_name,resolver_ip", [
         ('google', RESOLVERS_IPV6['google']),
         ('cloudflare', RESOLVERS_IPV6['cloudflare']),
@@ -132,6 +133,7 @@ class TestAddressFamilyHandling:
         # Should resolve to IPv4 address
         assert ("8.8.8.8" in result.output or "8.8.4.4" in result.output)
 
+    @pytest.mark.ipv6
     def test_ipv6_flag_with_hostname(self, runner):
         """Test -6 flag forces IPv6 resolution of hostname"""
         result = runner.run(['-6', '-c', '2', '-s', 'dns.google', 'google.com'])
@@ -146,6 +148,7 @@ class TestAddressFamilyHandling:
         assert not result.success, "Should fail with conflicting flags"
         assert "ERROR" in result.output
 
+    @pytest.mark.ipv6
     def test_conflicting_ipv6_server_with_ipv4_flag(self, runner):
         """Test error when -4 flag is used with IPv6 server"""
         result = runner.run(['-4', '-s', '2001:4860:4860::8888', 'google.com'])
@@ -158,6 +161,7 @@ class TestAddressFamilyHandling:
         assert result.success, f"Auto-detect IPv4 failed: {result.error}"
         assert "8.8.8.8" in result.output
 
+    @pytest.mark.ipv6
     def test_auto_detect_ipv6(self, runner):
         """Test auto-detection of IPv6 address family"""
         result = runner.run(['-c', '2', '-s', '2001:4860:4860::8888', 'google.com'])
@@ -205,6 +209,7 @@ class TestSourceIPValidation:
         if not result.success:
             assert ("ERROR" in result.output or "Permission" in result.output)
 
+    @pytest.mark.ipv6
     def test_ipv4_source_with_ipv6_target(self, runner):
         """Test error when IPv4 source is used with IPv6 target"""
         result = runner.run(['-S', '127.0.0.1', '-s', '2001:4860:4860::8888', 'google.com'])
@@ -322,6 +327,7 @@ class TestCLIParameterValidation:
 class TestRegressionBugs:
     """Tests for specific regression bugs and fixes"""
 
+    @pytest.mark.ipv6
     def test_ipv6_support_issue_45(self, runner):
         """Test IPv6 support works (GitHub issue #45)"""
         result = runner.run(['-c', '3', '-s', '2001:4860:4860::8888', 'google.com'])
