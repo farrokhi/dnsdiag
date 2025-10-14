@@ -7,6 +7,7 @@ setup(
     packages=find_packages(),
     scripts=["dnseval.py", "dnsping.py", "dnstraceroute.py"],
     install_requires=['aioquic>=1.2.0', 'cryptography>=42.0.5', 'cymruwhois>=1.6', 'dnspython>=2.8.0', 'h2>=4.1.0', 'httpx>=0.27.0'],
+    python_requires='>=3.10',
 
     classifiers=[
         "Topic :: System :: Networking",
@@ -17,6 +18,7 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Topic :: Internet :: Name Service (DNS)",
         "Development Status :: 5 - Production/Stable",
         "Operating System :: OS Independent",
