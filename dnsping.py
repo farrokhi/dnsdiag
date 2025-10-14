@@ -57,7 +57,7 @@ __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
 
-def usage():
+def usage(exit_code=0):
     print("""%s version %s
 Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] [--ecs client_subnet] hostname
@@ -94,7 +94,7 @@ Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_
   -F, --flags       Display response flags
   -x, --expert      Display additional information (implies --ttl, --flags)
 """ % (__progname__, __version__, __progname__, ' ' * len(__progname__)))
-    sys.exit(0)
+    sys.exit(exit_code)
 
 
 def setup_signal_handler():
@@ -164,6 +164,8 @@ def main():
     show_answer = False
     request_flags = dns.flags.from_text('RD')
     af = socket.AF_INET
+    af_ipv4_set = False
+    af_ipv6_set = False
     qname = 'wikipedia.org'
 
     try:
@@ -172,15 +174,16 @@ def main():
                                     "port=", "srcip=", "tcp", "ipv4", "ipv6", "cache-miss", "srcport=", "edns",
                                     "dnssec", "flags", "norecurse", "tls", "doh", "nsid", "ede", "class=", "ttl",
                                     "expert", "answer", "quic", "http3", "ecs=", "cookie"])
-    except getopt.GetoptError as err:
-        # print help information and exit:
-        err(err)  # will print something like "option -a not recognized"
-        usage()
+    except getopt.GetoptError as getopt_err:
+        err(str(getopt_err))
+        usage(1)
 
     if args and len(args) == 1:
         qname = args[0]
+        if not qname or qname.strip() == '':
+            die("ERROR: hostname cannot be empty")
     else:
-        usage()
+        usage(1)
 
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -203,7 +206,12 @@ def main():
             verbose = False
 
         elif o in ("-w", "--wait"):
-            timeout = int(a)
+            try:
+                timeout = int(a)
+                if timeout < 0:
+                    die(f"ERROR: wait time must be non-negative: {a}")
+            except ValueError:
+                die(f"ERROR: invalid wait time value: {a}")
 
         elif o in ("-a", "--answer"):
             show_answer = True
@@ -216,7 +224,12 @@ def main():
             force_miss = True
 
         elif o in ("-i", "--interval"):
-            interval = float(a)
+            try:
+                interval = float(a)
+                if interval < 0:
+                    die(f"ERROR: interval must be non-negative: {a}")
+            except ValueError:
+                die(f"ERROR: invalid interval value: {a}")
 
         elif o in ("-L", "--ttl"):
             show_ttl = True
@@ -256,10 +269,16 @@ def main():
                 dst_port = getDefaultPort(proto)
 
         elif o in ("-4", "--ipv4"):
+            if af_ipv6_set:
+                die("ERROR: cannot specify both -4 and -6")
             af = socket.AF_INET
+            af_ipv4_set = True
 
         elif o in ("-6", "--ipv6"):
+            if af_ipv4_set:
+                die("ERROR: cannot specify both -4 and -6")
             af = socket.AF_INET6
+            af_ipv6_set = True
 
         elif o in ("-e", "--edns"):
             use_edns = True
@@ -286,23 +305,37 @@ def main():
             show_cookie = True
 
         elif o in ("-p", "--port"):
-            dst_port = int(a)
-            use_default_dst_port = False
+            try:
+                dst_port = int(a)
+                if not (0 < dst_port <= 65535):
+                    die(f"ERROR: port must be between 1 and 65535: {a}")
+                use_default_dst_port = False
+            except ValueError:
+                die(f"ERROR: invalid port value: {a}")
 
         elif o in ("-P", "--srcport"):
-            src_port = int(a)
-            if src_port < 1024 and not quiet:
-                err("WARNING: Source ports below 1024 are only available to superuser")
+            try:
+                src_port = int(a)
+                if not (0 <= src_port <= 65535):
+                    die(f"ERROR: source port must be between 0 and 65535: {a}")
+                if src_port < 1024 and not quiet:
+                    err("WARNING: Source ports below 1024 are only available to superuser")
+            except ValueError:
+                die(f"ERROR: invalid source port value: {a}")
 
         elif o in ("-S", "--srcip"):
-            src_ip = a
+            try:
+                ipaddress.ip_address(a)
+                src_ip = a
+            except ValueError:
+                die(f"ERROR: invalid source IP address: {a}")
 
         elif o == "--ecs":
             client_subnet = a
             use_edns = True  # ECS requires EDNS
 
         else:
-            usage()
+            usage(1)
 
     # Use system DNS server if parameter is not specified
     # remember not all systems have /etc/resolv.conf (i.e. Android)

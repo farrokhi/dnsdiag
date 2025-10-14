@@ -276,6 +276,131 @@ class TestErrorHandling:
         result = dnsping_runner.run(['-c', '1', '-s', '8.8.8.8', '--ecs', 'invalid-subnet', 'google.com'])
         assert not result.success, "Query with invalid ECS subnet should fail"
 
+
+# CLI parameter validation tests
+class TestCLIParameterValidation:
+    """Test CLI parameter validation and error handling"""
+
+    def test_invalid_long_option(self, dnsping_runner):
+        """Test handling of invalid long option"""
+        result = dnsping_runner.run(['--invalid-option', 'google.com'])
+        assert not result.success, "Invalid option should fail gracefully"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "not recognized" in result.output or "Usage:" in result.output
+
+    def test_invalid_short_option(self, dnsping_runner):
+        """Test handling of invalid short option"""
+        result = dnsping_runner.run(['-Z', 'google.com'])
+        assert not result.success, "Invalid option should fail gracefully"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_count_negative(self, dnsping_runner):
+        """Test handling of negative count value"""
+        result = dnsping_runner.run(['-c', '-5', 'google.com'])
+        assert not result.success, "Negative count should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_count_non_numeric(self, dnsping_runner):
+        """Test handling of non-numeric count value"""
+        result = dnsping_runner.run(['-c', 'abc', 'google.com'])
+        assert not result.success, "Non-numeric count should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_port_too_high(self, dnsping_runner):
+        """Test handling of port value above 65535"""
+        result = dnsping_runner.run(['-p', '99999', 'google.com'])
+        assert not result.success, "Port above 65535 should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "port" in result.output.lower()
+
+    def test_invalid_port_negative(self, dnsping_runner):
+        """Test handling of negative port value"""
+        result = dnsping_runner.run(['-p', '-1', 'google.com'])
+        assert not result.success, "Negative port should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_port_non_numeric(self, dnsping_runner):
+        """Test handling of non-numeric port value"""
+        result = dnsping_runner.run(['-p', 'abc', 'google.com'])
+        assert not result.success, "Non-numeric port should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_timeout_negative(self, dnsping_runner):
+        """Test handling of negative timeout value"""
+        result = dnsping_runner.run(['-w', '-5', 'google.com'])
+        assert not result.success, "Negative timeout should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_timeout_non_numeric(self, dnsping_runner):
+        """Test handling of non-numeric timeout value"""
+        result = dnsping_runner.run(['-w', 'xyz', 'google.com'])
+        assert not result.success, "Non-numeric timeout should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_interval_negative(self, dnsping_runner):
+        """Test handling of negative interval value"""
+        result = dnsping_runner.run(['-i', '-1', 'google.com'])
+        assert not result.success, "Negative interval should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_interval_non_numeric(self, dnsping_runner):
+        """Test handling of non-numeric interval value"""
+        result = dnsping_runner.run(['-i', 'notanumber', 'google.com'])
+        assert not result.success, "Non-numeric interval should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_source_ip(self, dnsping_runner):
+        """Test handling of invalid source IP address"""
+        result = dnsping_runner.run(['-S', 'not.an.ip.address', 'google.com'])
+        assert not result.success, "Invalid source IP should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_source_port_negative(self, dnsping_runner):
+        """Test handling of negative source port value"""
+        result = dnsping_runner.run(['-P', '-1', 'google.com'])
+        assert not result.success, "Negative source port should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_source_port_too_high(self, dnsping_runner):
+        """Test handling of source port value above 65535"""
+        result = dnsping_runner.run(['-P', '70000', 'google.com'])
+        assert not result.success, "Source port above 65535 should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_ecs_no_prefix(self, dnsping_runner):
+        """Test handling of ECS without prefix length"""
+        result = dnsping_runner.run(['--ecs', '192.168.1.1', '-c', '1', 'google.com'])
+        assert not result.success, "ECS without prefix should fail"
+
+    def test_invalid_ecs_invalid_ip(self, dnsping_runner):
+        """Test handling of ECS with invalid IP"""
+        result = dnsping_runner.run(['--ecs', 'invalid.ip/24', '-c', '1', 'google.com'])
+        assert not result.success, "ECS with invalid IP should fail"
+
+    def test_invalid_ecs_prefix_too_large(self, dnsping_runner):
+        """Test handling of ECS with prefix larger than 32"""
+        result = dnsping_runner.run(['--ecs', '192.168.1.0/33', '-c', '1', 'google.com'])
+        assert not result.success, "ECS with prefix > 32 should fail"
+
+    def test_conflicting_address_families(self, dnsping_runner):
+        """Test handling of conflicting -4 and -6 flags"""
+        result = dnsping_runner.run(['-4', '-6', '-c', '1', 'google.com'])
+        assert not result.success, "Conflicting -4 and -6 should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "ERROR" in result.output or "cannot specify both" in result.output.lower()
+
+    def test_no_hostname_provided(self, dnsping_runner):
+        """Test handling of missing hostname"""
+        result = dnsping_runner.run(['-c', '5'])
+        assert not result.success, "Missing hostname should fail"
+        assert "Usage:" in result.output, "Should show usage message"
+
+    def test_empty_hostname(self, dnsping_runner):
+        """Test handling of empty hostname"""
+        result = dnsping_runner.run([''])
+        assert not result.success, "Empty hostname should fail"
+
 # Regression tests for specific bugs
 class TestRegressionBugs:
     """Tests for specific bugs that have been fixed"""
