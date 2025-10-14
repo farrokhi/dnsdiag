@@ -40,8 +40,8 @@ import dns.resolver
 
 import dnsdiag.whois
 from typing import Any, Dict
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort, die, err
-from dnsdiag.shared import __version__, Colors, valid_hostname
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort
+from dnsdiag.shared import __version__, Colors, valid_hostname, die, err
 
 # Global Variables
 quiet = False

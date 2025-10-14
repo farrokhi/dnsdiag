@@ -40,8 +40,8 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.dns
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, getDefaultPort, die, err
-from dnsdiag.shared import __version__, Colors, valid_hostname
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, getDefaultPort
+from dnsdiag.shared import __version__, Colors, valid_hostname, die, err
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'

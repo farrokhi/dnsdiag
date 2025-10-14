@@ -48,8 +48,8 @@ import dns.resolver
 import httpx
 
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
-    unsupported_feature, random_string, getDefaultPort, valid_rdatatype, die, err
-from dnsdiag.shared import __version__, valid_hostname
+    getDefaultPort, valid_rdatatype
+from dnsdiag.shared import __version__, valid_hostname, unsupported_feature, random_string, die, err
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
