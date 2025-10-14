@@ -228,6 +228,97 @@ class TestErrorHandling:
         assert "ERROR" in result.output
 
 
+class TestCLIParameterValidation:
+    """Test CLI parameter validation and error handling"""
+
+    def test_invalid_long_option(self, runner):
+        """Test handling of invalid long option"""
+        result = runner.run(['--invalid-option', 'google.com'])
+        assert not result.success, "Invalid option should fail gracefully"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "not recognized" in result.output or "Usage:" in result.output
+
+    def test_invalid_short_option(self, runner):
+        """Test handling of invalid short option"""
+        result = runner.run(['-Z', 'google.com'])
+        assert not result.success, "Invalid option should fail gracefully"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_port_too_high(self, runner):
+        """Test handling of port value above 65535"""
+        result = runner.run(['-p', '99999', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Port above 65535 should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "port" in result.output.lower()
+
+    def test_invalid_port_negative(self, runner):
+        """Test handling of negative port value"""
+        result = runner.run(['-p', '-1', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Negative port should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_port_non_numeric(self, runner):
+        """Test handling of non-numeric port value"""
+        result = runner.run(['-p', 'abc', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Non-numeric port should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_count_negative(self, runner):
+        """Test handling of negative count value"""
+        result = runner.run(['-c', '-5', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Negative count should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_count_zero(self, runner):
+        """Test handling of zero count value"""
+        result = runner.run(['-c', '0', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Zero count should fail"
+        assert "ERROR" in result.output or "positive" in result.output.lower()
+
+    def test_invalid_count_non_numeric(self, runner):
+        """Test handling of non-numeric count value"""
+        result = runner.run(['-c', 'abc', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Non-numeric count should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_timeout_negative(self, runner):
+        """Test handling of negative timeout value"""
+        result = runner.run(['-w', '-5', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Negative timeout should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+
+    def test_invalid_timeout_non_numeric(self, runner):
+        """Test handling of non-numeric timeout value"""
+        result = runner.run(['-w', 'xyz', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Non-numeric timeout should fail"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_invalid_source_ip(self, runner):
+        """Test handling of invalid source IP address"""
+        result = runner.run(['-S', 'not.an.ip.address', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Invalid source IP should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "ERROR" in result.output or "invalid" in result.output.lower()
+
+    def test_conflicting_address_families(self, runner):
+        """Test handling of conflicting -4 and -6 flags"""
+        result = runner.run(['-4', '-6', '-s', '8.8.8.8', 'google.com'])
+        assert not result.success, "Conflicting -4 and -6 should fail"
+        assert "Traceback" not in result.output, "Should not show Python traceback"
+        assert "ERROR" in result.output or "cannot specify both" in result.output.lower()
+
+    def test_no_hostname_provided(self, runner):
+        """Test handling of missing hostname"""
+        result = runner.run(['-c', '5', '-s', '8.8.8.8'])
+        assert not result.success, "Missing hostname should fail"
+        assert "Usage:" in result.output, "Should show usage message"
+
+    def test_empty_hostname(self, runner):
+        """Test handling of empty hostname"""
+        result = runner.run([''])
+        assert not result.success, "Empty hostname should fail"
+
+
 class TestRegressionBugs:
     """Tests for specific regression bugs and fixes"""
 
