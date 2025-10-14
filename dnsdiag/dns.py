@@ -50,11 +50,11 @@ _TTL: Optional[int] = None
 
 class PingResponse:
     def __init__(self) -> None:
-        self.r_avg: float = 0
-        self.r_min: float = 0
-        self.r_max: float = 0
-        self.r_stddev: float = 0
-        self.r_lost_percent: float = 0
+        self.r_avg: float = 0.0
+        self.r_min: float = 0.0
+        self.r_max: float = 0.0
+        self.r_stddev: float = 0.0
+        self.r_lost_percent: float = 0.0
         self.flags: int = 0
         self.ednsflags: int = 0
         self.ttl: Optional[int] = None
@@ -203,12 +203,12 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
         if len(response_times) > 1:
             retval.r_stddev = stdev(response_times)
         else:
-            retval.r_stddev = 0
+            retval.r_stddev = 0.0
     else:
-        retval.r_min = 0
-        retval.r_max = 0
-        retval.r_avg = 0
-        retval.r_stddev = 0
+        retval.r_min = 0.0
+        retval.r_max = 0.0
+        retval.r_avg = 0.0
+        retval.r_stddev = 0.0
 
     return retval
 
