@@ -188,11 +188,27 @@ class TestEDNSFeatures:
 
     def test_dns_cookies(self, dnsping_runner):
         """Test DNS Cookies support (RFC 7873)"""
-        result = dnsping_runner.run(['-c', '1', '-s', '8.8.8.8', '--cookie', 'google.com'])
+        # Test with a server that supports cookies
+        result = dnsping_runner.run(['-c', '1', '-s', 'anyns.pch.net', '--cookie', 'quad9.net'])
         assert result.success, f"Cookie query failed: {result.error}"
 
-        # Most public resolvers don't support cookies yet - test that it doesn't crash
-        cookie_present = '[COOKIE:' in result.output
+        # Verify cookie is displayed (anyns.pch.net supports cookies)
+        assert '[COOKIE:' in result.output, "Cookie not displayed in output"
+
+        # Verify cookie format (hex string)
+        import re
+        cookie_match = re.search(r'\[COOKIE:([0-9a-f]+)\]', result.output)
+        assert cookie_match, "Cookie format is invalid"
+        cookie_hex = cookie_match.group(1)
+        # Cookie should be 24 bytes (48 hex chars): 8 client + 16 server
+        assert len(cookie_hex) == 48, f"Cookie length is {len(cookie_hex)}, expected 48"
+
+    def test_dns_cookies_no_support(self, dnsping_runner):
+        """Test DNS Cookies with server that doesn't support it"""
+        # Google DNS doesn't echo cookies
+        result = dnsping_runner.run(['-c', '1', '-s', '8.8.8.8', '--cookie', 'google.com'])
+        assert result.success, f"Cookie query failed: {result.error}"
+        # Should not crash even if server doesn't support cookies
 
     def test_dnssec_validation(self, dnsping_runner):
         """Test DNSSEC validation request"""
