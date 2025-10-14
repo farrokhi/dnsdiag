@@ -1,0 +1,7 @@
+[tool.git-changelog]
+convention = "basic"
+in-place = true
+marker-line = "<!-- insertion marker -->"
+output = "CHANGELOG.md"
+template = "path:.git-changelog-template.md.jinja"
+parse-trailers = false
