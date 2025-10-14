@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
@@ -64,8 +64,16 @@ jobs:
         env:
           PYTHONPATH: .
 
-      - name: CLI smoke tests
+      - name: CLI smoke tests (Unix)
+        if: runner.os != 'Windows'
         run: |
           python3 dnsping.py -c 1 -s 8.8.8.8 google.com
-          python3 dnseval.py -c 1 --skip-warmup -f - google.com <<< "8.8.8.8"
+          echo "8.8.8.8" | python3 dnseval.py -c 1 --skip-warmup -f - google.com
           python3 dnstraceroute.py -c 1 -s 8.8.8.8 google.com
+
+      - name: CLI smoke tests (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python dnsping.py -c 1 -s 8.8.8.8 google.com
+          echo 8.8.8.8 | python dnseval.py -c 1 --skip-warmup -f - google.com
+          python dnstraceroute.py -c 1 -s 8.8.8.8 google.com
