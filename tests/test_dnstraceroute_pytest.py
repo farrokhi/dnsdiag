@@ -98,7 +98,6 @@ def runner():
 class TestBasicFunctionality:
     """Basic functionality tests for dnstraceroute"""
 
-    @pytest.mark.privileged
     @pytest.mark.parametrize("resolver_name,resolver_ip", [
         ('google', RESOLVERS_IPV4['google']),
         ('cloudflare', RESOLVERS_IPV4['cloudflare']),
@@ -110,7 +109,6 @@ class TestBasicFunctionality:
         assert "DNS:" in result.output
         assert resolver_ip in result.output
 
-    @pytest.mark.privileged
     @pytest.mark.parametrize("resolver_name,resolver_ip", [
         ('google', RESOLVERS_IPV6['google']),
         ('cloudflare', RESOLVERS_IPV6['cloudflare']),
@@ -330,8 +328,8 @@ class TestRegressionBugs:
         assert result.success, "IPv6 should work (issue #45)"
         assert "2001:4860:4860::8888" in result.output
 
-# Mark all tests as requiring network
-pytestmark = pytest.mark.network
+# Mark all tests as requiring network and privileges (ICMP sockets)
+pytestmark = [pytest.mark.network, pytest.mark.privileged]
 
 
 if __name__ == '__main__':

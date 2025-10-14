@@ -131,7 +131,7 @@ class TestProtocols:
     @pytest.mark.parametrize("resolver_name,resolver_ip", [
         ('cloudflare', '1.1.1.1'),
         ('google', '8.8.8.8'),
-        ('quad9', '9.9.9.9')
+        pytest.param('quad9', '9.9.9.9', marks=pytest.mark.xfail(reason="GitHub Actions may block Quad9 port 443"))
     ])
     def test_protocol_with_ip(self, dnsping_runner, protocol, flag, resolver_name, resolver_ip):
         """Test various protocols work with IP addresses"""
@@ -225,7 +225,7 @@ class TestHostnameConsistency:
 
     @pytest.mark.parametrize("ip,hostname,name", [
         ('8.8.8.8', 'dns.google', 'google'),
-        ('9.9.9.9', 'dns.quad9.net', 'quad9'),
+        pytest.param('9.9.9.9', 'dns.quad9.net', 'quad9', marks=pytest.mark.xfail(reason="GitHub Actions may block Quad9 port 443")),
     ])
     def test_hostname_vs_ip_doh(self, dnsping_runner, ip, hostname, name):
         """Test DoH works with both IP and hostname (critical after hostname fix)"""
