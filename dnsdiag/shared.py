@@ -24,8 +24,33 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import random
+import string
+import sys
 
 __version__ = '2.8.1'
+
+
+def random_string(min_length: int = 5, max_length: int = 10) -> str:
+    char_set = string.ascii_letters + string.digits
+    length = random.randint(min_length, max_length)
+    return ''.join(map(lambda unused: random.choice(char_set), range(length)))
+
+
+def die(s, exit_code=1):
+    err(s)
+    sys.exit(exit_code)
+
+
+def err(s):
+    print(s, file=sys.stderr, flush=True)
+
+
+def unsupported_feature(feature: str = "") -> None:
+    if feature:
+        die(f"{feature} not available", exit_code=127)
+    else:
+        die("feature not available", exit_code=127)
 
 
 def valid_hostname(hostname, allow_underscore=False):

@@ -25,9 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
-import random
 import socket
-import sys
 from statistics import stdev
 from typing import Optional, List, Any
 
@@ -36,7 +34,8 @@ import dns.message
 import dns.query
 import dns.rcode
 import dns.rdataclass
-import string
+
+from dnsdiag.shared import random_string, die, err, unsupported_feature
 
 # Transport protocols
 PROTO_UDP: int = 0
@@ -212,28 +211,6 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
         retval.r_stddev = 0
 
     return retval
-
-
-def random_string(min_length: int = 5, max_length: int = 10) -> str:
-    char_set = string.ascii_letters + string.digits
-    length = random.randint(min_length, max_length)
-    return ''.join(map(lambda unused: random.choice(char_set), range(length)))
-
-
-def die(s, exit_code=1):
-    err(s)
-    sys.exit(exit_code)
-
-
-def err(s):
-    print(s, file=sys.stderr, flush=True)
-
-
-def unsupported_feature(feature: str = "") -> None:
-    if feature:
-        die(f"{feature} not available", exit_code=127)
-    else:
-        die("feature not available", exit_code=127)
 
 
 def valid_rdatatype(rtype: str) -> bool:
