@@ -34,15 +34,15 @@ __version__ = '2.8.1'
 def random_string(min_length: int = 5, max_length: int = 10) -> str:
     char_set = string.ascii_letters + string.digits
     length = random.randint(min_length, max_length)
-    return ''.join(map(lambda unused: random.choice(char_set), range(length)))
+    return ''.join(random.choices(char_set, k=length))
 
 
-def die(s, exit_code=1):
+def die(s: str, exit_code: int = 1) -> None:
     err(s)
     sys.exit(exit_code)
 
 
-def err(s):
+def err(s: str) -> None:
     print(s, file=sys.stderr, flush=True)
 
 
@@ -53,7 +53,7 @@ def unsupported_feature(feature: str = "") -> None:
         die("feature not available", exit_code=127)
 
 
-def valid_hostname(hostname, allow_underscore=False):
+def valid_hostname(hostname: str, allow_underscore: bool = False) -> bool:
     """
     Validate a hostname or FQDN.
 
@@ -112,14 +112,14 @@ def valid_hostname(hostname, allow_underscore=False):
     return True
 
 
-class Colors(object):
+class Colors:
     N = '\033[m'  # native
     R = '\033[31m'  # red
     G = '\033[32m'  # green
     O = '\033[33m'  # orange
     B = '\033[34m'  # blue
 
-    def __init__(self, mode):
+    def __init__(self, mode: bool) -> None:
         if not mode:
             self.N = ''
             self.R = ''

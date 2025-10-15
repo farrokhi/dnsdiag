@@ -34,13 +34,14 @@ import signal
 import socket
 import sys
 import time
+from typing import List, Any
 
 import dns.rcode
 import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.dns
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, getDefaultPort
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, get_default_port
 from dnsdiag.shared import __version__, Colors, valid_hostname, die, err
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -49,7 +50,7 @@ __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
 
-def setup_signal_handler():
+def setup_signal_handler() -> None:
     try:
         signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
         signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
@@ -57,14 +58,14 @@ def setup_signal_handler():
         pass
 
 
-def signal_handler(sig, frame):
+def signal_handler(sig: int, frame: Any) -> None:
     global shutdown
     if shutdown:  # pressed twice, so exit immediately
         sys.exit(0)
     shutdown = True  # pressed once, exit gracefully
 
 
-def usage(exit_code=0):
+def usage(exit_code: int = 0) -> None:
     print("""%s version %s
 Usage: %s [-ehmvCTXHQ3SD] [-f server-list] [-j output.json] [-c count] [-t type] [-p port] [-w wait] hostname
 
@@ -91,12 +92,11 @@ Usage: %s [-ehmvCTXHQ3SD] [-f server-list] [-j output.json] [-c count] [-t type]
     sys.exit(exit_code)
 
 
-def maxlen(names):
-    sn = sorted(names, key=len)
-    return len(sn[-1])
+def maxlen(names: List[str]) -> int:
+    return max(len(name) for name in names) if names else 0
 
 
-def main():
+def main() -> None:
     global shutdown
     setup_signal_handler()
 
@@ -107,11 +107,11 @@ def main():
     rdatatype = 'A'
     proto = PROTO_UDP
     src_ip = None
-    dst_port = getDefaultPort(proto)
+    dst_port = get_default_port(proto)
     use_default_dst_port = True
     count = 10
     waittime = 2
-    inputfilename = None
+    inputfilename: str = ""
     fromfile = False
     json_output = False
     use_edns = False
@@ -165,7 +165,7 @@ def main():
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
         elif o in ("-S", "--srcip"):
             try:
                 ipaddress.ip_address(a)
@@ -187,19 +187,19 @@ def main():
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
         elif o in ("-Q", "--quic"):
             proto = PROTO_QUIC
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
         elif o in ("-3", "--http3"):
             proto = PROTO_HTTP3
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
         elif o in ("-p", "--port"):
             try:
                 dst_port = int(a)
@@ -210,10 +210,6 @@ def main():
                 die(f"ERROR: invalid port value: {a}")
         elif o in ("--skip-warmup",):
             warmup = False
-
-        else:
-            print("Invalid option: %s" % o)
-            usage(1)
 
     # validate RR type
     if not dnsdiag.dns.valid_rdatatype(rdatatype):
@@ -239,8 +235,8 @@ def main():
         if len(f) == 0:
             print("ERROR: No nameserver specified")
 
-        f = [name.strip() for name in f]  # remove annoying blanks
-        f = [x for x in f if not x.startswith('#') and len(x)]  # remove comments and empty entries
+        # remove blanks, comments, and empty entries
+        f = [name.strip() for name in f if name.strip() and not name.strip().startswith('#')]
 
         width = maxlen(f)
         blanks = (width - 5) * ' '
@@ -250,18 +246,20 @@ def main():
             for server in f:
                 if shutdown:
                     break
-                if server.lstrip() == '':
+                if not server.strip():
                     continue
                 server = server.replace(' ', '')
+                resolver: str = ""
                 try:
                     ipaddress.ip_address(server)
+                    resolver = server
                 except ValueError:
                     try:
-                        resolver = socket.getaddrinfo(server, port=None)[1][4][0]
-                    except (OSError, Exception):
-                        resolver = None
-                else:
-                    resolver = server
+                        results = socket.getaddrinfo(server, None, socket.AF_UNSPEC, socket.SOCK_DGRAM)
+                        if results and len(results[0]) > 4 and results[0][4]:
+                            resolver = str(results[0][4][0])
+                    except (OSError, IndexError, TypeError):
+                        pass
 
                 if resolver:
                     try:
@@ -286,21 +284,27 @@ def main():
                 break
 
             # check if we have a valid dns server address
-            if server.lstrip() == '':  # deal with empty lines
+            if not server.strip():
                 continue
             server = server.replace(' ', '')
+            resolver = ""
             try:
                 ipaddress.ip_address(server)
-            except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
+                resolver = server
+            except ValueError:
                 try:
-                    resolver = socket.getaddrinfo(server, port=None)[1][4][0]
+                    results = socket.getaddrinfo(server, None, socket.AF_UNSPEC, socket.SOCK_DGRAM)
+                    if results and len(results[0]) > 4 and results[0][4]:
+                        resolver = str(results[0][4][0])
+                    else:
+                        print('ERROR: cannot resolve hostname:', server)
+                        continue
                 except OSError:
                     print('ERROR: cannot resolve hostname:', server)
-                    resolver = None
-                except Exception:
-                    pass
-            else:
-                resolver = server
+                    continue
+                except (IndexError, TypeError):
+                    print('ERROR: invalid address format for hostname:', server)
+                    continue
 
             if not resolver:
                 continue
@@ -327,9 +331,7 @@ def main():
             else:
                 text_flags = " ".join([text_flags, "--"])
 
-            s_ttl = str(retval.ttl)
-            if s_ttl == "None":
-                s_ttl = "N/A"
+            s_ttl = str(retval.ttl) if retval.ttl is not None else "N/A"
 
             if retval.r_lost_percent > 0:
                 l_color = color.O
@@ -337,24 +339,24 @@ def main():
                 l_color = color.N
 
             if json_output:
-                dns_data = {
-                    'hostname': qname,
-                    'timestamp': str(datetime.datetime.now()),
-                    'r_min': retval.r_min,
-                    'r_avg': retval.r_avg,
-                    'resolver': resolver.rstrip(),
-                    'r_max': retval.r_max,
-                    'r_lost_percent': retval.r_lost_percent,
-                    's_ttl': s_ttl,
-                    'text_flags': text_flags,
-                    'flags': retval.flags,
-                    'ednsflags': retval.ednsflags,
-                    'rcode': retval.rcode,
-                    'rcode_text': retval.rcode_text,
-                }
                 outer_data = {
                     'hostname': qname,
-                    'data': dns_data
+                    'data': {
+                        'hostname': qname,
+                        'timestamp': str(datetime.datetime.now()),
+                        'resolver': resolver.rstrip(),
+                        'r_min': retval.r_min,
+                        'r_avg': retval.r_avg,
+                        'r_max': retval.r_max,
+                        'r_stddev': retval.r_stddev,
+                        'r_lost_percent': retval.r_lost_percent,
+                        's_ttl': s_ttl,
+                        'text_flags': text_flags,
+                        'flags': retval.flags,
+                        'ednsflags': retval.ednsflags,
+                        'rcode': retval.rcode,
+                        'rcode_text': retval.rcode_text,
+                    }
                 }
 
                 if json_filename == '-':  # stdout

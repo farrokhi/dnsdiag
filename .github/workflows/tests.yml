@@ -28,7 +28,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-timeout
+          pip install pytest pytest-timeout mypy flake8 Flake8-pyproject
+
+      - name: Run mypy type checks
+        run: |
+          mypy dnsdiag/ dnsping.py dnseval.py dnstraceroute.py
+
+      - name: Run flake8 linting
+        run: |
+          flake8 dnsdiag/ dnsping.py dnseval.py dnstraceroute.py
 
       - name: Run unit tests (no network)
         run: |
@@ -59,7 +67,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-timeout
+          pip install pytest pytest-timeout mypy flake8 Flake8-pyproject
+
+      - name: Run mypy type checks
+        run: |
+          mypy dnsdiag/ dnsping.py dnseval.py dnstraceroute.py
+
+      - name: Run flake8 linting
+        run: |
+          flake8 dnsdiag/ dnsping.py dnseval.py dnstraceroute.py
 
       - name: Run integration tests
         run: |
