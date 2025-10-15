@@ -43,7 +43,7 @@ module = ["cymruwhois", "dns.*", "httpx"]
 ignore_missing_imports = true
 
 [tool.flake8]
-ignore = ["E501", "E741", "F823", "E128", "W504"]
+ignore = ["E501", "E741", "E128", "W504"]
 exclude = [".venv"]
 
 [tool.pycodestyle]

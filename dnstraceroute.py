@@ -158,7 +158,7 @@ def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
 
 
 def main() -> None:
-    global quiet, shutdown
+    global quiet, shutdown, whois_cache
 
     setup_signal_handler()
 
