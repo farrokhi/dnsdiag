@@ -100,7 +100,7 @@ Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_
 
 def setup_signal_handler() -> None:
     try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z  # type: ignore[attr-defined]
         signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
     except AttributeError:  # not all signals are supported on all platforms
         pass
