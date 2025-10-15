@@ -33,13 +33,13 @@ import signal
 import socket
 import sys
 import time
+from typing import Any, Dict
 
 import dns.query
 import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.whois
-from typing import Any, Dict
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort
 from dnsdiag.shared import __version__, Colors, valid_hostname, die, err
 
@@ -141,7 +141,7 @@ def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
 
     try:
         resp = dnsdiag.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
-                             want_dnssec=False, socket_ttl=ttl)
+                                want_dnssec=False, socket_ttl=ttl)
 
     except SystemExit:
         raise

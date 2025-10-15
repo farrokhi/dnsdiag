@@ -125,7 +125,8 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hf:c:t:w:S:TevCmXHQ3Dj:p:",
                                    ["help", "file=", "count=", "type=", "wait=", "json=", "tcp", "edns", "verbose",
-                                    "color", "cache-miss", "srcip=", "tls", "doh", "quic", "http3", "dnssec", "port=", "skip-warmup"])
+                                    "color", "cache-miss", "srcip=", "tls", "doh", "quic", "http3", "dnssec", "port=",
+                                    "skip-warmup"])
     except getopt.GetoptError as getopt_err:
         err(str(getopt_err))
         usage(1)
@@ -265,7 +266,7 @@ def main():
                 if resolver:
                     try:
                         dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, 1, proto, src_ip,
-                                        use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
+                                         use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
                     except (KeyboardInterrupt, SystemExit):
                         shutdown = True
                         break
@@ -306,7 +307,7 @@ def main():
 
             try:
                 retval = dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
-                                       use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
+                                          use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
 
             except KeyboardInterrupt:
                 shutdown = True

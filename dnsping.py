@@ -112,8 +112,6 @@ def signal_handler(sig, frame):
     shutdown = True  # pressed once, exit gracefully
 
 
-
-
 def validate_server_address(dnsserver, address_family):
     """checks if we have a valid dns server address and resolve if it is a hostname"""
 
@@ -123,7 +121,8 @@ def validate_server_address(dnsserver, address_family):
     except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
         try:
             if address_family == socket.AF_INET6:
-                results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM, flags=socket.AI_V4MAPPED)
+                results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM,
+                                             flags=socket.AI_V4MAPPED)
             else:
                 results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM)
 
@@ -638,7 +637,7 @@ def main():
                                 key_tags = []
                                 for i in range(0, len(ans_opt.data), 2):
                                     if i + 1 < len(ans_opt.data):
-                                        tag = struct.unpack('!H', ans_opt.data[i:i+2])[0]
+                                        tag = struct.unpack('!H', ans_opt.data[i:i + 2])[0]
                                         key_tags.append(str(tag))
                                 option_details = "tags=[%s]" % ",".join(key_tags)
                         else:
