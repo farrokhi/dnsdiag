@@ -123,11 +123,30 @@ def validate_server_address(dnsserver, address_family):
     except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
         try:
             if address_family == socket.AF_INET6:
-                dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family, flags=socket.AI_V4MAPPED)[1][4][0]
+                results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM, flags=socket.AI_V4MAPPED)
             else:
-                dnsserver = socket.getaddrinfo(dnsserver, port=None, family=address_family)[1][4][0]
-        except OSError:
-            die(f'ERROR: cannot resolve hostname: {dnsserver}')
+                results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM)
+
+            if not results:
+                die(f'ERROR: cannot resolve hostname: {dnsserver}')
+
+            # getaddrinfo returns list of tuples: (family, type, proto, canonname, sockaddr)
+            # Extract IP address from first result's sockaddr tuple
+            family, socktype, proto, canonname, sockaddr = results[0]
+
+            # sockaddr format depends on address family:
+            # IPv4: (address, port)
+            # IPv6: (address, port, flow info, scope id)
+            if sockaddr and len(sockaddr) >= 1:
+                dnsserver = sockaddr[0]
+            else:
+                die(f'ERROR: invalid address data for hostname: {dnsserver}')
+
+        except (OSError, socket.gaierror) as e:
+            die(f'ERROR: cannot resolve hostname {original_server}: {e}')
+        except (IndexError, TypeError, ValueError) as e:
+            die(f'ERROR: invalid address format for hostname {original_server}: {e}')
+
     return dnsserver, original_server
 
 
