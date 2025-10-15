@@ -56,7 +56,8 @@ __progname__ = os.path.basename(sys.argv[0])
 
 def setup_signal_handler() -> None:
     try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z  # type: ignore[attr-defined]
+        if hasattr(signal, 'SIGTSTP'):
+            signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
         signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
     except AttributeError:  # not all signals are supported on all platforms
         pass
