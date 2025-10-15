@@ -33,14 +33,14 @@ import signal
 import socket
 import sys
 import time
+from typing import Any, Dict, Optional, Tuple, List
 
 import dns.query
 import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.whois
-from typing import Any, Dict
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, getDefaultPort
+from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, get_default_port
 from dnsdiag.shared import __version__, Colors, valid_hostname, die, err
 
 # Global Variables
@@ -54,27 +54,28 @@ __license__ = 'BSD'
 __progname__ = os.path.basename(sys.argv[0])
 
 
-def setup_signal_handler():
+def setup_signal_handler() -> None:
     try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        if hasattr(signal, 'SIGTSTP'):
+            signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
         signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
     except AttributeError:  # not all signals are supported on all platforms
         pass
 
 
-def signal_handler(sig, frame):
+def signal_handler(sig: int, frame: Any) -> None:
     global shutdown
     if shutdown:  # pressed twice, so exit immediately
         sys.exit(0)
     shutdown = True  # pressed once, exit gracefully
 
 
-def test_import():
+def test_import() -> None:
     #  passing this test means imports were successful
     pass
 
 
-def usage(exit_code=0):
+def usage(exit_code: int = 0) -> None:
     print("""%s version %s
 Usage: %s [-aenqhCxTSQ346] [-s server] [-p port] [-c count] [-t type] [-w wait] hostname
 
@@ -101,7 +102,7 @@ Options:
     sys.exit(exit_code)
 
 
-def expert_report(trace_path, color_mode):
+def expert_report(trace_path: List[str], color_mode: bool) -> None:
     color = Colors(color_mode)
     print("\n%s=== Expert Hints ===%s" % (color.B, color.N))
     if len(trace_path) == 0:
@@ -134,14 +135,15 @@ def expert_report(trace_path, color_mode):
     print(" %s[*]%s No expert hint available for this trace" % (color.G, color.N))
 
 
-def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
+def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
+         timeout: int, src_ip: Optional[str], use_edns: bool) -> Tuple[bool, Optional[float]]:
     reached = False
     resp_time = None
     resp = None
 
     try:
         resp = dnsdiag.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
-                             want_dnssec=False, socket_ttl=ttl)
+                                want_dnssec=False, socket_ttl=ttl)
 
     except SystemExit:
         raise
@@ -155,8 +157,8 @@ def ping(qname, server, rdtype, proto, port, ttl, timeout, src_ip, use_edns):
     return reached, resp_time
 
 
-def main():
-    global quiet, shutdown
+def main() -> None:
+    global quiet, shutdown, whois_cache
 
     setup_signal_handler()
 
@@ -168,7 +170,7 @@ def main():
     timeout = 2
     dnsserver = None
     proto = PROTO_UDP
-    dest_port = getDefaultPort(proto)
+    dest_port = get_default_port(proto)
     use_default_dest_port = True
     src_ip = None
     hops = 0
@@ -243,15 +245,15 @@ def main():
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
             if use_default_dest_port:
-                dest_port = getDefaultPort(proto)
+                dest_port = get_default_port(proto)
         elif o in ("-Q", "--quic"):
             proto = PROTO_QUIC
             if use_default_dest_port:
-                dest_port = getDefaultPort(proto)
+                dest_port = get_default_port(proto)
         elif o in ("-3", "--http3"):
             proto = PROTO_HTTP3
             if use_default_dest_port:
-                dest_port = getDefaultPort(proto)
+                dest_port = get_default_port(proto)
         elif o in ("-4", "--ipv4"):
             if af_ipv6_set:
                 die("ERROR: cannot specify both -4 and -6")
@@ -266,8 +268,6 @@ def main():
             as_lookup = True
         elif o in ("-e", "--edns"):
             use_edns = True
-        else:
-            usage(1)
 
     color = Colors(color_mode)
 
@@ -284,10 +284,11 @@ def main():
             filtered = []
             for ns in nameservers:
                 try:
-                    addr = ipaddress.ip_address(ns)
-                    if (af == socket.AF_INET and isinstance(addr, ipaddress.IPv4Address)) or \
-                       (af == socket.AF_INET6 and isinstance(addr, ipaddress.IPv6Address)):
-                        filtered.append(ns)
+                    addr = ipaddress.ip_address(str(ns))
+                    is_matching = ((af == socket.AF_INET and isinstance(addr, ipaddress.IPv4Address)) or
+                                   (af == socket.AF_INET6 and isinstance(addr, ipaddress.IPv6Address)))
+                    if is_matching:
+                        filtered.append(str(ns))
                 except ValueError:
                     pass
             if not filtered:
@@ -295,7 +296,7 @@ def main():
                 die(f"ERROR: no {af_name} nameservers found in system resolver")
             dnsserver = filtered[0]
         else:
-            dnsserver = nameservers[0]
+            dnsserver = str(nameservers[0])
 
     # check if we have a valid dns server address and detect/set address family
     try:
@@ -315,23 +316,34 @@ def main():
             af = socket.AF_INET
         try:
             if af == socket.AF_INET6:
-                dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af, flags=socket.AI_V4MAPPED)[0][4][0]
+                results = socket.getaddrinfo(dnsserver, None, family=af, flags=socket.AI_V4MAPPED)
             else:
-                dnsserver = socket.getaddrinfo(dnsserver, port=None, family=af)[0][4][0]
+                results = socket.getaddrinfo(dnsserver, None, family=af)
+
+            if results and len(results[0]) > 4 and results[0][4]:
+                dnsserver = str(results[0][4][0])
+            else:
+                die(f'ERROR: invalid address format for hostname: {dnsserver}')
         except OSError:
             die(f'ERROR: cannot resolve hostname: {dnsserver}')
+        except (IndexError, TypeError):
+            die(f'ERROR: invalid address format for hostname: {dnsserver}')
 
     # Validate source IP address family if specified
     if src_ip:
         try:
             src_addr = ipaddress.ip_address(src_ip)
-            if (af == socket.AF_INET and not isinstance(src_addr, ipaddress.IPv4Address)) or \
-               (af == socket.AF_INET6 and not isinstance(src_addr, ipaddress.IPv6Address)):
+            is_mismatch = ((af == socket.AF_INET and not isinstance(src_addr, ipaddress.IPv4Address)) or
+                           (af == socket.AF_INET6 and not isinstance(src_addr, ipaddress.IPv6Address)))
+            if is_mismatch:
                 af_name = "IPv4" if af == socket.AF_INET else "IPv6"
                 src_type = "IPv4" if isinstance(src_addr, ipaddress.IPv4Address) else "IPv6"
                 die(f"ERROR: source IP is {src_type} but target DNS server is {af_name}")
         except ValueError:
             die(f"ERROR: invalid source IP address: {src_ip}")
+
+    # At this point dnsserver must be set (either from command line or system resolver)
+    assert dnsserver is not None
 
     # Select correct ICMP protocol based on address family
     if af == socket.AF_INET:
@@ -427,7 +439,7 @@ def main():
             shutdown = True
             break
 
-        if reached:
+        if reached and resp_time is not None:
             curr_addr = dnsserver
             elapsed = resp_time
         else:
@@ -447,13 +459,12 @@ def main():
                 shutdown = True
                 break
             except Exception:
-                print("unxpected error: ", sys.exc_info()[0])
+                print("unexpected error: ", sys.exc_info()[0])
 
         # Check for shutdown signal after hostname resolution
         if shutdown:
             break
 
-        global whois_cache
         if curr_addr:
             as_name = ""
             if as_lookup:

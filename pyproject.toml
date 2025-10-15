@@ -5,3 +5,46 @@ marker-line = "<!-- insertion marker -->"
 output = "CHANGELOG.md"
 template = "path:.git-changelog-template.md.jinja"
 parse-trailers = false
+
+[tool.mypy]
+python_version = "3.9"
+mypy_path = "."
+namespace_packages = true
+ignore_missing_imports = true
+show_error_codes = true
+show_column_numbers = true
+pretty = true
+
+# Strict type checking mode
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+no_implicit_optional = true
+strict_equality = true
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+warn_unreachable = false
+no_implicit_reexport = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+ignore_errors = false
+
+[[tool.mypy.overrides]]
+module = ["cymruwhois", "dns.*", "httpx"]
+ignore_missing_imports = true
+
+[tool.flake8]
+ignore = ["E501", "E741", "E128", "W504"]
+exclude = [".venv"]
+
+[tool.pycodestyle]
+ignore = ["E501", "E741"]

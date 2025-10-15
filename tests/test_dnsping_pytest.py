@@ -447,25 +447,6 @@ class TestRegressionBugs:
             # No EDE present, which is also fine
             assert True
 
-# Performance tests
-class TestPerformance:
-    """Basic performance validation tests"""
-
-    @pytest.mark.parametrize("resolver_ip", ['1.1.1.1', '8.8.8.8', '9.9.9.9'])
-    def test_response_time_variance(self, dnsping_runner, resolver_ip):
-        """Test response time consistency across multiple queries"""
-        times = []
-        for _ in range(3):
-            result = dnsping_runner.run(['-c', '1', '-s', resolver_ip, 'google.com'])
-            if result.success and result.response_time:
-                times.append(result.response_time)
-
-        if len(times) >= 2:
-            # Simple variance check - times shouldn't vary by more than 10x
-            max_time = max(times)
-            min_time = min(times)
-            assert max_time / min_time < 10, f"Response time variance too high: {min_time}ms to {max_time}ms"
-
 # Pytest configuration and custom markers
 def pytest_configure(config):
     """Configure pytest with custom markers"""

@@ -34,6 +34,7 @@ import socket
 import sys
 import time
 from statistics import stdev
+from typing import Any, Tuple, Optional
 
 import dns.edns
 import dns.exception
@@ -48,7 +49,7 @@ import dns.resolver
 import httpx
 
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
-    getDefaultPort, valid_rdatatype
+    get_default_port, valid_rdatatype
 from dnsdiag.shared import __version__, valid_hostname, unsupported_feature, random_string, die, err
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
@@ -57,7 +58,7 @@ __progname__ = os.path.basename(sys.argv[0])
 shutdown = False
 
 
-def usage(exit_code=0):
+def usage(exit_code: int = 0) -> None:
     print("""%s version %s
 Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_port] [-S src_ip]
        %s [-c count] [-t qtype] [-C class] [-s server] [--ecs client_subnet] hostname
@@ -97,24 +98,23 @@ Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_
     sys.exit(exit_code)
 
 
-def setup_signal_handler():
+def setup_signal_handler() -> None:
     try:
-        signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        if hasattr(signal, 'SIGTSTP'):
+            signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
         signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
     except AttributeError:  # not all signals are supported on all platforms
         pass
 
 
-def signal_handler(sig, frame):
+def signal_handler(sig: int, frame: Any) -> None:
     global shutdown
     if shutdown:  # pressed twice, so exit immediately
         sys.exit(0)
     shutdown = True  # pressed once, exit gracefully
 
 
-
-
-def validate_server_address(dnsserver, address_family):
+def validate_server_address(dnsserver: str, address_family: Optional[int]) -> Tuple[str, str]:
     """checks if we have a valid dns server address and resolve if it is a hostname"""
 
     original_server = dnsserver
@@ -123,9 +123,10 @@ def validate_server_address(dnsserver, address_family):
     except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
         try:
             if address_family == socket.AF_INET6:
-                results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM, flags=socket.AI_V4MAPPED)
+                results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM,
+                                             flags=socket.AI_V4MAPPED)
             else:
-                results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM)
+                results = socket.getaddrinfo(dnsserver, None, address_family or socket.AF_UNSPEC, socket.SOCK_DGRAM)
 
             if not results:
                 die(f'ERROR: cannot resolve hostname: {dnsserver}')
@@ -138,7 +139,7 @@ def validate_server_address(dnsserver, address_family):
             # IPv4: (address, port)
             # IPv6: (address, port, flow info, scope id)
             if sockaddr and len(sockaddr) >= 1:
-                dnsserver = sockaddr[0]
+                dnsserver = str(sockaddr[0])
             else:
                 die(f'ERROR: invalid address data for hostname: {dnsserver}')
 
@@ -150,27 +151,27 @@ def validate_server_address(dnsserver, address_family):
     return dnsserver, original_server
 
 
-def main():
+def main() -> None:
     global shutdown
     setup_signal_handler()
 
     if len(sys.argv) == 1:
         usage()
 
-    dns.rdata.load_all_types()
+    dns.rdata.load_all_types()  # type: ignore[no-untyped-call]
     # defaults
     rdatatype = 'A'
     rdata_class = dns.rdataclass.from_text('IN')
     count = 10
     timeout = 2
-    interval = 1
+    interval = 1.0
     quiet = False
     verbose = False
     show_flags = False
     show_cookie = False
     dnsserver = None  # do not try to use system resolver by default
     proto = PROTO_UDP
-    dst_port = getDefaultPort(proto)
+    dst_port = get_default_port(proto)
     use_default_dst_port = True
     src_port = 0
     src_ip = None
@@ -265,27 +266,27 @@ def main():
         elif o in ("-T", "--tcp"):
             proto = PROTO_TCP
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
 
         elif o in ("-X", "--tls"):
             proto = PROTO_TLS
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
 
         elif o in ("-H", "--doh"):
             proto = PROTO_HTTPS
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
 
         elif o in ("-Q", "--quic"):
             proto = PROTO_QUIC
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
 
         elif o in ("-3", "--http3"):
             proto = PROTO_HTTP3
             if use_default_dst_port:
-                dst_port = getDefaultPort(proto)
+                dst_port = get_default_port(proto)
 
         elif o in ("-4", "--ipv4"):
             if af_ipv6_set:
@@ -360,7 +361,7 @@ def main():
     # Use system DNS server if parameter is not specified
     # remember not all systems have /etc/resolv.conf (i.e. Android)
     if dnsserver is None:
-        dnsserver = dns.resolver.get_default_resolver().nameservers[0]
+        dnsserver = str(dns.resolver.get_default_resolver().nameservers[0])
 
     dnsserver_ip, dnsserver_hostname = validate_server_address(dnsserver, af)
 
@@ -393,7 +394,7 @@ def main():
             fqdn = qname
 
         if use_edns:
-            edns_options = []
+            edns_options: list[Any] = []
             if want_nsid:
                 edns_options.append(dns.edns.GenericOption(dns.edns.NSID, ''))
             if client_subnet:
@@ -522,7 +523,8 @@ def main():
         else:
             # convert time to milliseconds, considering that
             # time property is returned differently by query.https
-            if type(answers.time) is datetime.timedelta:
+            # dns library returns float for most protocols but timedelta for HTTPS
+            if isinstance(answers.time, datetime.timedelta):
                 elapsed = answers.time.total_seconds() * 1000
             else:
                 elapsed = answers.time * 1000
@@ -638,7 +640,7 @@ def main():
                                 key_tags = []
                                 for i in range(0, len(ans_opt.data), 2):
                                     if i + 1 < len(ans_opt.data):
-                                        tag = struct.unpack('!H', ans_opt.data[i:i+2])[0]
+                                        tag = struct.unpack('!H', ans_opt.data[i:i + 2])[0]
                                         key_tags.append(str(tag))
                                 option_details = "tags=[%s]" % ",".join(key_tags)
                         else:

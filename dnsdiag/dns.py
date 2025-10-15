@@ -75,7 +75,7 @@ def proto_to_text(proto: int) -> str:
     return _proto_name[proto]
 
 
-def getDefaultPort(proto: int) -> int:
+def get_default_port(proto: int) -> int:
     _proto_port = {
         PROTO_UDP: 53,
         PROTO_TCP: 53,
@@ -105,7 +105,6 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
     retval.rcode_text = "No Response"
 
     response_times: List[float] = []
-    i: int = 0
 
     if socket_ttl:
         global _TTL
@@ -125,28 +124,28 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns=False, want_dnssec=False)
 
         try:
-            if proto is PROTO_UDP:
+            if proto == PROTO_UDP:
                 response = dns.query.udp(query, server, timeout=timeout, port=dst_port, source=src_ip,
                                          ignore_unexpected=True)
-            elif proto is PROTO_TCP:
+            elif proto == PROTO_TCP:
                 response = dns.query.tcp(query, server, timeout=timeout, port=dst_port, source=src_ip)
-            elif proto is PROTO_TLS:
+            elif proto == PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
                     response = dns.query.tls(query, server, timeout, dst_port, src_ip)
                 else:
                     unsupported_feature()
-            elif proto is PROTO_HTTPS:
+            elif proto == PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
                     response = dns.query.https(query, server, timeout, dst_port, src_ip,
                                               http_version=dns.query.HTTPVersion.HTTP_2)
                 else:
                     unsupported_feature()
-            elif proto is PROTO_QUIC:
+            elif proto == PROTO_QUIC:
                 if hasattr(dns.query, 'quic'):
                     response = dns.query.quic(query, server, timeout, dst_port, src_ip)
                 else:
                     unsupported_feature()
-            elif proto is PROTO_HTTP3:
+            elif proto == PROTO_HTTP3:
                 if hasattr(dns.query, '_http3'):
                     url = f"https://{server}:{dst_port}/dns-query"
                     response = dns.query._http3(query, server, url, timeout, dst_port, src_ip)
@@ -179,7 +178,8 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
         else:
             # convert time to milliseconds, considering that
             # time property is retruned differently by query.https
-            if type(response.time) is datetime.timedelta:
+            # dns library returns float for most protocols but timedelta for HTTPS
+            if isinstance(response.time, datetime.timedelta):
                 elapsed = response.time.total_seconds() * 1000
             else:
                 elapsed = response.time * 1000
@@ -222,39 +222,33 @@ def valid_rdatatype(rtype: str) -> bool:
     return True
 
 
+# Standard DNS flags
+_DNS_FLAG_QR = 0x8000
+_DNS_FLAG_AA = 0x0400
+_DNS_FLAG_TC = 0x0200
+_DNS_FLAG_RD = 0x0100
+_DNS_FLAG_RA = 0x0080
+_DNS_FLAG_AD = 0x0020
+_DNS_FLAG_CD = 0x0010
+
+_DNS_FLAGS_BY_TEXT = {
+    'QR': _DNS_FLAG_QR,
+    'AA': _DNS_FLAG_AA,
+    'TC': _DNS_FLAG_TC,
+    'RD': _DNS_FLAG_RD,
+    'RA': _DNS_FLAG_RA,
+    'AD': _DNS_FLAG_AD,
+    'CD': _DNS_FLAG_CD
+}
+
+
 def flags_to_text(flags: int) -> str:
-    # Standard DNS flags
-
-    QR = 0x8000
-    AA = 0x0400
-    TC = 0x0200
-    RD = 0x0100
-    RA = 0x0080
-    AD = 0x0020
-    CD = 0x0010
-
-    # EDNS flags
-    # DO = 0x8000
-
-    _by_text = {
-        'QR': QR,
-        'AA': AA,
-        'TC': TC,
-        'RD': RD,
-        'RA': RA,
-        'AD': AD,
-        'CD': CD
-    }
-
-    _by_value = dict([(y, x) for x, y in _by_text.items()])
-    # _flags_order = sorted(_by_value.items(), reverse=True)
-
-    _by_value = dict([(y, x) for x, y in _by_text.items()])
+    _by_value = {value: key for key, value in _DNS_FLAGS_BY_TEXT.items()}
 
     order = sorted(_by_value.items(), reverse=True)
     text_flags = []
     for k, v in order:
-        if flags & k != 0:
+        if (flags & k) != 0:
             text_flags.append(v)
         else:
             text_flags.append('--')
