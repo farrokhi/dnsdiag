@@ -121,16 +121,6 @@
 8.26.56.26
 8.20.247.20
 
-## DNS0.eu
-# European sovereign DNS resolver with GDPR compliance
-# Privacy-focused service with infrastructure located in the EU
-# Website: https://www.dns0.eu/
-# DNSSEC: YES | ECS: NO | EDE: NO
-193.110.81.0
-185.253.5.0
-2a0f:fc80::
-2a0f:fc81::
-
 ## Hurricane Electric
 # Internet backbone provider's public DNS service
 # Basic DNS resolution from major internet infrastructure company

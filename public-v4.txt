@@ -65,11 +65,6 @@
 8.26.56.26
 8.20.247.20
 
-## DNS0.eu
-# European sovereign DNS resolver with GDPR compliance
-193.110.81.0
-185.253.5.0
-
 ## Hurricane Electric
 # Internet backbone provider's public DNS
 74.82.42.42
