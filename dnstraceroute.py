@@ -35,6 +35,7 @@ import sys
 import time
 from typing import Any, Dict, Optional, Tuple, List
 
+import dns.edns
 import dns.query
 import dns.rdatatype
 import dns.resolver
@@ -97,6 +98,7 @@ Options:
   -t, --type        DNS request record type (default: A)
   -C, --color       Enable colorful output
   -e, --edns        Enable EDNS0 (default: disabled)
+  -N, --nsid        Enable NSID to retrieve resolver identification (implies EDNS)
   -n                Disable hostname resolution for IP addresses
 """ % (__progname__, __version__, __progname__))
     sys.exit(exit_code)
@@ -136,14 +138,15 @@ def expert_report(trace_path: List[str], color_mode: bool) -> None:
 
 
 def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
-         timeout: int, src_ip: Optional[str], use_edns: bool) -> Tuple[bool, Optional[float]]:
+         timeout: int, src_ip: Optional[str], use_edns: bool, want_nsid: bool) -> Tuple[bool, Optional[float], Optional[str]]:
     reached = False
     resp_time = None
+    nsid_value = None
     resp = None
 
     try:
         resp = dnsdiag.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
-                                want_dnssec=False, socket_ttl=ttl)
+                                want_dnssec=False, want_nsid=want_nsid, socket_ttl=ttl)
 
     except SystemExit:
         raise
@@ -154,7 +157,19 @@ def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
             reached = True
             resp_time = resp.r_max
 
-    return reached, resp_time
+            # Extract NSID if requested and available
+            if want_nsid and resp.response and resp.response.options:
+                for option in resp.response.options:
+                    if option.otype == dns.edns.OptionType.NSID:
+                        nsid_bytes = option.nsid
+                        if nsid_bytes:
+                            try:
+                                nsid_value = nsid_bytes.decode("utf-8")
+                            except UnicodeDecodeError:
+                                nsid_value = nsid_bytes.hex()
+                        break
+
+    return reached, resp_time, nsid_value
 
 
 def main() -> None:
@@ -178,6 +193,7 @@ def main() -> None:
     expert_mode = False
     should_resolve = True
     use_edns = False
+    want_nsid = False
     color_mode = False
     af = None  # auto-detect from server address
     af_ipv4_set = False
@@ -185,9 +201,9 @@ def main() -> None:
 
     args = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCTQ346",
+        opts, args = getopt.getopt(sys.argv[1:], "aqhc:s:S:t:w:p:nexCTQ346N",
                                    ["help", "count=", "server=", "quiet", "type=", "wait=", "asn", "port=", "expert",
-                                    "color", "srcip=", "tcp", "quic", "http3", "ipv4", "ipv6"])
+                                    "color", "srcip=", "tcp", "quic", "http3", "ipv4", "ipv6", "nsid"])
     except getopt.GetoptError as getopt_err:
         err(str(getopt_err))
         usage(1)
@@ -268,6 +284,9 @@ def main() -> None:
             as_lookup = True
         elif o in ("-e", "--edns"):
             use_edns = True
+        elif o in ("-N", "--nsid"):
+            use_edns = True
+            want_nsid = True
 
     color = Colors(color_mode)
 
@@ -388,7 +407,7 @@ def main() -> None:
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
             stime = time.perf_counter()
             thr = pool.submit(ping, qname, dnsserver, rdatatype, proto, dest_port, ttl, timeout, src_ip=src_ip,
-                              use_edns=use_edns)
+                              use_edns=use_edns, want_nsid=want_nsid)
 
             try:  # expect ICMP response
                 packet, curr_addr = icmp_socket.recvfrom(512)
@@ -431,7 +450,7 @@ def main() -> None:
                 icmp_socket.close()
 
         try:
-            reached, resp_time = thr.result()
+            reached, resp_time, nsid_value = thr.result()
         except SystemExit:
             shutdown = True
             break
@@ -444,6 +463,7 @@ def main() -> None:
             elapsed = resp_time
         else:
             elapsed = abs(etime - stime) * 1000  # convert to milliseconds
+            nsid_value = None
 
         curr_name = curr_addr
         if should_resolve:
@@ -490,7 +510,11 @@ def main() -> None:
                 except Exception:
                     pass
 
-            print("%d\t%s (%s%s%s) %s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, elapsed), flush=True)
+            nsid_display = ""
+            if nsid_value:
+                nsid_display = "[NSID: %s] " % nsid_value
+
+            print("%d\t%s (%s%s%s) %s%s%.3f ms" % (ttl, curr_name, c, curr_addr, color.N, as_name, nsid_display, elapsed), flush=True)
             trace_path.append(curr_addr)
         else:
             print("%d\t *" % ttl, flush=True)
