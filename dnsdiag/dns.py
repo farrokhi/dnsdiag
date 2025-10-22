@@ -30,6 +30,7 @@ from statistics import stdev
 from typing import Optional, List, Any
 
 import httpx
+import dns.edns
 import dns.message
 import dns.query
 import dns.rcode
@@ -61,6 +62,7 @@ class PingResponse:
         self.answer: Optional[Any] = None
         self.rcode: int = 0
         self.rcode_text: str = ''
+        self.response: Optional[Any] = None
 
 
 def proto_to_text(proto: int) -> str:
@@ -100,7 +102,7 @@ class CustomSocket(socket.socket):
 
 def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, count: int, proto: int,
          src_ip: Optional[str], use_edns: bool = False, force_miss: bool = False,
-         want_dnssec: bool = False, socket_ttl: Optional[int] = None) -> PingResponse:
+         want_dnssec: bool = False, want_nsid: bool = False, socket_ttl: Optional[int] = None) -> PingResponse:
     retval = PingResponse()
     retval.rcode_text = "No Response"
 
@@ -119,7 +121,11 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             fqdn = qname
 
         if use_edns:
-            query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec, payload=1232)
+            edns_options: List[dns.edns.Option] = []
+            if want_nsid:
+                edns_options.append(dns.edns.GenericOption(dns.edns.NSID, b''))
+            query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec, payload=1232,
+                                           options=edns_options if edns_options else None)
         else:
             query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns=False, want_dnssec=False)
 
@@ -185,6 +191,7 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
                 elapsed = response.time * 1000
             response_times.append(elapsed)
             if response:
+                retval.response = response
                 retval.flags = response.flags
                 retval.ednsflags = response.ednsflags
                 retval.answer = response.answer
