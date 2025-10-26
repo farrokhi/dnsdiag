@@ -452,7 +452,7 @@ def main() -> None:
                     unsupported_feature("DNS-over-HTTPS (DoH)")
 
             elif proto is PROTO_HTTP3:
-                if hasattr(dns.query, 'quic'):
+                if hasattr(dns.query, 'https') and hasattr(dns.query, 'HTTPVersion') and hasattr(dns.query.HTTPVersion, 'H3'):
                     try:
                         # For hostnames, construct full URL; for IPs, use IP directly
                         if dnsserver_hostname != dnsserver_ip:
