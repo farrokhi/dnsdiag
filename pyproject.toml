@@ -29,7 +29,7 @@ classifiers = [
 ]
 dependencies = [
     "aioquic>=1.2.0",
-    "cryptography>=42.0.5",
+    "cryptography>=42.0.5,<46",
     "cymruwhois>=1.6",
     "dnspython>=2.8.0",
     "h2>=4.1.0",
