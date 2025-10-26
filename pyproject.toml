@@ -1,3 +1,54 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dnsdiag"
+version = "2.9.0"
+description = "DNS Measurement, Troubleshooting and Security Auditing Toolset (ping, traceroute)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Babak Farrokhi", email = "babak@farrokhi.net"}
+]
+keywords = ["dns", "traceroute", "ping", "performance"]
+classifiers = [
+    "Topic :: System :: Networking",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Internet :: Name Service (DNS)",
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "aioquic>=1.2.0",
+    "cryptography>=42.0.5",
+    "cymruwhois>=1.6",
+    "dnspython>=2.8.0",
+    "h2>=4.1.0",
+    "httpx>=0.27.0",
+]
+
+[project.urls]
+Homepage = "https://dnsdiag.org/"
+Repository = "https://github.com/farrokhi/dnsdiag"
+Issues = "https://github.com/farrokhi/dnsdiag/issues"
+
+[project.scripts]
+dnsping = "dnsping:main"
+dnstraceroute = "dnstraceroute:main"
+dnseval = "dnseval:main"
+
+[tool.setuptools]
+packages = ["dnsdiag"]
+
 [tool.git-changelog]
 convention = "basic"
 in-place = true

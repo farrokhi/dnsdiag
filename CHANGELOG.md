@@ -6,13 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
-## Unreleased
+## [v2.9.0](https://github.com/farrokhi/dnsdiag/releases/tag/v2.9.0) - 2025-10-26
 
-<small>[Compare with latest](https://github.com/farrokhi/dnsdiag/compare/v2.8.1...HEAD)</small>
+<small>[Compare with v2.8.1](https://github.com/farrokhi/dnsdiag/compare/v2.8.1...v2.9.0)</small>
 
 ### Added
 
-- Add tests for cookie feature in dnsping ([56078d6](https://github.com/farrokhi/dnsdiag/commit/56078d636eff1095d2fc71d48702b51eb7d60e60) by [@farrokhi](https://github.com/farrokhi)).
+- Add --nsid support to dnstraceroute (#153) ([85d96f6](https://github.com/farrokhi/dnsdiag/commit/85d96f66d2cfa36d5fd47d2fb5022f269e23aecb) by [@farrokhi](https://github.com/farrokhi)).
+- Add tests for cookie feature in dnsping ([66b4faa](https://github.com/farrokhi/dnsdiag/commit/66b4faa80fbf8b2cbe94e8f73e942400715a40ef) by [@farrokhi](https://github.com/farrokhi)).
 - Add support for Python 3.14 ([8099260](https://github.com/farrokhi/dnsdiag/commit/8099260c69d159844c2790bdd0064e943c847e03) by [@farrokhi](https://github.com/farrokhi)).
 - Add marker to disable IPv6 tests on Github Action ([a756d10](https://github.com/farrokhi/dnsdiag/commit/a756d10bc22b57ad00273200528b1955c73271f0) by [@farrokhi](https://github.com/farrokhi)).
 - Add Windows to test suite ([1e1cbdb](https://github.com/farrokhi/dnsdiag/commit/1e1cbdb5f745a67bddaabf9cc83da5b755115f7b) by [@farrokhi](https://github.com/farrokhi)).
@@ -28,8 +29,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-- Fix broken test when run from parent directory ([4ad8731](https://github.com/farrokhi/dnsdiag/commit/4ad873177bc1fca3ef5bb63c9808a1ed6f7348a7) by [@farrokhi](https://github.com/farrokhi)).
-- Fixed cookie display in dnsping ([81edf3a](https://github.com/farrokhi/dnsdiag/commit/81edf3a4a9f0051b8b5df1e214be65fb9c25199a) by [@farrokhi](https://github.com/farrokhi)).
+- fix: default to AF_UNSPEC for automatic IPv4/IPv6 selection ([46f6235](https://github.com/farrokhi/dnsdiag/commit/46f623534394a9d9c8714e8252945b2b92bea0af) by [@farrokhi](https://github.com/farrokhi)).
+- fix: correct DoH3 feature detection to check HTTPVersion.H3 ([7cfe3e9](https://github.com/farrokhi/dnsdiag/commit/7cfe3e940eadbb902e081a2a407e57e3237c1d52) by [@farrokhi](https://github.com/farrokhi)).
+- Fix broken test when run from parent directory ([75903c6](https://github.com/farrokhi/dnsdiag/commit/75903c65def8b882e06be9f60cd9ddc580bf8a27) by [@farrokhi](https://github.com/farrokhi)).
+- Fixed cookie display in dnsping ([455344d](https://github.com/farrokhi/dnsdiag/commit/455344ddf21e6b31a8f4ea8c1dbd311a8cd8a763) by [@farrokhi](https://github.com/farrokhi)).
+- Fix: Only build packages when a new tag is pushed ([a2927e4](https://github.com/farrokhi/dnsdiag/commit/a2927e488dfde287e423aed625835fd027060241) by [@farrokhi](https://github.com/farrokhi)).
 - Fix JSON Output Type Consistency ([af88b1b](https://github.com/farrokhi/dnsdiag/commit/af88b1b35d7c609c954c15a63567c9e9622806ad) by [@farrokhi](https://github.com/farrokhi)).
 - Fix for IPv6 hostname resolution ([3f60d84](https://github.com/farrokhi/dnsdiag/commit/3f60d84cf42e44a645641091894434e22032c9af) by [@farrokhi](https://github.com/farrokhi)).
 - Fix doh http version (#141) ([0ae5e93](https://github.com/farrokhi/dnsdiag/commit/0ae5e9388ffd028610a337d195cdbde32e1b7aa3) by [@farrokhi](https://github.com/farrokhi)).
@@ -37,9 +41,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Removed
 
+- remove unnecessary files ([9e10740](https://github.com/farrokhi/dnsdiag/commit/9e10740c636f479f06a407f45c37c7a359c554c4) by [@farrokhi](https://github.com/farrokhi)).
+- Remove stale email address ([99fd2fb](https://github.com/farrokhi/dnsdiag/commit/99fd2fbd0c137b5be26db06981121d86f6b4ab57) by [@farrokhi](https://github.com/farrokhi)).
 - Remove unnecessary tests ([ff2b768](https://github.com/farrokhi/dnsdiag/commit/ff2b7685de66d29ea8c94ea411e4fa9d06e5caef) by [@farrokhi](https://github.com/farrokhi)).
 
 <!-- insertion marker -->
+
 
 ## [v2.8.1](https://github.com/farrokhi/dnsdiag/releases/tag/v2.8.1) - 2025-10-04
 
