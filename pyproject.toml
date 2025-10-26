@@ -48,6 +48,7 @@ dnseval = "dnseval:main"
 
 [tool.setuptools]
 packages = ["dnsdiag"]
+py-modules = ["dnsping", "dnstraceroute", "dnseval"]
 
 [tool.git-changelog]
 convention = "basic"
