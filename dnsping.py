@@ -183,7 +183,7 @@ def main() -> None:
     force_miss = False
     show_answer = False
     request_flags = dns.flags.from_text('RD')
-    af = socket.AF_INET
+    af = None
     af_ipv4_set = False
     af_ipv6_set = False
     qname = 'wikipedia.org'
