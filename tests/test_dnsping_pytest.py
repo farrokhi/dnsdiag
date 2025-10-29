@@ -195,13 +195,10 @@ class TestEDNSFeatures:
         # Verify cookie is displayed (anyns.pch.net supports cookies)
         assert '[COOKIE:' in result.output, "Cookie not displayed in output"
 
-        # Verify cookie format (hex string)
+        # Verify cookie format (truncated to 8 hex chars + "..." in normal mode)
         import re
-        cookie_match = re.search(r'\[COOKIE:([0-9a-f]+)\]', result.output)
-        assert cookie_match, "Cookie format is invalid"
-        cookie_hex = cookie_match.group(1)
-        # Cookie should be 24 bytes (48 hex chars): 8 client + 16 server
-        assert len(cookie_hex) == 48, f"Cookie length is {len(cookie_hex)}, expected 48"
+        cookie_match = re.search(r'\[COOKIE:([0-9a-f]{8}\.\.\.)\]', result.output)
+        assert cookie_match, "Cookie format is invalid (expected 8 hex chars + '...')"
 
     def test_dns_cookies_no_support(self, dnsping_runner):
         """Test DNS Cookies with server that doesn't support it"""
