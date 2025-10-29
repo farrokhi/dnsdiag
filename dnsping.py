@@ -580,7 +580,12 @@ def main() -> None:
                     for ans_opt in answers.options:
                         if ans_opt.otype == 10:  # COOKIE
                             cookie_hex = ans_opt.client.hex() + ans_opt.server.hex()
-                            edns_parts.append("COOKIE:%s" % cookie_hex)
+                            # Truncate cookie display in normal mode (max 8 chars)
+                            if len(cookie_hex) > 8:
+                                cookie_display = cookie_hex[:8] + "..."
+                            else:
+                                cookie_display = cookie_hex
+                            edns_parts.append("COOKIE:%s" % cookie_display)
 
                 if edns_parts:
                     extras += " [%s]" % ", ".join(edns_parts)
