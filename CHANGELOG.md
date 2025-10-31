@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [2.9.1](https://github.com/farrokhi/dnsdiag/releases/tag/2.9.1) - 2025-10-31
+
+<small>[Compare with v2.9.0](https://github.com/farrokhi/dnsdiag/compare/v2.9.0...2.9.1)</small>
+
+### Fixed
+
+- fix: truncate cookie display in normal mode to 8 characters ([6d8f609](https://github.com/farrokhi/dnsdiag/commit/6d8f6098cdf666bd2cbf6ad5805bafdabec99cb3) by [@farrokhi](https://github.com/farrokhi)).
+- fix: include root-level Python modules in package distribution ([0470053](https://github.com/farrokhi/dnsdiag/commit/047005321125a5393eebdb0f24e792e07e85cde3) by [@farrokhi](https://github.com/farrokhi)).
+
 ## [v2.9.0](https://github.com/farrokhi/dnsdiag/releases/tag/v2.9.0) - 2025-10-26
 
 <small>[Compare with v2.8.1](https://github.com/farrokhi/dnsdiag/compare/v2.8.1...v2.9.0)</small>
@@ -45,7 +54,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Remove stale email address ([99fd2fb](https://github.com/farrokhi/dnsdiag/commit/99fd2fbd0c137b5be26db06981121d86f6b4ab57) by [@farrokhi](https://github.com/farrokhi)).
 - Remove unnecessary tests ([ff2b768](https://github.com/farrokhi/dnsdiag/commit/ff2b7685de66d29ea8c94ea411e4fa9d06e5caef) by [@farrokhi](https://github.com/farrokhi)).
 
-<!-- insertion marker -->
+
 
 
 ## [v2.8.1](https://github.com/farrokhi/dnsdiag/releases/tag/v2.8.1) - 2025-10-04

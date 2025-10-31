@@ -28,7 +28,7 @@ import random
 import string
 import sys
 
-__version__ = '2.9.0'
+__version__ = '2.9.1'
 
 
 def random_string(min_length: int = 5, max_length: int = 10) -> str:
