@@ -664,7 +664,9 @@ def main() -> None:
                 while time.time() - sleep_start < time_to_next:
                     if shutdown:
                         break
-                    time.sleep(min(0.1, time_to_next - (time.time() - sleep_start)))
+                    sleep_duration = time_to_next - (time.time() - sleep_start)
+                    if sleep_duration > 0:
+                        time.sleep(min(0.1, sleep_duration))
 
     r_sent = i
     r_received = len(response_time)
