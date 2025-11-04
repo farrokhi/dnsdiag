@@ -30,12 +30,12 @@ jobs:
             shell: bash
 
           # macOS Intel x86_64
-          - os: macos-13
+          - os: macos-15-intel
             platform: darwin-x86_64
             shell: bash
 
           # macOS Apple Silicon ARM64
-          - os: macos-14
+          - os: macos-latest
             platform: darwin-arm64
             shell: bash
 
