@@ -26,9 +26,9 @@ jobs:
 
       - name: Install linting dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install mypy flake8 Flake8-pyproject
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip || exit 1
+          pip install mypy flake8 Flake8-pyproject || exit 1
+          pip install -r requirements.txt || exit 1
 
       - name: Run mypy type checks
         run: |
@@ -59,9 +59,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest build
+          python -m pip install --upgrade pip || exit 1
+          pip install -r requirements.txt || exit 1
+          pip install pytest build || exit 1
 
       - name: Run unit tests (no network)
         run: |
@@ -99,8 +99,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
+          pip install -r requirements.txt || exit 1
+          pip install pytest || exit 1
+
+      - name: Verify critical dependencies
+        run: |
+          python -c "import dns; print(f'dnspython version: {dns.version.version}')" || exit 1
+          python -c "import httpx; print(f'httpx version: {httpx.__version__}')" || exit 1
 
       - name: Run integration tests
         run: |
@@ -143,9 +148,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
+          python -m pip install --upgrade pip || exit 1
+          pip install -r requirements.txt || exit 1
+          pip install pytest || exit 1
 
       - name: Run integration tests
         run: |
