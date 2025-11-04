@@ -1,0 +1,123 @@
+name: Build Release Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (leave empty to auto-detect from code)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-artifacts:
+    name: Build ${{ matrix.platform }} binary
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            shell: bash
+
+          # Linux ARM64
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            shell: bash
+
+          # macOS Intel x86_64
+          - os: macos-13
+            platform: darwin-x86_64
+            shell: bash
+
+          # macOS Apple Silicon ARM64
+          - os: macos-14
+            platform: darwin-arm64
+            shell: bash
+
+          # Windows x86_64
+          - os: windows-latest
+            platform: win-amd64
+            shell: bash
+
+          # Windows ARM64
+          - os: windows-11-arm
+            platform: win-arm64
+            shell: bash
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: 'pip'
+          cache-dependency-path: 'requirements.txt'
+
+      - name: Extract version from code
+        id: get_version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION=$(python3 -c "import sys; sys.path.insert(0, '.'); from dnsdiag.shared import __version__; print(__version__)")
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Build package
+        run: |
+          bash build-pkgs.sh --venv
+
+      - name: List built packages
+        run: |
+          echo "Built packages:"
+          ls -lh pkg/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dnsdiag-${{ matrix.platform }}-bin
+          path: |
+            pkg/*.tar.gz
+            pkg/*.zip
+          retention-days: 30
+          if-no-files-found: error
+
+  summary:
+    name: Build Summary
+    needs: build-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Release Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Binary packages have been built for the following platforms:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Linux x86_64" >> $GITHUB_STEP_SUMMARY
+          echo "- Linux ARM64" >> $GITHUB_STEP_SUMMARY
+          echo "- macOS Intel x86_64" >> $GITHUB_STEP_SUMMARY
+          echo "- macOS Apple Silicon ARM64" >> $GITHUB_STEP_SUMMARY
+          echo "- Windows x86_64" >> $GITHUB_STEP_SUMMARY
+          echo "- Windows ARM64" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download artifacts from the workflow run (6 packages total)" >> $GITHUB_STEP_SUMMARY
+          echo "2. GPG sign each package (.tar.gz/.zip files)" >> $GITHUB_STEP_SUMMARY
+          echo "3. Build FreeBSD package manually (not available on GitHub runners)" >> $GITHUB_STEP_SUMMARY
+          echo "4. Create GitHub release and upload all signed packages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Manual Build Required:" >> $GITHUB_STEP_SUMMARY
+          echo "FreeBSD packages must still be built manually (GitHub does not provide FreeBSD runners)" >> $GITHUB_STEP_SUMMARY
