@@ -90,6 +90,26 @@ for i in dnsping.py dnstraceroute.py dnseval.py; do
         --hidden-import=httpx
 done
 
+msg "Verifying built binaries..."
+for tool in dnsping dnstraceroute dnseval; do
+    BINARY="${PKG_PATH}/${tool}"
+    [ "${PLATFORM}" = "windows" ] && BINARY="${BINARY}.exe"
+
+    if [ ! -f "${BINARY}" ]; then
+        die "Binary not found: ${BINARY}"
+    fi
+
+    if [ ! -x "${BINARY}" ]; then
+        die "Binary is not executable: ${BINARY}"
+    fi
+
+    msg "Testing ${tool}..."
+    if ! "${BINARY}" --help > /dev/null 2>&1; then
+        die "Binary failed to execute: ${BINARY}"
+    fi
+done
+msg "All binaries verified successfully"
+
 msg "Adding extra files..."
 for i in public-servers.txt public-v4.txt rootservers.txt; do
     cp ${i} "${PKG_PATH}/"
