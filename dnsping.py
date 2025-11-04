@@ -198,6 +198,10 @@ def main() -> None:
         err(str(getopt_err))
         usage(1)
 
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+
     if args and len(args) == 1:
         qname = args[0]
         if not valid_hostname(qname, allow_underscore=True):
@@ -206,10 +210,7 @@ def main() -> None:
         usage(1)
 
     for o, a in opts:
-        if o in ("-h", "--help"):
-            usage()
-
-        elif o in ("-c", "--count"):
+        if o in ("-c", "--count"):
             if a.isdigit():
                 count = abs(int(a))
             else:
