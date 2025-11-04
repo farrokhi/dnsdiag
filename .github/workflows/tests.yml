@@ -79,6 +79,12 @@ jobs:
         # Full OS coverage for critical Python versions
         os: [ubuntu-latest, ubuntu-24.04-arm, macos-14, macos-15, macos-latest, windows-latest, windows-11-arm]
         python-version: ["3.10", "3.13", "3.14"]
+        exclude:
+          # Python 3.10 and 3.13 not available on Windows ARM64 (only 3.14+)
+          - os: windows-11-arm
+            python-version: "3.10"
+          - os: windows-11-arm
+            python-version: "3.13"
 
     steps:
       - uses: actions/checkout@v5
