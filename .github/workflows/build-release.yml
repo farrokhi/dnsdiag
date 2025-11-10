@@ -69,6 +69,12 @@ jobs:
           python -m pip install --upgrade pip || exit 1
           pip install virtualenv || exit 1
 
+      - name: Install UPX (Ubuntu only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y upx
+
       - name: Extract version from code
         id: get_version
         run: |
