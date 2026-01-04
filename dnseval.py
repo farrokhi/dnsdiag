@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2016-2025, Babak Farrokhi
+# Copyright (c) 2016-2026, Babak Farrokhi
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
