@@ -37,7 +37,7 @@ import dns.query
 import dns.rcode
 import dns.rdataclass
 
-from dnsdiag.shared import random_string, die, err, unsupported_feature
+from dnsdiag.shared import random_string, err, unsupported_feature
 
 # Transport protocols
 PROTO_UDP: int = 0

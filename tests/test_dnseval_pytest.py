@@ -44,7 +44,7 @@ class DNSEvalRunner:
 
     def run(self, args: List[str], stdin: Optional[bytes] = None) -> DNSEvalResult:
         """Run dnseval with given arguments"""
-        cmd = ['python3', self.dnseval_path] + args
+        cmd = [sys.executable, self.dnseval_path] + args
         try:
             stdin_text = stdin.decode('utf-8') if stdin else None
             result = subprocess.run(

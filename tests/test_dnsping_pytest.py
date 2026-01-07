@@ -55,7 +55,7 @@ class DNSPingRunner:
 
     def run(self, args: List[str]) -> DNSResult:
         """Execute dnsping with given arguments"""
-        cmd = ['python3', self.dnsping_path] + args
+        cmd = [sys.executable, self.dnsping_path] + args
 
         try:
             result = subprocess.run(

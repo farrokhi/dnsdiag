@@ -54,7 +54,7 @@ class DNSTracerouteRunner:
 
     def run(self, args: list) -> TracerouteResult:
         """Run dnstraceroute with given arguments"""
-        cmd = ['python3', self.dnstraceroute_path] + args
+        cmd = [sys.executable, self.dnstraceroute_path] + args
         try:
             result = subprocess.run(
                 cmd,
