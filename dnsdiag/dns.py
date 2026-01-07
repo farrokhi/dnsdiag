@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
+import errno
 import socket
 from statistics import stdev
 from typing import Optional, List, Any
@@ -169,11 +170,9 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
         except dns.exception.Timeout:
             break
         except OSError as e:
-            # Check for fatal network errors
-            if e.errno == 65:  # EHOSTUNREACH
-                die("ERROR: No route to host")
-            elif e.errno == 51:  # ENETUNREACH
-                die("ERROR: Network unreachable")
+            # Transient network errors should be re-raised for caller to handle
+            if e.errno in (errno.EHOSTUNREACH, errno.ENETUNREACH):
+                raise
             elif socket_ttl:  # other acceptable errors while doing traceroute
                 break
             err(f"ERROR: {e.strerror}")

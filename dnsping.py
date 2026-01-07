@@ -26,6 +26,7 @@
 
 
 import datetime
+import errno
 import getopt
 import ipaddress
 import os
@@ -505,10 +506,12 @@ def main() -> None:
             else:
                 sys.exit(1)
         except OSError as e:
-            if e.errno == 65:  # EHOSTUNREACH
-                die("ERROR: No route to host")
-            elif e.errno == 51:  # ENETUNREACH
-                die("ERROR: Network unreachable")
+            if e.errno == errno.EHOSTUNREACH:
+                if not quiet:
+                    print("No route to host", flush=True)
+            elif e.errno == errno.ENETUNREACH:
+                if not quiet:
+                    print("Network unreachable", flush=True)
             elif not quiet:
                 die(f"ERROR: {e}")
             else:
