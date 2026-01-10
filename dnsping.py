@@ -594,11 +594,10 @@ def main() -> None:
                 if edns_parts:
                     extras += " [%s]" % ", ".join(edns_parts)
 
-                if show_answer:  # The answer should be displayed at the rightmost
-                    for ans in answers.answer:
-                        if ans.rdtype == dns.rdatatype.from_text(rdatatype):  # is this the answer to our question?
-                            extras += " [RDATA: %s]" % ans[0]
-                            break
+                if show_answer and answers.answer:
+                    ans = answers.answer[0]
+                    rtype = dns.rdatatype.to_text(ans.rdtype)
+                    extras += " [RDATA: %s %s]" % (rtype, ans[0])
 
                 print("%-3d bytes from %s: seq=%-3d time=%-7.3f ms %s" % (
                     len(answers.to_wire()), server_display, i, elapsed, extras), flush=True)
