@@ -95,10 +95,25 @@ jobs:
           echo "Built packages:"
           ls -lh pkg/
 
+      - name: Extract package name
+        id: pkg_name
+        shell: bash
+        run: |
+          # Find the first tar.gz or zip file and extract basename without extension
+          PKG_FILE=$(ls pkg/*.tar.gz pkg/*.zip 2>/dev/null | head -1)
+          if [ -z "$PKG_FILE" ]; then
+            echo "ERROR: No package file found"
+            exit 1
+          fi
+          # Remove directory and extension(s) to get package name
+          PKG_NAME=$(basename "$PKG_FILE" | sed -E 's/\.(tar\.gz|zip)$//')
+          echo "PACKAGE_NAME=$PKG_NAME" >> $GITHUB_OUTPUT
+          echo "Package name: $PKG_NAME"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dnsdiag-${{ matrix.platform }}-bin
+          name: ${{ steps.pkg_name.outputs.PACKAGE_NAME }}
           path: |
             pkg/*.tar.gz
             pkg/*.zip
