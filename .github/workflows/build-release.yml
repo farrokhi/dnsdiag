@@ -28,6 +28,9 @@ jobs:
           cache: 'pip'
           cache-dependency-path: 'requirements.txt'
 
+      - name: Install virtualenv
+        run: pip install virtualenv
+
       - name: Install UPX (Linux only)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y upx
