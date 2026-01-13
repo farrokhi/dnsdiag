@@ -14,6 +14,7 @@ Usage:
 """
 
 import subprocess
+import sys
 import pytest
 import time
 from typing import Tuple, Optional
