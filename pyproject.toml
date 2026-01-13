@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dnsdiag"
-version = "2.9.1"
+version = "2.9.2"
 description = "DNS Measurement, Troubleshooting and Security Auditing Toolset (ping, traceroute)"
 readme = "README.md"
 requires-python = ">=3.10"
