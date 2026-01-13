@@ -280,6 +280,18 @@ server                   avg(ms)  min(ms)  max(ms)  stddev(ms)  lost(%)  ttl    
 8.8.8.8                  21.22    16.22    24.93    2.39        %0       299      QR -- -- RD RA AD -- DO     NOERROR
 ```
 
+You can also save results in JSONL format for further processing. Each line in the output file is a valid JSON object containing the full measurement results for one DNS server.
+
+```shell
+./dnseval.py -c 5 -j results.jsonl -f public-servers.txt example.com
+```
+
+The output can be parsed line by line with standard JSON tools like `jq`.
+
+```shell
+cat results.jsonl | jq -r 'select(.data.r_lost_percent == 0) | .data.resolver'
+```
+
 ### Author
 
 Babak Farrokhi 
