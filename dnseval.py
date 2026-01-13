@@ -84,7 +84,7 @@ Usage: %s [-ehmvCTXHQ3SD] [-f server-list] [-j output.json] [-c count] [-t type]
   -Q, --quic         Use QUIC as the transport protocol (DoQ)
   -H, --doh          Use HTTPS as the transport protocol (DoH)
   -3, --http3        Use HTTP/3 as the transport protocol (DoH3)
-  -j, --json         Save the results to a specified file in JSON format
+  -j, --json         Save the results to a specified file in JSONL format (one JSON object per line)
   -p, --port         Specify the DNS server port number (default: protocol-specific)
   -S, --srcip        Set the query source IP address
   -e, --edns         Enable EDNS0 in requests
@@ -174,11 +174,12 @@ def evaluate_server(server: str, qname: str, rdatatype: str, waittime: int, coun
         }
 
         if json_filename == '-':
-            output_lines.append(json.dumps(outer_data, indent=2))
+            output_lines.append(json.dumps(outer_data))
         else:
             with print_lock:
                 with open(json_filename, 'a+') as outfile:
-                    json.dump(outer_data, outfile, indent=2)
+                    json.dump(outer_data, outfile)
+                    outfile.write('\n')
 
     else:
         result = "%s  %-7.2f  %-7.2f  %-7.2f  %-10.2f  %s%%%-3d%s     %-7s  %-26s  %-12s" % (
