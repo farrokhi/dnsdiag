@@ -398,7 +398,7 @@ def main() -> None:
         if use_edns:
             edns_options: list[Any] = []
             if want_nsid:
-                edns_options.append(dns.edns.GenericOption(dns.edns.NSID, ''))
+                edns_options.append(dns.edns.GenericOption(dns.edns.NSID, b''))
             if client_subnet:
                 try:
                     ecs_option = dns.edns.ECSOption.from_text(client_subnet)
