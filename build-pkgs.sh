@@ -43,7 +43,13 @@ if [ "Windows_NT" = "${OS}" ]; then ## windows compatibility shims
 else
   PLATFORM=$(uname -s | tr 'A-Z' 'a-z')
 fi
-ARCH=$(uname -m)
+# On Windows, use MSYSTEM_CARCH if set (correctly identifies ARM64)
+# Otherwise fall back to uname -m (works correctly on Linux/macOS)
+if [ "Windows_NT" = "${OS}" ] && [ -n "${MSYSTEM_CARCH}" ]; then
+  ARCH="${MSYSTEM_CARCH}"
+else
+  ARCH=$(uname -m)
+fi
 DDVER=$(grep __version__ dnsdiag/shared.py | awk -F\' '{print $2}')
 [ -z "${DDVER}" ] && die "Failed to extract version number from dnsdiag/shared.py"
 PKG_NAME="dnsdiag-${DDVER}.${PLATFORM}-${ARCH}-bin"
