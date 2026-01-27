@@ -449,7 +449,9 @@ def main() -> None:
                     except dns.query.NoDOH:
                         die("ERROR: python httpx module not available")
                     except httpx.ConnectError:
-                        die(f"DoH connection failed on port {dst_port}")
+                        if not quiet:
+                            print("Connection refused", flush=True)
+                        continue
                 else:
                     unsupported_feature("DNS-over-HTTPS (DoH)")
 
@@ -465,7 +467,9 @@ def main() -> None:
                                                   source=src_ip, source_port=src_port,
                                                   http_version=dns.query.HTTPVersion.H3)
                     except ConnectionRefusedError:
-                        die(f"DoH3 connection refused on port {dst_port}")
+                        if not quiet:
+                            print("Connection refused", flush=True)
+                        continue
                 else:
                     unsupported_feature("DNS-over-HTTPS/3 (DoH3)")
 
@@ -482,7 +486,9 @@ def main() -> None:
                             print("Request timeout", flush=True)
                         continue
                     except ConnectionRefusedError:
-                        die(f"DoQ connection refused on port {dst_port}")
+                        if not quiet:
+                            print("Connection refused", flush=True)
+                        continue
                     except Exception as e:
                         # Catch QUIC-specific exceptions like UnexpectedEOF
                         if e.__class__.__name__ == 'UnexpectedEOF':
