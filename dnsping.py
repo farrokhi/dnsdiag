@@ -478,9 +478,19 @@ def main() -> None:
                                                  source=src_ip, source_port=src_port,
                                                  server_hostname=server_hostname)
                     except dns.exception.Timeout:
-                        die(f"DoQ connection timeout on port {dst_port}")
+                        if not quiet:
+                            print("Request timeout", flush=True)
+                        continue
                     except ConnectionRefusedError:
                         die(f"DoQ connection refused on port {dst_port}")
+                    except Exception as e:
+                        # Catch QUIC-specific exceptions like UnexpectedEOF
+                        if e.__class__.__name__ == 'UnexpectedEOF':
+                            if not quiet:
+                                print("Connection closed unexpectedly", flush=True)
+                            continue
+                        else:
+                            raise
                 else:
                     unsupported_feature("DNS-over-QUIC (DoQ)")
 
