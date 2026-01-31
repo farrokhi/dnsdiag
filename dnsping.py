@@ -32,6 +32,7 @@ import ipaddress
 import os
 import signal
 import socket
+import ssl
 import sys
 import time
 from statistics import stdev
@@ -427,11 +428,30 @@ def main() -> None:
                                         source=src_ip, source_port=src_port)
             elif proto is PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
-                    # Use resolved IP for connection, but provide hostname for SNI/certificate validation
-                    server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
-                    answers = dns.query.tls(query, dnsserver_ip, timeout=timeout, port=dst_port,
-                                            source=src_ip, source_port=src_port,
-                                            server_hostname=server_hostname)
+                    try:
+                        # Use resolved IP for connection, but provide hostname for SNI/certificate validation
+                        server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
+                        answers = dns.query.tls(query, dnsserver_ip, timeout=timeout, port=dst_port,
+                                                source=src_ip, source_port=src_port,
+                                                server_hostname=server_hostname)
+                    except dns.exception.Timeout:
+                        if not quiet:
+                            print("Request timeout", flush=True)
+                        continue
+                    except (ConnectionResetError, BrokenPipeError):
+                        if not quiet:
+                            print("Connection closed unexpectedly", flush=True)
+                        continue
+                    except socket.gaierror:
+                        if not quiet:
+                            print("Name resolution failed", flush=True)
+                        continue
+                    except ssl.SSLCertVerificationError as e:
+                        die(f"Certificate verification failed: {e}")
+                    except ssl.SSLError:
+                        if not quiet:
+                            print("Connection failed", flush=True)
+                        continue
                 else:
                     unsupported_feature("DNS-over-TLS")
 
@@ -452,6 +472,24 @@ def main() -> None:
                         if not quiet:
                             print("Connection refused", flush=True)
                         continue
+                    except (ConnectionResetError, BrokenPipeError):
+                        if not quiet:
+                            print("Connection closed unexpectedly", flush=True)
+                        continue
+                    except socket.gaierror:
+                        if not quiet:
+                            print("Name resolution failed", flush=True)
+                        continue
+                    except (httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
+                        if not quiet:
+                            print("Connection failed", flush=True)
+                        continue
+                    except ssl.SSLCertVerificationError as e:
+                        die(f"Certificate verification failed: {e}")
+                    except ssl.SSLError:
+                        if not quiet:
+                            print("Connection failed", flush=True)
+                        continue
                 else:
                     unsupported_feature("DNS-over-HTTPS (DoH)")
 
@@ -470,6 +508,32 @@ def main() -> None:
                         if not quiet:
                             print("Connection refused", flush=True)
                         continue
+                    except (ConnectionResetError, BrokenPipeError):
+                        if not quiet:
+                            print("Connection closed unexpectedly", flush=True)
+                        continue
+                    except socket.gaierror:
+                        if not quiet:
+                            print("Name resolution failed", flush=True)
+                        continue
+                    except (httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
+                        if not quiet:
+                            print("Connection failed", flush=True)
+                        continue
+                    except ssl.SSLCertVerificationError as e:
+                        die(f"Certificate verification failed: {e}")
+                    except ssl.SSLError:
+                        if not quiet:
+                            print("Connection failed", flush=True)
+                        continue
+                    except Exception as e:
+                        # Catch QUIC-specific exceptions (UnexpectedEOF, etc.)
+                        if e.__class__.__name__ in ('UnexpectedEOF', 'QuicConnectionError', 'H3Error'):
+                            if not quiet:
+                                print("Connection closed unexpectedly", flush=True)
+                            continue
+                        else:
+                            raise
                 else:
                     unsupported_feature("DNS-over-HTTPS/3 (DoH3)")
 
@@ -489,9 +553,23 @@ def main() -> None:
                         if not quiet:
                             print("Connection refused", flush=True)
                         continue
+                    except (ConnectionResetError, BrokenPipeError):
+                        if not quiet:
+                            print("Connection closed unexpectedly", flush=True)
+                        continue
+                    except socket.gaierror:
+                        if not quiet:
+                            print("Name resolution failed", flush=True)
+                        continue
+                    except ssl.SSLCertVerificationError as e:
+                        die(f"Certificate verification failed: {e}")
+                    except ssl.SSLError:
+                        if not quiet:
+                            print("Connection failed", flush=True)
+                        continue
                     except Exception as e:
-                        # Catch QUIC-specific exceptions like UnexpectedEOF
-                        if e.__class__.__name__ == 'UnexpectedEOF':
+                        # Catch QUIC-specific exceptions
+                        if e.__class__.__name__ in ('UnexpectedEOF', 'QuicConnectionError', 'StreamFinishedError'):
                             if not quiet:
                                 print("Connection closed unexpectedly", flush=True)
                             continue
