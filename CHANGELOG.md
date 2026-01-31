@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v2.9.3](https://github.com/farrokhi/dnsdiag/releases/tag/v2.9.3) - 2026-01-31
+
+<small>[Compare with v2.9.2](https://github.com/farrokhi/dnsdiag/compare/v2.9.2...v2.9.3)</small>
+
+### Fixed
+
+- fix: remove Windows ARM64 from CI build matrix ([04f8b62](https://github.com/farrokhi/dnsdiag/commit/04f8b62)) by [@farrokhi](https://github.com/farrokhi)). Removed Windows ARM64 platform from build workflow and documentation due to cryptography dependency lacking pre-built wheels for this platform.
+- fix: replace unreliable dnspython timing with perf_counter measurements ([0a3a5f6](https://github.com/farrokhi/dnsdiag/commit/0a3a5f6)) by [@farrokhi](https://github.com/farrokhi)). Improves response time accuracy across all DNS protocols.
+- fix: improved error handling for DoH, DoH3 and DoQ ([6d14c1f](https://github.com/farrokhi/dnsdiag/commit/6d14c1f)) by [@farrokhi](https://github.com/farrokhi)). Better user-friendly error messages instead of Python stack traces for modern DNS protocols.
+- fix: treat connection refused as transient across all DNS protocols ([099d627](https://github.com/farrokhi/dnsdiag/commit/099d627)) by [@farrokhi](https://github.com/farrokhi)). DoH, DoH3, and DoQ now continue pinging when connection is refused (like UDP/TCP), showing error messages and collecting packet loss statistics uniformly across all protocols.
+- fix: handle transient QUIC connection failures gracefully ([87b2285](https://github.com/farrokhi/dnsdiag/commit/87b2285)) by [@farrokhi](https://github.com/farrokhi)). Treats UnexpectedEOF exceptions as transient failures that should be retried.
+- fix: correctly detect Windows ARM64 architecture in build script ([6d36c8b](https://github.com/farrokhi/dnsdiag/commit/6d36c8b)) by [@farrokhi](https://github.com/farrokhi)). Uses MSYSTEM_CARCH environment variable on Windows.
+
 ## [2.9.1](https://github.com/farrokhi/dnsdiag/releases/tag/2.9.1) - 2025-10-31
 
 <small>[Compare with v2.9.0](https://github.com/farrokhi/dnsdiag/compare/v2.9.0...2.9.1)</small>
