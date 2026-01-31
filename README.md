@@ -81,6 +81,16 @@ uv tool upgrade dnsdiag
 
 From time to time, binary packages will be released for Windows, Mac OS X and Linux. You can grab the latest release from [releases page](https://github.com/farrokhi/dnsdiag/releases).
 
+### Supported Platforms
+
+Pre-built binaries are available for:
+
+- Linux (x86_64, ARM64)
+- macOS (Intel, Apple Silicon)
+- Windows (x86_64)
+
+Windows ARM64 is not currently supported due to build dependencies requiring native compilation toolchains that are not readily available. If you're using Windows on ARM, you can run dnsdiag using Windows Subsystem for Linux (WSL2) or install directly from source.
+
 ## Docker
 
 If you prefer not to install `dnsdiag` on your local machine, you can use the
