@@ -24,9 +24,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime
 import errno
 import socket
+import time
 from statistics import stdev
 from typing import Optional, List, Any
 
@@ -131,6 +131,7 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns=False, want_dnssec=False)
 
         try:
+            stime = time.perf_counter()
             if proto == PROTO_UDP:
                 response = dns.query.udp(query, server, timeout=timeout, port=dst_port, source=src_ip,
                                          ignore_unexpected=True)
@@ -181,13 +182,9 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             err(f"ERROR: {e}")
             break
         else:
-            # convert time to milliseconds, considering that
-            # time property is retruned differently by query.https
-            # dns library returns float for most protocols but timedelta for HTTPS
-            if isinstance(response.time, datetime.timedelta):
-                elapsed = response.time.total_seconds() * 1000
-            else:
-                elapsed = response.time * 1000
+            etime = time.perf_counter()
+            # Use perf_counter() measurements for accurate wall-clock time
+            elapsed = (etime - stime) * 1000  # Convert seconds to milliseconds
             response_times.append(elapsed)
             if response:
                 retval.response = response

@@ -25,7 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import datetime
 import errno
 import getopt
 import ipaddress
@@ -619,13 +618,8 @@ def main() -> None:
             shutdown = True
             break
         else:
-            # convert time to milliseconds, considering that
-            # time property is returned differently by query.https
-            # dns library returns float for most protocols but timedelta for HTTPS
-            if isinstance(answers.time, datetime.timedelta):
-                elapsed = answers.time.total_seconds() * 1000
-            else:
-                elapsed = answers.time * 1000
+            # Use perf_counter() measurements for accurate wall-clock time
+            elapsed = (etime - stime) * 1000  # Convert seconds to milliseconds
             response_time.append(elapsed)
             if not quiet:
                 extras = ""
