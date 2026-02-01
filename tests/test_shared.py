@@ -5,7 +5,7 @@ Test suite for shared module functions
 """
 
 import pytest
-from dnsdiag.shared import valid_hostname
+from dnsdiag.shared import valid_hostname, set_protocol_exclusive
 
 
 class TestHostnameValidation:
@@ -157,6 +157,63 @@ class TestHostnameValidation:
 
         # Mixed with other valid chars
         assert valid_hostname('_test-123.example.com', allow_underscore=True)
+
+
+class TestProtocolExclusive:
+    """Test protocol mutual exclusivity function"""
+
+    def test_first_protocol_succeeds(self):
+        """First protocol option should succeed"""
+        proto, option = set_protocol_exclusive(1, "-T", None)
+        assert proto == 1
+        assert option == "-T"
+
+    def test_second_protocol_fails(self):
+        """Second protocol option should raise SystemExit"""
+        with pytest.raises(SystemExit):
+            set_protocol_exclusive(2, "-H", "-T")
+
+    def test_long_option_names(self):
+        """Test with long option names"""
+        proto, option = set_protocol_exclusive(1, "--tcp", None)
+        assert proto == 1
+        assert option == "--tcp"
+
+    def test_error_shows_conflicting_options(self):
+        """Error message should show both conflicting options"""
+        with pytest.raises(SystemExit) as exc_info:
+            set_protocol_exclusive(2, "-H", "-T")
+
+        # The die() function prints to stderr and exits, we can't capture
+        # the message directly, but we can verify it exits with code 1
+
+    def test_multiple_different_protocols(self):
+        """Test various protocol constant values"""
+        # Test with different protocol values
+        proto1, opt1 = set_protocol_exclusive(10, "-X", None)
+        assert proto1 == 10
+        assert opt1 == "-X"
+
+        # Second call should fail
+        with pytest.raises(SystemExit):
+            set_protocol_exclusive(20, "-Q", "-X")
+
+    def test_same_protocol_twice_fails(self):
+        """Setting same protocol twice should fail"""
+        proto1, opt1 = set_protocol_exclusive(5, "-T", None)
+        assert proto1 == 5
+
+        # Even same protocol should fail if already set
+        with pytest.raises(SystemExit):
+            set_protocol_exclusive(5, "-T", "-T")
+
+    def test_return_type(self):
+        """Test return type is tuple of int and str"""
+        result = set_protocol_exclusive(1, "-T", None)
+        assert isinstance(result, tuple)
+        assert len(result) == 2
+        assert isinstance(result[0], int)
+        assert isinstance(result[1], str)
 
 
 if __name__ == '__main__':

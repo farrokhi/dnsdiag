@@ -104,7 +104,7 @@ docker run --network host -it --rm farrokhi/dnsdiag dnsping.py
 
 `dnsping` allows you to "ping" a DNS resolver by sending an arbitrary DNS query multiple times. For a full list of supported command-line options, use `--help`. Here are a few key flags:
 
-- Use `--tcp`, `--tls`, `--doh`, `--quic` or `--http3` to select the transport protocol (default is UDP).
+- Use `--tcp`, `--tls`, `--doh`, `--quic` or `--http3` to select the transport protocol (default is UDP). These options are mutually exclusive; only one protocol can be specified per command.
 - Use `--flags` to display response flags, including EDNS flags, for each response.
 - Use `--dnssec` to request DNSSEC validation, if available.
 - Extended DNS Error messages ([RFC 8914](https://www.rfc-editor.org/rfc/rfc8914)) are automatically displayed when present.
@@ -193,7 +193,7 @@ min=24.794 ms, avg=27.673 ms, max=30.552 ms, stddev=4.072 ms
 destination. You may want to compare this with your actual network traceroute to
 ensure that your DNS traffic is not being routed through any unwanted paths.
 
-`dnstraceroute` supports multiple transport protocols:
+`dnstraceroute` supports multiple transport protocols (mutually exclusive):
 - UDP (default) - Traditional DNS queries
 - TCP (`--tcp`) - DNS over TCP
 - DoQ (`--quic`) - DNS over QUIC (supported by AdGuard DNS)
@@ -236,7 +236,7 @@ simultaneously.
 You can use `dnseval` to evaluate response times across different transport
 protocols, including UDP (default), TCP, DoT (DNS over TLS), DoH (DNS over
 HTTPS), DoQ (DNS over QUIC), and DoH3 (DNS over HTTP/3) by using the `--tcp`,
-`--tls`, `--doh`, `--quic`, and `--http3` flags, respectively.
+`--tls`, `--doh`, `--quic`, and `--http3` flags, respectively. These protocol options are mutually exclusive; only one can be specified per command.
 
 ## Protocol Support Summary
 
