@@ -44,7 +44,7 @@ import dns.resolver
 
 import dnsdiag.dns
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, get_default_port
-from dnsdiag.shared import __version__, Colors, valid_hostname, die, err
+from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_protocol_exclusive
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
@@ -221,6 +221,7 @@ def main() -> None:
     verbose = False
     color_mode = False
     warmup = True
+    proto_option_set: Optional[str] = None
     qname = 'wikipedia.org'
 
     try:
@@ -266,7 +267,7 @@ def main() -> None:
         elif o in ("-t", "--type"):
             rdatatype = a
         elif o in ("-T", "--tcp"):
-            proto = PROTO_TCP
+            proto, proto_option_set = set_protocol_exclusive(PROTO_TCP, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
         elif o in ("-S", "--srcip"):
@@ -288,19 +289,19 @@ def main() -> None:
         elif o in ("-v", "--verbose"):
             verbose = True
         elif o in ("-X", "--tls"):
-            proto = PROTO_TLS
+            proto, proto_option_set = set_protocol_exclusive(PROTO_TLS, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
         elif o in ("-H", "--doh"):
-            proto = PROTO_HTTPS
+            proto, proto_option_set = set_protocol_exclusive(PROTO_HTTPS, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
         elif o in ("-Q", "--quic"):
-            proto = PROTO_QUIC
+            proto, proto_option_set = set_protocol_exclusive(PROTO_QUIC, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
         elif o in ("-3", "--http3"):
-            proto = PROTO_HTTP3
+            proto, proto_option_set = set_protocol_exclusive(PROTO_HTTP3, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
         elif o in ("-p", "--port"):

@@ -27,6 +27,7 @@
 import random
 import string
 import sys
+from typing import Optional
 
 __version__ = '2.9.3'
 
@@ -44,6 +45,26 @@ def die(s: str, exit_code: int = 1) -> None:
 
 def err(s: str) -> None:
     print(s, file=sys.stderr, flush=True)
+
+
+def set_protocol_exclusive(new_proto: int, current_option: str, proto_option_set: Optional[str]) -> tuple[int, str]:
+    """
+    Set protocol ensuring mutual exclusivity.
+
+    Args:
+        new_proto: Protocol constant to set
+        current_option: Current option being processed (e.g., "-T")
+        proto_option_set: Previously set protocol option or None
+
+    Returns:
+        Tuple of (protocol, option_name)
+
+    Raises:
+        SystemExit if a protocol was already set
+    """
+    if proto_option_set is not None:
+        die(f"ERROR: cannot use {current_option} with {proto_option_set}")
+    return new_proto, current_option
 
 
 def unsupported_feature(feature: str = "") -> None:

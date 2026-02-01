@@ -51,7 +51,8 @@ import httpx
 
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
     get_default_port, valid_rdatatype
-from dnsdiag.shared import __version__, valid_hostname, unsupported_feature, random_string, die, err
+from dnsdiag.shared import __version__, valid_hostname, unsupported_feature, random_string, die, err, \
+    set_protocol_exclusive
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
@@ -187,6 +188,7 @@ def main() -> None:
     af = None
     af_ipv4_set = False
     af_ipv6_set = False
+    proto_option_set: Optional[str] = None
     qname = 'wikipedia.org'
 
     try:
@@ -266,27 +268,27 @@ def main() -> None:
                 die(f"ERROR: invalid RR class: {a}")
 
         elif o in ("-T", "--tcp"):
-            proto = PROTO_TCP
+            proto, proto_option_set = set_protocol_exclusive(PROTO_TCP, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
 
         elif o in ("-X", "--tls"):
-            proto = PROTO_TLS
+            proto, proto_option_set = set_protocol_exclusive(PROTO_TLS, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
 
         elif o in ("-H", "--doh"):
-            proto = PROTO_HTTPS
+            proto, proto_option_set = set_protocol_exclusive(PROTO_HTTPS, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
 
         elif o in ("-Q", "--quic"):
-            proto = PROTO_QUIC
+            proto, proto_option_set = set_protocol_exclusive(PROTO_QUIC, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
 
         elif o in ("-3", "--http3"):
-            proto = PROTO_HTTP3
+            proto, proto_option_set = set_protocol_exclusive(PROTO_HTTP3, o, proto_option_set)
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
 

@@ -42,7 +42,7 @@ import dns.resolver
 
 import dnsdiag.whois
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, get_default_port
-from dnsdiag.shared import __version__, Colors, valid_hostname, die, err
+from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_protocol_exclusive
 
 # Global Variables
 quiet = False
@@ -198,6 +198,7 @@ def main() -> None:
     af = None  # auto-detect from server address
     af_ipv4_set = False
     af_ipv6_set = False
+    proto_option_set: Optional[str] = None
 
     args = None
     try:
@@ -261,15 +262,15 @@ def main() -> None:
         elif o in "-n":
             should_resolve = False
         elif o in ("-T", "--tcp"):
-            proto = PROTO_TCP
+            proto, proto_option_set = set_protocol_exclusive(PROTO_TCP, o, proto_option_set)
             if use_default_dest_port:
                 dest_port = get_default_port(proto)
         elif o in ("-Q", "--quic"):
-            proto = PROTO_QUIC
+            proto, proto_option_set = set_protocol_exclusive(PROTO_QUIC, o, proto_option_set)
             if use_default_dest_port:
                 dest_port = get_default_port(proto)
         elif o in ("-3", "--http3"):
-            proto = PROTO_HTTP3
+            proto, proto_option_set = set_protocol_exclusive(PROTO_HTTP3, o, proto_option_set)
             if use_default_dest_port:
                 dest_port = get_default_port(proto)
         elif o in ("-4", "--ipv4"):
