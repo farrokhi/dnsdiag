@@ -221,7 +221,7 @@ def main() -> None:
     verbose = False
     color_mode = False
     warmup = True
-    proto_option_set: str | None = None
+    proto_option_set: Optional[str] = None
     qname = 'wikipedia.org'
 
     try:

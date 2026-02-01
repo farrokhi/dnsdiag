@@ -27,6 +27,7 @@
 import random
 import string
 import sys
+from typing import Optional
 
 __version__ = '2.9.3'
 
@@ -46,7 +47,7 @@ def err(s: str) -> None:
     print(s, file=sys.stderr, flush=True)
 
 
-def set_protocol_exclusive(new_proto: int, current_option: str, proto_option_set: str | None) -> tuple[int, str]:
+def set_protocol_exclusive(new_proto: int, current_option: str, proto_option_set: Optional[str]) -> tuple[int, str]:
     """
     Set protocol ensuring mutual exclusivity.
 

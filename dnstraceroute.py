@@ -198,7 +198,7 @@ def main() -> None:
     af = None  # auto-detect from server address
     af_ipv4_set = False
     af_ipv6_set = False
-    proto_option_set: str | None = None
+    proto_option_set: Optional[str] = None
 
     args = None
     try:
