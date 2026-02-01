@@ -186,6 +186,42 @@ dnsping.py DNS: anyns.pch.net:53, hostname: quad9.net, proto: UDP, class: IN, ty
 min=24.794 ms, avg=27.673 ms, max=30.552 ms, stddev=4.072 ms
 ```
 
+## Interpreting DNSSEC and Security-Related Flags
+
+When using `--dnssec` and `--flags`, `dnsping` exposes DNS protocol fields that are
+directly relevant to DNS security validation. These values indicate whether a
+resolver is capable of validating DNSSEC and whether a response was successfully
+verified.
+
+Common flags:
+
+- **DO (DNSSEC OK)**  
+  Indicates that the client is requesting DNSSEC-related records. Its presence
+  shows that the resolver supports DNSSEC queries.
+
+- **AD (Authenticated Data)**  
+  Set by validating resolvers when the response has been cryptographically
+  validated using DNSSEC. This is a strong signal that DNSSEC validation is active
+  and successful.
+
+Typical patterns:
+
+| Result | Meaning |
+|-------|--------|
+| `NOERROR` with `AD` flag | DNSSEC validation succeeded |
+| `SERVFAIL` with `DO` flag | DNSSEC validation failed (often due to broken signatures or misconfiguration) |
+| No `AD` flag present | Resolver is not performing DNSSEC validation |
+
+Extended DNS Errors (EDE, RFC 8914) provide additional diagnostic information when
+DNSSEC validation fails. For example:
+
+- **EDE:10** – *DNSSEC Bogus* (invalid or broken DNSSEC data)
+- **EDE:6** – *DNSSEC Signature Expired*
+- **EDE:7** – *DNSSEC Signature Not Yet Valid*
+
+These indicators make `dnsping` useful not only for performance testing, but also
+for validating whether resolvers correctly enforce DNSSEC and for diagnosing
+DNSSEC deployment issues.
 
 # dnstraceroute
 
