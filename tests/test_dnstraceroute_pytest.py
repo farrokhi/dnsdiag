@@ -170,6 +170,41 @@ class TestAddressFamilyHandling:
         assert "2001:4860:4860::8888" in result.output
 
 
+class TestProtocols:
+    """Tests for different DNS protocols in traceroute mode"""
+
+    @pytest.mark.parametrize("resolver_name,resolver_ip", [
+        ('google', RESOLVERS_IPV4['google']),
+        ('cloudflare', RESOLVERS_IPV4['cloudflare']),
+    ])
+    def test_tcp_traceroute(self, runner, resolver_name, resolver_ip):
+        """Test TCP traceroute (regression test for issue with EHOSTUNREACH)"""
+        result = runner.run(['-T', '-c', '3', '-s', resolver_ip, 'google.com'])
+        assert result.success, f"TCP traceroute failed: {result.error}"
+        assert "DNS:" in result.output
+        assert resolver_ip in result.output
+        assert "unexpected error" not in result.output.lower()
+        assert "[Errno 65]" not in result.output
+
+    def test_quic_traceroute(self, runner):
+        """Test QUIC (DoQ) traceroute"""
+        result = runner.run(['-Q', '-c', '3', '-s', '94.140.14.14', 'wikimedia.org'])
+        assert result.success, f"QUIC traceroute failed: {result.error}"
+        assert "DNS:" in result.output
+        assert "94.140.14.14" in result.output
+
+    @pytest.mark.parametrize("resolver_ip", [
+        RESOLVERS_IPV4['google'],
+        RESOLVERS_IPV4['cloudflare'],
+    ])
+    def test_http3_traceroute(self, runner, resolver_ip):
+        """Test HTTP/3 (DoH3) traceroute"""
+        result = runner.run(['-3', '-c', '3', '-s', resolver_ip, 'google.com'])
+        assert result.success, f"HTTP/3 traceroute failed: {result.error}"
+        assert "DNS:" in result.output
+        assert resolver_ip in result.output
+
+
 class TestCLIOptions:
     """Tests for various CLI options"""
 
