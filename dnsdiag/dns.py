@@ -181,7 +181,10 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             break
         except OSError as e:
             # Transient network errors should be re-raised for caller to handle
+            # Exception: during traceroute (socket_ttl set), these errors are expected
             if e.errno in (errno.EHOSTUNREACH, errno.ENETUNREACH):
+                if socket_ttl:
+                    break
                 raise
             elif socket_ttl:  # other acceptable errors while doing traceroute
                 break
