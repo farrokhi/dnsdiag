@@ -114,6 +114,15 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
         _TTL = socket_ttl
         dns.query.socket_factory = CustomSocket
 
+        # Also set QUIC socket factory if available
+        # dns.quic._sync.socket_factory is documented as "Can be overridden if needed in special situations"
+        try:
+            import dns.quic._sync as quic_sync
+            quic_sync.socket_factory = CustomSocket
+        except (ImportError, AttributeError):
+            # aioquic not installed or QUIC not available
+            pass
+
     for i in range(count):
 
         if force_miss:
@@ -179,7 +188,10 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             err(f"ERROR: {e.strerror}")
             raise OSError(e)
         except Exception as e:
-            err(f"ERROR: {e}")
+            # In traceroute mode, connection failures are expected
+            if socket_ttl:
+                break
+            err(f"ERROR: {type(e).__name__}: {e}")
             break
         else:
             etime = time.perf_counter()
