@@ -1,4 +1,4 @@
-# Last tested and validated: September 2025
+# Last tested and validated: March 2026
 
 ## Cloudflare
 # Fast, privacy-focused DNS with no logging policy
@@ -87,9 +87,10 @@
 # Variants: .9 (secure with blocking), .10 (unsecured, no blocking), .11 (ECS-enabled)
 # Website: https://quad9.net/
 # DNSSEC: YES (.9/.11), NO (.10) | ECS: YES (.11), NO (.9/.10) | EDE: NO
-# Protocols: UDP, TCP, DoT, DoH
+# Protocols: UDP, TCP, DoT, DoH, DoQ, DoH3
 # DoT: dns.quad9.net (port 853)
 # DoH: https://dns.quad9.net/dns-query
+# DoQ: dns.quad9.net (port 853)
 9.9.9.9
 9.9.9.10
 9.9.9.11
