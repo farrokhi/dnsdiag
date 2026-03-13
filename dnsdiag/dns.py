@@ -26,7 +26,6 @@
 
 import errno
 import socket
-import struct
 import time
 from statistics import stdev
 from typing import Optional, List, Any
