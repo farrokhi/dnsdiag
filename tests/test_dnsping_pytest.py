@@ -17,9 +17,8 @@ Usage:
 import subprocess
 import sys
 import pytest
-import time
 import platform
-from typing import Tuple, Optional, List
+from typing import Optional, List
 from dataclasses import dataclass
 
 # Test configuration
@@ -38,6 +37,7 @@ RESOLVERS = {
 PROTOCOLS = ['udp', 'tcp', 'tls', 'doh', 'http3']
 RECORD_TYPES = ['A', 'AAAA', 'MX', 'TXT']
 
+
 @dataclass
 class DNSResult:
     """Result from a dnsping command execution"""
@@ -45,6 +45,7 @@ class DNSResult:
     output: str
     response_time: Optional[float]
     error: Optional[str]
+
 
 class DNSPingRunner:
     """Helper class for running dnsping commands"""
@@ -92,14 +93,17 @@ class DNSPingRunner:
             return DNSResult(success=False, output="", response_time=None,
                            error=f"Command execution failed: {str(e)}")
 
+
 # Global runner instance
 runner = DNSPingRunner()
+
 
 # Pytest fixtures
 @pytest.fixture(scope="session")
 def dnsping_runner():
     """Provide DNSPingRunner instance for tests"""
     return runner
+
 
 # Basic functionality tests
 class TestBasicFunctionality:
@@ -122,6 +126,7 @@ class TestBasicFunctionality:
         result = dnsping_runner.run(['-c', '1', '-s', '8.8.8.8', 'google.com'])
         assert result.success, f"Query failed: {result.error}"
         assert result.response_time < 5000, f"Response time too high: {result.response_time}ms"
+
 
 # Protocol tests
 class TestProtocols:
@@ -149,6 +154,7 @@ class TestProtocols:
         # HTTP3 may fail on some resolvers, so we just ensure it doesn't crash
         assert result.error is None or "timed out" in result.error or "failed" in result.error.lower()
 
+
 # Record type tests
 class TestRecordTypes:
     """Test different DNS record types"""
@@ -164,6 +170,7 @@ class TestRecordTypes:
         result = dnsping_runner.run(['-c', '1', '-s', '8.8.8.8', '-t', 'CNAME', 'www.github.com'])
         assert result.success, f"CNAME record query failed: {result.error}"
 
+
 # EDNS feature tests
 class TestEDNSFeatures:
     """Test EDNS extensions"""
@@ -176,9 +183,6 @@ class TestEDNSFeatures:
         """Test NSID (Name Server Identifier) support"""
         result = dnsping_runner.run(['-c', '1', '-s', resolver_ip, '--nsid', 'google.com'])
         assert result.success, f"NSID query to {resolver_name} failed: {result.error}"
-
-        # Check if NSID data is present (may vary by resolver)
-        nsid_present = '[NSID:' in result.output
         # We don't assert NSID presence as not all resolvers support it
 
     @pytest.mark.parametrize("resolver_ip", ['8.8.8.8', '9.9.9.9', '1.1.1.1'])
@@ -186,9 +190,7 @@ class TestEDNSFeatures:
         """Test ECS (EDNS Client Subnet) support"""
         result = dnsping_runner.run(['-c', '1', '-s', resolver_ip, '--ecs', '203.0.113.0/24', 'google.com'])
         assert result.success, f"ECS query failed: {result.error}"
-
         # Some resolvers echo back ECS, others don't - both are valid
-        ecs_present = '[ECS:' in result.output
 
     def test_dns_cookies(self, dnsping_runner):
         """Test DNS Cookies support (RFC 7873)"""
@@ -215,6 +217,7 @@ class TestEDNSFeatures:
         """Test DNSSEC validation request"""
         result = dnsping_runner.run(['-c', '1', '-s', '8.8.8.8', '--dnssec', 'google.com'])
         assert result.success, f"DNSSEC query failed: {result.error}"
+
 
 # Hostname vs IP consistency tests
 class TestHostnameConsistency:
@@ -270,6 +273,7 @@ class TestHostnameConsistency:
         # Should not crash (the original issue)
         assert hostname_result.error is None or "timed out" in hostname_result.error or "failed" in hostname_result.error.lower()
         # The key is that it shouldn't have an "UnexpectedEOF" or similar crash
+
 
 # Error handling tests
 class TestErrorHandling:
@@ -424,6 +428,7 @@ class TestCLIParameterValidation:
         result = dnsping_runner.run([''])
         assert not result.success, "Empty hostname should fail"
 
+
 # Regression tests for specific bugs
 class TestRegressionBugs:
     """Tests for specific bugs that have been fixed"""
@@ -460,11 +465,13 @@ class TestRegressionBugs:
             # No EDE present, which is also fine
             assert True
 
+
 # Pytest configuration and custom markers
 def pytest_configure(config):
     """Configure pytest with custom markers"""
     config.addinivalue_line("markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')")
     config.addinivalue_line("markers", "network: marks tests as requiring network access")
+
 
 # Mark all tests as requiring network
 pytestmark = pytest.mark.network
