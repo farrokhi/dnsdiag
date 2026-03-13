@@ -441,6 +441,12 @@ class TestRegressionBugs:
         result = dnsping_runner.run(['-c', '1', '-s', 'dns.google', '--doh', 'google.com'])
         assert result.success, f"DoH with dns.google hostname should work: {result.error}"
 
+    def test_tcp_fixed_source_port_no_loss(self, dnsping_runner):
+        """Regression: TCP with a fixed source port should succeed on all queries, not just the first (was EADDRINUSE)"""
+        result = dnsping_runner.run(['-c', '3', '-s', '8.8.8.8', '--tcp', '-P', '60321', '-i', '0', 'google.com'])
+        assert '3 responses received, 0% lost' in result.output, \
+            f"TCP with fixed source port had packet loss: {result.output}"
+
     def test_ede_always_displayed(self, dnsping_runner):
         """Regression test: EDE should always be displayed when present"""
         # Test with a domain that might trigger EDE (DNSSEC validation failure)

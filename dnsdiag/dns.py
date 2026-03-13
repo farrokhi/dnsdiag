@@ -26,6 +26,7 @@
 
 import errno
 import socket
+import struct
 import time
 from statistics import stdev
 from typing import Optional, List, Any
@@ -93,6 +94,8 @@ def get_default_port(proto: int) -> int:
 class CustomSocket(socket.socket):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(CustomSocket, self).__init__(*args, **kwargs)
+        # Allow reuse of ports in TIME_WAIT so fixed source ports work across reconnects
+        self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if _TTL:
             # Set TTL/hop limit based on address family
             if self.family == socket.AF_INET:

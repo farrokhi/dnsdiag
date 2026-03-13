@@ -50,7 +50,7 @@ import dns.resolver
 import httpx
 
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
-    get_default_port, valid_rdatatype
+    get_default_port, valid_rdatatype, CustomSocket
 from dnsdiag.shared import __version__, valid_hostname, unsupported_feature, random_string, die, err, \
     set_protocol_exclusive
 
@@ -352,6 +352,7 @@ def main() -> None:
             try:
                 ipaddress.ip_address(a)
                 src_ip = a
+                # TODO: validate src_ip address family against -4/-6 flag and infer af when not set
             except ValueError:
                 die(f"ERROR: invalid source IP address: {a}")
 
@@ -361,6 +362,11 @@ def main() -> None:
 
         else:
             usage(1)
+
+    if src_port > 0:
+        # For UDP with a fixed source port, SO_REUSEADDR lets the socket bind the same
+        # port again between queries. TCP avoids this entirely via connection reuse (tcp_sock).
+        dns.query.socket_factory = CustomSocket
 
     # Use system DNS server if parameter is not specified
     # remember not all systems have /etc/resolv.conf (i.e. Android)
@@ -375,6 +381,19 @@ def main() -> None:
     # validate RR type
     if not valid_rdatatype(rdatatype):
         die(f'ERROR: invalid record type: {rdatatype}')
+
+    # For TCP with a fixed source port, keep one connection alive across all queries to avoid
+    # TIME_WAIT exhaustion — the OS cannot reuse an identical 4-tuple while the old one is in
+    # TIME_WAIT, even with SO_REUSEADDR.  This is also the RFC 7766-recommended pattern.
+    tcp_sock = None
+    if proto is PROTO_TCP and src_port > 0:
+        af_tcp = socket.AF_INET6 if ':' in dnsserver_ip else socket.AF_INET
+        tcp_sock = socket.socket(af_tcp, socket.SOCK_STREAM)
+        tcp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        source = (src_ip or ('::' if af_tcp == socket.AF_INET6 else '0.0.0.0'), src_port)
+        tcp_sock.bind(source)
+        tcp_sock.connect((dnsserver_ip, dst_port))
+        tcp_sock.setblocking(False)
 
     # Display the hostname if it differs from the resolved IP, otherwise just the IP
     server_display = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else dnsserver_ip
@@ -425,8 +444,13 @@ def main() -> None:
                 answers = dns.query.udp(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                         source=src_ip, source_port=src_port, ignore_unexpected=True)
             elif proto is PROTO_TCP:
-                answers = dns.query.tcp(query, dnsserver_ip, timeout=timeout, port=dst_port,
-                                        source=src_ip, source_port=src_port)
+                if tcp_sock:
+                    # TODO: reconnect on connection drop (currently counted as packet loss)
+                    answers = dns.query.tcp(query, dnsserver_ip, timeout=timeout, port=dst_port,
+                                            source=src_ip, source_port=src_port, sock=tcp_sock)
+                else:
+                    answers = dns.query.tcp(query, dnsserver_ip, timeout=timeout, port=dst_port,
+                                            source=src_ip, source_port=src_port)
             elif proto is PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
                     try:
@@ -760,6 +784,12 @@ def main() -> None:
                     sleep_duration = time_to_next - (time.time() - sleep_start)
                     if sleep_duration > 0:
                         time.sleep(min(0.1, sleep_duration))
+
+    if tcp_sock:
+        try:
+            tcp_sock.close()
+        except OSError:
+            pass
 
     r_sent = i
     r_received = len(response_time)
