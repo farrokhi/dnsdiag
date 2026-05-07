@@ -295,7 +295,6 @@ def main() -> None:
 
         elif o in ("-S", "--srcip"):
             src_ip = parse_ip_address(a)
-            # TODO: validate src_ip address family against -4/-6 flag and infer af when not set
 
         elif o == "--ecs":
             client_subnet = a
@@ -303,6 +302,12 @@ def main() -> None:
 
         else:
             usage(1)
+
+    if src_ip is not None:
+        if af is not None:
+            parse_ip_address(src_ip, family=af)
+        else:
+            af = socket.AF_INET6 if ':' in src_ip else socket.AF_INET
 
     if src_port > 0:
         # For UDP with a fixed source port, SO_REUSEADDR lets the socket bind the same
