@@ -32,6 +32,7 @@ import os
 import signal
 import socket
 import ssl
+import struct
 import sys
 import time
 from statistics import stdev
@@ -505,13 +506,9 @@ def main() -> None:
                         if not quiet:
                             print("Name resolution failed", flush=True)
                         continue
-                    except (httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
-                        if not quiet:
-                            print("Connection failed", flush=True)
-                        continue
                     except ssl.SSLCertVerificationError as e:
                         die(f"Certificate verification failed: {e}")
-                    except ssl.SSLError:
+                    except (ssl.SSLError, httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
                         if not quiet:
                             print("Connection failed", flush=True)
                         continue
@@ -541,13 +538,9 @@ def main() -> None:
                         if not quiet:
                             print("Name resolution failed", flush=True)
                         continue
-                    except (httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
-                        if not quiet:
-                            print("Connection failed", flush=True)
-                        continue
                     except ssl.SSLCertVerificationError as e:
                         die(f"Certificate verification failed: {e}")
-                    except ssl.SSLError:
+                    except (ssl.SSLError, httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
                         if not quiet:
                             print("Connection failed", flush=True)
                         continue
@@ -746,7 +739,6 @@ def main() -> None:
                         elif ans_opt.otype == 11:  # TCP-KEEPALIVE
                             option_name = "TCP-KEEPALIVE"
                             if len(ans_opt.data) >= 2:
-                                import struct
                                 keepalive_timeout = struct.unpack('!H', ans_opt.data[:2])[0]
                                 option_details = "timeout=%ds" % keepalive_timeout
                         elif ans_opt.otype == 12:  # PADDING
@@ -757,7 +749,6 @@ def main() -> None:
                             option_details = "closest_encloser=%s" % ans_opt.data.decode('utf-8', errors='ignore')
                         elif ans_opt.otype == 14:  # KEY-TAG
                             option_name = "KEY-TAG"
-                            import struct
                             if len(ans_opt.data) >= 2:
                                 key_tags = []
                                 for idx in range(0, len(ans_opt.data), 2):
