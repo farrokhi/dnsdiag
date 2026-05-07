@@ -45,6 +45,8 @@ def signal_handler(sig: int, frame: Any) -> None:
 
 
 def setup_signal_handler() -> None:
+    global shutdown
+    shutdown = False
     try:
         if hasattr(signal, 'SIGTSTP'):
             signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z

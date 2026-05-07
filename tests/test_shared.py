@@ -216,5 +216,14 @@ class TestProtocolExclusive:
         assert isinstance(result[1], str)
 
 
+class TestSignalHandling:
+    def test_setup_resets_shutdown_flag(self):
+        import dnsdiag.shared as shared
+        from dnsdiag.shared import setup_signal_handler
+        shared.shutdown = True          # simulate a prior interrupt
+        setup_signal_handler()
+        assert shared.shutdown is False
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
