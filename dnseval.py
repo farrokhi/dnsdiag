@@ -36,8 +36,9 @@ import socket
 import sys
 import threading
 import time
-from typing import List, Any, Optional
+from typing import Any
 
+import dns.flags
 import dns.rcode
 import dns.rdatatype
 import dns.resolver
@@ -96,12 +97,12 @@ Usage: %s [-ehmvCTXHQ3SD] [-f server-list] [-j output.json] [-c count] [-t type]
     sys.exit(exit_code)
 
 
-def maxlen(names: List[str]) -> int:
+def maxlen(names: list[str]) -> int:
     return max(len(name) for name in names) if names else 0
 
 
 def evaluate_server(server: str, qname: str, rdatatype: str, waittime: int, count: int, proto: int,
-                    dst_port: int, src_ip: Optional[str], use_edns: bool, force_miss: bool, want_dnssec: bool,
+                    dst_port: int, src_ip: str | None, use_edns: bool, force_miss: bool, want_dnssec: bool,
                     width: int, color: Colors, verbose: bool, json_output: bool, json_filename: str) -> str:
     if not server.strip():
         return ""
@@ -221,7 +222,7 @@ def main() -> None:
     verbose = False
     color_mode = False
     warmup = True
-    proto_option_set: Optional[str] = None
+    proto_option_set: str | None = None
     qname = 'wikipedia.org'
 
     try:
@@ -320,6 +321,7 @@ def main() -> None:
         die(f'ERROR: invalid record type "{rdatatype}"')
 
     color = Colors(color_mode)
+    server = ""
 
     try:
         if fromfile:

@@ -26,21 +26,15 @@
 
 import pickle
 import time
-from typing import Optional, Tuple, Any, Dict
+from typing import Any
 
 import cymruwhois
 
 WHOIS_CACHE_FILE = 'whois.cache'
 
 
-def asn_lookup(ip: str, whois_cache: Dict[str, Any]) -> Tuple[Optional[Any], Dict[str, Any]]:
-    """
-    Look up an ASN given the IP address from cache. If not in cache, lookup from a whois server and update the cache
-    :param ip: IP Address
-    :param whois_cache: whois data cache
-    :return: AS Number, Updated whois cache
-    """
-    asn: Optional[Any] = None
+def asn_lookup(ip: str, whois_cache: dict[str, Any]) -> tuple[Any | None, dict[str, Any]]:
+    asn: Any | None = None
     try:
         currenttime = time.time()
         if ip in whois_cache:
@@ -56,24 +50,15 @@ def asn_lookup(ip: str, whois_cache: Dict[str, Any]) -> Tuple[Optional[Any], Dic
     return asn, whois_cache
 
 
-def restore() -> Dict[str, Any]:
-    """
-    Loads whois cache data from a file
-    :return: whois data dict
-    """
+def restore() -> dict[str, Any]:
     try:
         with open(WHOIS_CACHE_FILE, 'rb') as pkl_file:
-            whois: Dict[str, Any] = pickle.load(pkl_file)
+            whois: dict[str, Any] = pickle.load(pkl_file)
             return whois
     except (IOError, EOFError, pickle.UnpicklingError):
         return {}
 
 
-def save(whois_data: Dict[str, Any]) -> None:
-    """
-    Saves whois cache data to a file
-    :param whois_data: whois data (dict)
-    :return: None
-    """
+def save(whois_data: dict[str, Any]) -> None:
     with open(WHOIS_CACHE_FILE, 'wb') as pkl_file:
         pickle.dump(whois_data, pkl_file)

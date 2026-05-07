@@ -33,7 +33,7 @@ import signal
 import socket
 import sys
 import time
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any
 
 import dns.edns
 import dns.query
@@ -46,7 +46,7 @@ from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_pr
 
 # Global Variables
 quiet = False
-whois_cache: Dict[str, Any] = {}
+whois_cache: dict[str, Any] = {}
 shutdown = False
 
 # Constants
@@ -104,7 +104,7 @@ Options:
     sys.exit(exit_code)
 
 
-def expert_report(trace_path: List[str], color_mode: bool) -> None:
+def expert_report(trace_path: list[str], color_mode: bool) -> None:
     color = Colors(color_mode)
     print("\n%s=== Expert Hints ===%s" % (color.B, color.N))
     if len(trace_path) == 0:
@@ -138,7 +138,7 @@ def expert_report(trace_path: List[str], color_mode: bool) -> None:
 
 
 def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
-         timeout: int, src_ip: Optional[str], use_edns: bool, want_nsid: bool) -> Tuple[bool, Optional[float], Optional[str]]:
+         timeout: int, src_ip: str | None, use_edns: bool, want_nsid: bool) -> tuple[bool, float | None, str | None]:
     reached = False
     resp_time = None
     nsid_value = None
@@ -198,7 +198,7 @@ def main() -> None:
     af = None  # auto-detect from server address
     af_ipv4_set = False
     af_ipv6_set = False
-    proto_option_set: Optional[str] = None
+    proto_option_set: str | None = None
 
     args = None
     try:
@@ -259,7 +259,7 @@ def main() -> None:
                 die(f"ERROR: invalid port value: {a}")
         elif o in ("-C", "--color"):
             color_mode = True
-        elif o in "-n":
+        elif o == "-n":
             should_resolve = False
         elif o in ("-T", "--tcp"):
             proto, proto_option_set = set_protocol_exclusive(PROTO_TCP, o, proto_option_set)

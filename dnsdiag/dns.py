@@ -28,7 +28,7 @@ import errno
 import socket
 import time
 from statistics import stdev
-from typing import Optional, List, Any
+from typing import Any
 
 import httpx
 import dns.edns
@@ -47,7 +47,25 @@ PROTO_HTTPS: int = 3
 PROTO_QUIC: int = 4
 PROTO_HTTP3: int = 5
 
-_TTL: Optional[int] = None
+_TTL: int | None = None
+
+_PROTO_NAME: dict[int, str] = {
+    PROTO_UDP: 'UDP',
+    PROTO_TCP: 'TCP',
+    PROTO_TLS: 'TLS',
+    PROTO_HTTPS: 'HTTPS',
+    PROTO_QUIC: 'QUIC',
+    PROTO_HTTP3: 'HTTP3',
+}
+
+_PROTO_PORT: dict[int, int] = {
+    PROTO_UDP: 53,
+    PROTO_TCP: 53,
+    PROTO_TLS: 853,   # RFC 7858, Section 3.1
+    PROTO_HTTPS: 443,
+    PROTO_QUIC: 853,  # RFC 9250, Section 4.1.1
+    PROTO_HTTP3: 443,
+}
 
 
 class PingResponse:
@@ -59,43 +77,27 @@ class PingResponse:
         self.r_lost_percent: float = 0.0
         self.flags: int = 0
         self.ednsflags: int = 0
-        self.ttl: Optional[int] = None
-        self.answer: Optional[Any] = None
+        self.ttl: int | None = None
+        self.answer: Any | None = None
         self.rcode: int = 0
         self.rcode_text: str = ''
-        self.response: Optional[Any] = None
+        self.response: Any | None = None
 
 
 def proto_to_text(proto: int) -> str:
-    _proto_name = {
-        PROTO_UDP: 'UDP',
-        PROTO_TCP: 'TCP',
-        PROTO_TLS: 'TLS',
-        PROTO_HTTPS: 'HTTPS',
-        PROTO_QUIC: 'QUIC',
-        PROTO_HTTP3: 'HTTP3',
-    }
-    return _proto_name[proto]
+    return _PROTO_NAME[proto]
 
 
 def get_default_port(proto: int) -> int:
-    _proto_port = {
-        PROTO_UDP: 53,
-        PROTO_TCP: 53,
-        PROTO_TLS: 853,  # RFC 7858, Secion 3.1
-        PROTO_HTTPS: 443,
-        PROTO_QUIC: 853,  # RFC 9250, Section 4.1.1
-        PROTO_HTTP3: 443,
-    }
-    return _proto_port[proto]
+    return _PROTO_PORT[proto]
 
 
 class CustomSocket(socket.socket):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super(CustomSocket, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # Allow reuse of ports in TIME_WAIT so fixed source ports work across reconnects
         self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        if _TTL:
+        if _TTL is not None:
             # Set TTL/hop limit based on address family
             if self.family == socket.AF_INET:
                 self.setsockopt(socket.SOL_IP, socket.IP_TTL, _TTL)
@@ -104,14 +106,14 @@ class CustomSocket(socket.socket):
 
 
 def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, count: int, proto: int,
-         src_ip: Optional[str], use_edns: bool = False, force_miss: bool = False,
-         want_dnssec: bool = False, want_nsid: bool = False, socket_ttl: Optional[int] = None) -> PingResponse:
+         src_ip: str | None, use_edns: bool = False, force_miss: bool = False,
+         want_dnssec: bool = False, want_nsid: bool = False, socket_ttl: int | None = None) -> PingResponse:
     retval = PingResponse()
     retval.rcode_text = "No Response"
 
-    response_times: List[float] = []
+    response_times: list[float] = []
 
-    if socket_ttl:
+    if socket_ttl is not None:
         global _TTL
         _TTL = socket_ttl
         dns.query.socket_factory = CustomSocket
@@ -133,7 +135,7 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             fqdn = qname
 
         if use_edns:
-            edns_options: List[dns.edns.Option] = []
+            edns_options: list[dns.edns.Option] = []
             if want_nsid:
                 edns_options.append(dns.edns.GenericOption(dns.edns.NSID, b''))
             query = dns.message.make_query(fqdn, rdtype, dns.rdataclass.IN, use_edns, want_dnssec, payload=1232,
@@ -185,16 +187,16 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
             # Transient network errors should be re-raised for caller to handle
             # Exception: during traceroute (socket_ttl set), these errors are expected
             if e.errno in (errno.EHOSTUNREACH, errno.ENETUNREACH):
-                if socket_ttl:
+                if socket_ttl is not None:
                     break
                 raise
-            elif socket_ttl:  # other acceptable errors while doing traceroute
+            elif socket_ttl is not None:  # other acceptable errors while doing traceroute
                 break
             err(f"ERROR: {e.strerror}")
             raise OSError(e)
         except Exception as e:
             # In traceroute mode, connection failures are expected
-            if socket_ttl:
+            if socket_ttl is not None:
                 break
             err(f"ERROR: {type(e).__name__}: {e}")
             break
@@ -261,16 +263,16 @@ _DNS_FLAGS_BY_TEXT = {
     'CD': _DNS_FLAG_CD
 }
 
+# Precompute reverse map and sorted order once
+_DNS_FLAGS_BY_VALUE: dict[int, str] = {v: k for k, v in _DNS_FLAGS_BY_TEXT.items()}
+_DNS_FLAGS_ORDER: list[tuple[int, str]] = sorted(_DNS_FLAGS_BY_VALUE.items(), reverse=True)
+
 
 def flags_to_text(flags: int) -> str:
-    _by_value = {value: key for key, value in _DNS_FLAGS_BY_TEXT.items()}
-
-    order = sorted(_by_value.items(), reverse=True)
     text_flags = []
-    for k, v in order:
+    for k, v in _DNS_FLAGS_ORDER:
         if (flags & k) != 0:
             text_flags.append(v)
         else:
             text_flags.append('--')
-
     return ' '.join(text_flags)
