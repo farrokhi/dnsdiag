@@ -747,8 +747,8 @@ def main() -> None:
                             option_name = "TCP-KEEPALIVE"
                             if len(ans_opt.data) >= 2:
                                 import struct
-                                timeout = struct.unpack('!H', ans_opt.data[:2])[0]
-                                option_details = "timeout=%ds" % timeout
+                                keepalive_timeout = struct.unpack('!H', ans_opt.data[:2])[0]
+                                option_details = "timeout=%ds" % keepalive_timeout
                         elif ans_opt.otype == 12:  # PADDING
                             option_name = "PADDING"
                             option_details = "length=%d" % len(ans_opt.data)
@@ -760,9 +760,9 @@ def main() -> None:
                             import struct
                             if len(ans_opt.data) >= 2:
                                 key_tags = []
-                                for i in range(0, len(ans_opt.data), 2):
-                                    if i + 1 < len(ans_opt.data):
-                                        tag = struct.unpack('!H', ans_opt.data[i:i + 2])[0]
+                                for idx in range(0, len(ans_opt.data), 2):
+                                    if idx + 1 < len(ans_opt.data):
+                                        tag = struct.unpack('!H', ans_opt.data[idx:idx + 2])[0]
                                         key_tags.append(str(tag))
                                 option_details = "tags=[%s]" % ",".join(key_tags)
                         else:
@@ -794,7 +794,7 @@ def main() -> None:
     r_sent = i
     r_received = len(response_time)
     r_lost = r_sent - r_received
-    r_lost_percent = (100 * r_lost) / r_sent
+    r_lost_percent = (100 * r_lost) / r_sent if r_sent > 0 else 0.0
     if response_time:
         r_min = min(response_time)
         r_max = max(response_time)
