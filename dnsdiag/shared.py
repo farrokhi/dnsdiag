@@ -24,11 +24,33 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import ipaddress
 import random
+import signal
+import socket
 import string
 import sys
+from typing import Any, NoReturn
+
+shutdown: bool = False
 
 __version__ = '2.9.3'
+
+
+def signal_handler(sig: int, frame: Any) -> None:
+    global shutdown
+    if shutdown:  # pressed twice, so exit immediately
+        sys.exit(0)
+    shutdown = True  # pressed once, exit gracefully
+
+
+def setup_signal_handler() -> None:
+    try:
+        if hasattr(signal, 'SIGTSTP'):
+            signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
+        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
+    except AttributeError:  # not all signals are supported on all platforms
+        pass
 
 
 def random_string(min_length: int = 5, max_length: int = 10) -> str:
@@ -37,13 +59,66 @@ def random_string(min_length: int = 5, max_length: int = 10) -> str:
     return ''.join(random.choices(char_set, k=length))
 
 
-def die(s: str, exit_code: int = 1) -> None:
+def die(s: str, exit_code: int = 1) -> NoReturn:
     err(s)
     sys.exit(exit_code)
 
 
 def err(s: str) -> None:
     print(s, file=sys.stderr, flush=True)
+
+
+def parse_ip_address(value: str, family: int | None = None) -> str:
+    """Parse and validate an IP address string, optionally checking address family.
+
+    family should be socket.AF_INET or socket.AF_INET6 when the caller needs to
+    enforce a specific version; leave as None to accept either.
+    """
+    try:
+        addr = ipaddress.ip_address(value)
+    except ValueError:
+        die(f"ERROR: invalid IP address: {value}")
+    if family == socket.AF_INET and not isinstance(addr, ipaddress.IPv4Address):
+        die(f"ERROR: expected an IPv4 address, got: {value}")
+    elif family == socket.AF_INET6 and not isinstance(addr, ipaddress.IPv6Address):
+        die(f"ERROR: expected an IPv6 address, got: {value}")
+    return value
+
+
+def resolve_server_address(dnsserver: str, af: int | None) -> str:
+    """Resolve a DNS server hostname to an IP address, or return the IP unchanged.
+
+    For IPv6 resolution, uses AI_V4MAPPED so that IPv4 addresses are also returned.
+    Dies with an error message on any resolution failure.
+    """
+    original = dnsserver
+    try:
+        ipaddress.ip_address(dnsserver)
+        return dnsserver  # already an IP
+    except ValueError:
+        pass  # hostname — fall through to resolution
+
+    try:
+        if af == socket.AF_INET6:
+            results = socket.getaddrinfo(dnsserver, None, af, socket.SOCK_DGRAM,
+                                         flags=socket.AI_V4MAPPED)
+        else:
+            results = socket.getaddrinfo(dnsserver, None, af or socket.AF_UNSPEC, socket.SOCK_DGRAM)
+
+        if not results:
+            die(f'ERROR: cannot resolve hostname: {original}')
+
+        # getaddrinfo returns (family, type, proto, canonname, sockaddr)
+        # sockaddr is (address, port) for IPv4, (address, port, flow, scope) for IPv6
+        sockaddr = results[0][4]
+        if sockaddr and len(sockaddr) >= 1:
+            return str(sockaddr[0])
+        die(f'ERROR: invalid address data for hostname: {original}')
+
+    except (OSError, socket.gaierror) as e:
+        die(f'ERROR: cannot resolve hostname {original}: {e}')
+    except (IndexError, TypeError, ValueError) as e:
+        die(f'ERROR: invalid address format for hostname {original}: {e}')
 
 
 def set_protocol_exclusive(new_proto: int, current_option: str, proto_option_set: str | None) -> tuple[int, str]:

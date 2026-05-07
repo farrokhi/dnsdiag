@@ -31,12 +31,10 @@ import getopt
 import ipaddress
 import json
 import os
-import signal
 import socket
 import sys
 import threading
 import time
-from typing import Any
 
 import dns.flags
 import dns.rcode
@@ -45,29 +43,30 @@ import dns.resolver
 
 import dnsdiag.dns
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, get_default_port
-from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_protocol_exclusive
+import dnsdiag.shared as shared
+from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_protocol_exclusive, parse_ip_address, \
+    setup_signal_handler
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __progname__ = os.path.basename(sys.argv[0])
-shutdown = False
 print_lock = threading.Lock()
 
 
-def setup_signal_handler() -> None:
+def _resolve_server(server: str) -> str | None:
+    """Resolve a server name to an IP, returning None on any failure."""
     try:
-        if hasattr(signal, 'SIGTSTP'):
-            signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError:  # not all signals are supported on all platforms
+        ipaddress.ip_address(server)
+        return server
+    except ValueError:
         pass
-
-
-def signal_handler(sig: int, frame: Any) -> None:
-    global shutdown
-    if shutdown:  # pressed twice, so exit immediately
-        sys.exit(0)
-    shutdown = True  # pressed once, exit gracefully
+    try:
+        results = socket.getaddrinfo(server, None, socket.AF_UNSPEC, socket.SOCK_DGRAM)
+        if results and len(results[0]) > 4 and results[0][4]:
+            return str(results[0][4][0])
+    except (OSError, IndexError, TypeError):
+        pass
+    return None
 
 
 def usage(exit_code: int = 0) -> None:
@@ -108,24 +107,9 @@ def evaluate_server(server: str, qname: str, rdatatype: str, waittime: int, coun
         return ""
 
     server = server.replace(' ', '')
-    resolver = ""
-    try:
-        ipaddress.ip_address(server)
-        resolver = server
-    except ValueError:
-        try:
-            results = socket.getaddrinfo(server, None, socket.AF_UNSPEC, socket.SOCK_DGRAM)
-            if results and len(results[0]) > 4 and results[0][4]:
-                resolver = str(results[0][4][0])
-            else:
-                return 'ERROR: cannot resolve hostname: %s' % server
-        except OSError:
-            return 'ERROR: cannot resolve hostname: %s' % server
-        except (IndexError, TypeError):
-            return 'ERROR: invalid address format for hostname: %s' % server
-
-    if not resolver:
-        return ""
+    resolver = _resolve_server(server)
+    if resolver is None:
+        return 'ERROR: cannot resolve hostname: %s' % server
 
     try:
         retval = dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
@@ -199,7 +183,6 @@ def evaluate_server(server: str, qname: str, rdatatype: str, waittime: int, coun
 
 
 def main() -> None:
-    global shutdown
     setup_signal_handler()
 
     if len(sys.argv) == 1:
@@ -272,11 +255,7 @@ def main() -> None:
             if use_default_dst_port:
                 dst_port = get_default_port(proto)
         elif o in ("-S", "--srcip"):
-            try:
-                ipaddress.ip_address(a)
-                src_ip = a
-            except ValueError:
-                die(f"ERROR: invalid source IP address: {a}")
+            src_ip = parse_ip_address(a)
         elif o in ("-j", "--json"):
             json_output = True
             json_filename = a
@@ -350,33 +329,22 @@ def main() -> None:
         if warmup and not json_output:
             print("Warming up DNS caches...")
             for server in f:
-                if shutdown:
+                if shared.shutdown:
                     break
                 if not server.strip():
                     continue
                 server = server.replace(' ', '')
-                resolver: str = ""
-                try:
-                    ipaddress.ip_address(server)
-                    resolver = server
-                except ValueError:
-                    try:
-                        results = socket.getaddrinfo(server, None, socket.AF_UNSPEC, socket.SOCK_DGRAM)
-                        if results and len(results[0]) > 4 and results[0][4]:
-                            resolver = str(results[0][4][0])
-                    except (OSError, IndexError, TypeError):
-                        pass
-
-                if resolver:
+                resolver = _resolve_server(server)
+                if resolver is not None:
                     try:
                         dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, 1, proto, src_ip,
                                          use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
                     except (KeyboardInterrupt, SystemExit):
-                        shutdown = True
+                        shared.shutdown = True
                         break
                     except Exception:
                         pass
-            if not shutdown:
+            if not shared.shutdown:
                 time.sleep(1)
 
         if not json_output:
@@ -388,7 +356,7 @@ def main() -> None:
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_server = {}
             for server in f:
-                if shutdown:
+                if shared.shutdown:
                     break
                 future = executor.submit(evaluate_server, server, qname, rdatatype, waittime, count, proto,
                                        dst_port, src_ip, use_edns, force_miss, want_dnssec, width, color,
@@ -396,14 +364,14 @@ def main() -> None:
                 future_to_server[future] = server
 
             for future in future_to_server:
-                if shutdown:
+                if shared.shutdown:
                     break
                 try:
                     result_output = future.result()
                     if result_output:
                         print(result_output, flush=True)
                 except (KeyboardInterrupt, SystemExit):
-                    shutdown = True
+                    shared.shutdown = True
                     break
                 except Exception:
                     pass

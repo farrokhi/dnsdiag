@@ -27,16 +27,14 @@
 
 import errno
 import getopt
-import ipaddress
 import os
-import signal
 import socket
 import ssl
 import struct
 import sys
 import time
 from statistics import stdev
-from typing import Any, Tuple, Optional
+from typing import Any
 
 import dns.edns
 import dns.exception
@@ -52,13 +50,13 @@ import httpx
 
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
     get_default_port, valid_rdatatype, CustomSocket
+import dnsdiag.shared as shared
 from dnsdiag.shared import __version__, valid_hostname, unsupported_feature, random_string, die, err, \
-    set_protocol_exclusive
+    set_protocol_exclusive, parse_ip_address, setup_signal_handler, resolve_server_address
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __progname__ = os.path.basename(sys.argv[0])
-shutdown = False
 
 
 def usage(exit_code: int = 0) -> None:
@@ -101,61 +99,7 @@ Usage: %s [-346aDeEFhLmqnrvTQxXH] [-i interval] [-w wait] [-p dst_port] [-P src_
     sys.exit(exit_code)
 
 
-def setup_signal_handler() -> None:
-    try:
-        if hasattr(signal, 'SIGTSTP'):
-            signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError:  # not all signals are supported on all platforms
-        pass
-
-
-def signal_handler(sig: int, frame: Any) -> None:
-    global shutdown
-    if shutdown:  # pressed twice, so exit immediately
-        sys.exit(0)
-    shutdown = True  # pressed once, exit gracefully
-
-
-def validate_server_address(dnsserver: str, address_family: Optional[int]) -> Tuple[str, str]:
-    """checks if we have a valid dns server address and resolve if it is a hostname"""
-
-    original_server = dnsserver
-    try:
-        ipaddress.ip_address(dnsserver)
-    except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
-        try:
-            if address_family == socket.AF_INET6:
-                results = socket.getaddrinfo(dnsserver, None, address_family, socket.SOCK_DGRAM,
-                                             flags=socket.AI_V4MAPPED)
-            else:
-                results = socket.getaddrinfo(dnsserver, None, address_family or socket.AF_UNSPEC, socket.SOCK_DGRAM)
-
-            if not results:
-                die(f'ERROR: cannot resolve hostname: {dnsserver}')
-
-            # getaddrinfo returns list of tuples: (family, type, proto, canonname, sockaddr)
-            # Extract IP address from first result's sockaddr tuple
-            family, socktype, proto, canonname, sockaddr = results[0]
-
-            # sockaddr format depends on address family:
-            # IPv4: (address, port)
-            # IPv6: (address, port, flow info, scope id)
-            if sockaddr and len(sockaddr) >= 1:
-                dnsserver = str(sockaddr[0])
-            else:
-                die(f'ERROR: invalid address data for hostname: {dnsserver}')
-
-        except (OSError, socket.gaierror) as e:
-            die(f'ERROR: cannot resolve hostname {original_server}: {e}')
-        except (IndexError, TypeError, ValueError) as e:
-            die(f'ERROR: invalid address format for hostname {original_server}: {e}')
-
-    return dnsserver, original_server
-
-
 def main() -> None:
-    global shutdown
     setup_signal_handler()
 
     if len(sys.argv) == 1:
@@ -189,7 +133,7 @@ def main() -> None:
     af = None
     af_ipv4_set = False
     af_ipv6_set = False
-    proto_option_set: Optional[str] = None
+    proto_option_set: str | None = None
     qname = 'wikipedia.org'
 
     try:
@@ -350,12 +294,8 @@ def main() -> None:
                 die(f"ERROR: invalid source port value: {a}")
 
         elif o in ("-S", "--srcip"):
-            try:
-                ipaddress.ip_address(a)
-                src_ip = a
-                # TODO: validate src_ip address family against -4/-6 flag and infer af when not set
-            except ValueError:
-                die(f"ERROR: invalid source IP address: {a}")
+            src_ip = parse_ip_address(a)
+            # TODO: validate src_ip address family against -4/-6 flag and infer af when not set
 
         elif o == "--ecs":
             client_subnet = a
@@ -374,7 +314,8 @@ def main() -> None:
     if dnsserver is None:
         dnsserver = str(dns.resolver.get_default_resolver().nameservers[0])
 
-    dnsserver_ip, dnsserver_hostname = validate_server_address(dnsserver, af)
+    dnsserver_hostname = dnsserver  # keep original name for display and SNI
+    dnsserver_ip = resolve_server_address(dnsserver, af)
 
     response_time = []
     i = 0
@@ -405,7 +346,7 @@ def main() -> None:
           (__progname__, server_display, dst_port, qname, proto_to_text(proto), dns.rdataclass.to_text(rdata_class),
            rdatatype, dns.flags.to_text(request_flags)), flush=True)
 
-    while not shutdown:
+    while not shared.shutdown:
 
         if 0 < count <= i:
             break
@@ -634,7 +575,7 @@ def main() -> None:
                 continue
         except KeyboardInterrupt:
             # Handle Ctrl+C during DNS query
-            shutdown = True
+            shared.shutdown = True
             break
         else:
             # Use perf_counter() measurements for accurate wall-clock time
@@ -762,7 +703,7 @@ def main() -> None:
                         print("%s (%d): %s" % (option_name, ans_opt.otype, option_details), flush=True)
 
             # Check for shutdown signal after verbose output processing
-            if shutdown:
+            if shared.shutdown:
                 break
 
             time_to_next = (stime + interval) - etime
@@ -770,7 +711,7 @@ def main() -> None:
                 # Interruptible sleep - check for shutdown signal every 0.1 seconds
                 sleep_start = time.time()
                 while time.time() - sleep_start < time_to_next:
-                    if shutdown:
+                    if shared.shutdown:
                         break
                     sleep_duration = time_to_next - (time.time() - sleep_start)
                     if sleep_duration > 0:

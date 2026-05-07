@@ -29,7 +29,6 @@ import concurrent.futures
 import getopt
 import ipaddress
 import os
-import signal
 import socket
 import sys
 import time
@@ -42,33 +41,18 @@ import dns.resolver
 
 import dnsdiag.whois
 from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, get_default_port
-from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_protocol_exclusive
+import dnsdiag.shared as shared
+from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_protocol_exclusive, parse_ip_address, \
+    setup_signal_handler, resolve_server_address
 
 # Global Variables
 quiet = False
 whois_cache: dict[str, Any] = {}
-shutdown = False
 
 # Constants
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
 __progname__ = os.path.basename(sys.argv[0])
-
-
-def setup_signal_handler() -> None:
-    try:
-        if hasattr(signal, 'SIGTSTP'):
-            signal.signal(signal.SIGTSTP, signal.SIG_IGN)  # ignore CTRL+Z
-        signal.signal(signal.SIGINT, signal_handler)  # custom CTRL+C handler
-    except AttributeError:  # not all signals are supported on all platforms
-        pass
-
-
-def signal_handler(sig: int, frame: Any) -> None:
-    global shutdown
-    if shutdown:  # pressed twice, so exit immediately
-        sys.exit(0)
-    shutdown = True  # pressed once, exit gracefully
 
 
 def test_import() -> None:
@@ -173,7 +157,7 @@ def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
 
 
 def main() -> None:
-    global quiet, shutdown, whois_cache
+    global quiet, whois_cache
 
     setup_signal_handler()
 
@@ -235,11 +219,7 @@ def main() -> None:
         elif o in ("-q", "--quiet"):
             quiet = True
         elif o in ("-S", "--srcip"):
-            try:
-                ipaddress.ip_address(a)
-                src_ip = a
-            except ValueError:
-                die(f"ERROR: invalid source IP address: {a}")
+            src_ip = parse_ip_address(a)
         elif o in ("-w", "--wait"):
             try:
                 timeout = int(a)
@@ -320,49 +300,25 @@ def main() -> None:
         else:
             dnsserver = str(nameservers[0])
 
-    # check if we have a valid dns server address and detect/set address family
+    # Detect address family from IP, or resolve hostname and default af to IPv4
     try:
         addr = ipaddress.ip_address(dnsserver)
-        # Auto-detect address family from IP address (or verify it matches user request)
         if isinstance(addr, ipaddress.IPv4Address):
             if af is not None and af != socket.AF_INET:
                 die("ERROR: DNS server is IPv4 but -6 flag was specified")
             af = socket.AF_INET
-        else:  # IPv6
+        else:
             if af is not None and af != socket.AF_INET6:
                 die("ERROR: DNS server is IPv6 but -4 flag was specified")
             af = socket.AF_INET6
-    except ValueError:  # so it is not a valid IPv4 or IPv6 address, so try to resolve host name
-        # If af not specified, default to IPv4
+    except ValueError:  # hostname — resolve it
         if af is None:
             af = socket.AF_INET
-        try:
-            if af == socket.AF_INET6:
-                results = socket.getaddrinfo(dnsserver, None, family=af, flags=socket.AI_V4MAPPED)
-            else:
-                results = socket.getaddrinfo(dnsserver, None, family=af)
+        dnsserver = resolve_server_address(dnsserver, af)
 
-            if results and len(results[0]) > 4 and results[0][4]:
-                dnsserver = str(results[0][4][0])
-            else:
-                die(f'ERROR: invalid address format for hostname: {dnsserver}')
-        except OSError:
-            die(f'ERROR: cannot resolve hostname: {dnsserver}')
-        except (IndexError, TypeError):
-            die(f'ERROR: invalid address format for hostname: {dnsserver}')
-
-    # Validate source IP address family if specified
+    # Validate source IP address family against the resolved server family
     if src_ip:
-        try:
-            src_addr = ipaddress.ip_address(src_ip)
-            is_mismatch = ((af == socket.AF_INET and not isinstance(src_addr, ipaddress.IPv4Address)) or
-                           (af == socket.AF_INET6 and not isinstance(src_addr, ipaddress.IPv6Address)))
-            if is_mismatch:
-                af_name = "IPv4" if af == socket.AF_INET else "IPv6"
-                src_type = "IPv4" if isinstance(src_addr, ipaddress.IPv4Address) else "IPv6"
-                die(f"ERROR: source IP is {src_type} but target DNS server is {af_name}")
-        except ValueError:
-            die(f"ERROR: invalid source IP address: {src_ip}")
+        parse_ip_address(src_ip, family=af)
 
     # At this point dnsserver must be set (either from command line or system resolver)
     assert dnsserver is not None
@@ -385,7 +341,7 @@ def main() -> None:
 
     while True:
         # Check for shutdown signal
-        if shutdown:
+        if shared.shutdown:
             break
 
         # some platforms permit opening a DGRAM socket for ICMP without root permission
@@ -443,10 +399,10 @@ def main() -> None:
             except socket.error:
                 pass
             except KeyboardInterrupt:
-                shutdown = True
+                shared.shutdown = True
                 break
             except SystemExit:
-                shutdown = True
+                shared.shutdown = True
                 break
             finally:
                 etime = time.perf_counter()
@@ -455,10 +411,10 @@ def main() -> None:
         try:
             reached, resp_time, nsid_value = thr.result()
         except SystemExit:
-            shutdown = True
+            shared.shutdown = True
             break
         except KeyboardInterrupt:
-            shutdown = True
+            shared.shutdown = True
             break
 
         if reached and resp_time is not None:
@@ -476,16 +432,16 @@ def main() -> None:
             except socket.error:
                 curr_name = curr_addr
             except KeyboardInterrupt:
-                shutdown = True
+                shared.shutdown = True
                 break
             except SystemExit:
-                shutdown = True
+                shared.shutdown = True
                 break
             except Exception:
                 print("unexpected error: ", sys.exc_info()[0])
 
         # Check for shutdown signal after hostname resolution
-        if shutdown:
+        if shared.shutdown:
             break
 
         if curr_addr:
@@ -497,7 +453,7 @@ def main() -> None:
                     if asn and asn.asn != "NA":
                         as_name = "[AS%s %s] " % (asn.asn, asn.owner)
                 except AttributeError:
-                    if shutdown:
+                    if shared.shutdown:
                         sys.exit(0)
 
             c = color.N  # default
@@ -528,7 +484,7 @@ def main() -> None:
         if (hops >= count) or (curr_addr == dnsserver) or reached:
             break
 
-    if expert_mode and not shutdown:
+    if expert_mode and not shared.shutdown:
         expert_report(trace_path, color_mode)
 
 
