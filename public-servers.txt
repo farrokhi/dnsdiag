@@ -1,4 +1,4 @@
-# Last tested and validated: March 2026
+# Last tested and validated: May 2026
 
 ## Cloudflare
 # Fast, privacy-focused DNS with no logging policy
@@ -172,14 +172,6 @@
 2606:1a40::11
 2606:1a40:1::11
 
-## Wikimedia DNS (Formerly Wikidough)
-# Wikimedia Foundation's public DNS resolver
-# Privacy-focused DNS service from the Wikipedia organization
-# Website: https://meta.wikimedia.org/wiki/Wikimedia_DNS
-# NOTE: Service discontinued - servers not responding (tested Sept 2025)
-# 185.71.138.138
-# 2001:67c:930::1
-
 ## NextDNS
 # Highly customizable DNS service with extensive filtering options
 # Cloud-based DNS with detailed analytics and custom block lists
@@ -212,42 +204,40 @@
 2a11::
 
 ## Mullvad DNS
-# VPN provider's public DNS service with privacy focus
+# Privacy-focused public DNS service, accessible without a VPN subscription
+# Offers multiple filtering tiers: unfiltered (.2), adblock (.3), base (.4), extended (.5), family (.6), all (.9)
 # Website: https://mullvad.net/en/help/dns-over-https-and-dns-over-tls
-# NOTE: Servers respond but return REFUSED - may require VPN subscription or special config
-# 194.242.2.2 (returns REFUSED)
-# 194.242.2.3 (returns REFUSED)
-# 2a07:e340::2 (returns REFUSED)
-# 2a07:e340::3 (returns REFUSED)
+# Protocols: DoT, DoH
+# NOTE: Plain UDP/TCP queries return REFUSED by design; use -X (DoT) or -H (DoH)
+# DoT: dns.mullvad.net (port 853)
+# DoH: https://dns.mullvad.net/dns-query
+194.242.2.2
+194.242.2.3
+194.242.2.4
+194.242.2.5
+194.242.2.6
+194.242.2.9
+2a07:e340::2
+2a07:e340::3
+2a07:e340::4
+2a07:e340::5
+2a07:e340::6
+2a07:e340::9
 
 ## BlahDNS
 # Hobby adblock DNS project with DoH, DoT, and DoQ support
 # Open source DNS service with ad and malware blocking
 # Website: https://blahdns.com/
-# NOTE: Hobby project - servers intermittently available (tested Sept 2025)
-# 78.46.244.143 (not responding)
-# 178.82.102.190 (not responding)
-2a01:4f8:1c1c:6b4b::1
-2a06:e881:1201::1
-
-## Alternate DNS
-# Alternative public DNS service with basic resolution
-# Provides unfiltered DNS queries without logging
-# Website: https://alternate-dns.com/
-# NOTE: All IPv4 servers not responding (tested Sept 2025)
-# 76.76.19.19 (not responding)
-# 76.223.100.101 (not responding)
-2602:fcbc::ad
-2602:fcbc:2::ad
+# Protocols: DoT (plain UDP/TCP not available)
+78.46.244.143
 
 ## UncensoredDNS
 # Censorship-resistant DNS service
 # Provides unfiltered internet access without content blocking
 # Website: https://blog.uncensoreddns.org/
-# NOTE: Do53 (UDP/TCP) not responding, but DoT works (tested Oct 2025)
-# Protocols: DoT
+# Protocols: DoT (plain UDP/TCP not available)
 # DoT: unicast.censurfridns.dk (port 853)
-# 91.239.100.100 (not responding)
+91.239.100.100
 89.233.43.71
 2001:67c:28a4::
 2a01:3a0:53:53::
@@ -256,11 +246,9 @@
 # Open source DNS service with ad blocking capabilities
 # Community-driven DNS resolver with privacy focus
 # Website: https://libredns.gr/
-# NOTE: All IPv4 servers not responding (tested Sept 2025)
-# 116.203.115.192 (not responding)
-# 116.202.176.26 (not responding)
+# NOTE: some servers are DoT only; plain UDP works on 2a01:4f8:1c0c:40db::1
+116.202.176.26
 2a01:4f8:1c0c:40db::1
-2a01:4f8:c2c:52bf::1
 
 ## Neustar DNS
 # Enterprise-grade DNS with threat protection and filtering options
@@ -281,11 +269,4 @@
 116.203.32.217
 2a01:4f8:1c1b:44aa::32:217
 
-## Comcast DNS
-# Major ISP's public DNS resolvers
-# Basic DNS resolution from large US telecommunications provider
-# Website: https://www.xfinity.com/
-# NOTE: Servers not responding - likely restricted to Comcast customers only
-# 75.75.75.75 (access restricted)
-# 75.75.76.76 (access restricted)
 

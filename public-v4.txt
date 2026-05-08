@@ -1,4 +1,4 @@
-# Last tested and validated: October 2025
+# Last tested and validated: May 2026
 
 ## Cloudflare
 # Fast, privacy-focused DNS with no logging policy
@@ -90,10 +90,6 @@
 76.76.2.11
 76.76.10.11
 
-## Wikimedia DNS (Formerly Wikidough)
-# NOTE: Service discontinued (tested Sept 2025)
-# 185.71.138.138
-
 ## NextDNS
 # Highly customizable DNS service
 45.90.28.157
@@ -110,28 +106,26 @@
 45.11.45.11
 
 ## Mullvad DNS
-# NOTE: Returns REFUSED - may require VPN subscription
-# 194.242.2.2
-# 194.242.2.3
+# Protocols: DoT, DoH only (plain UDP/TCP returns REFUSED by design)
+194.242.2.2
+194.242.2.3
+194.242.2.4
+194.242.2.5
+194.242.2.6
+194.242.2.9
 
 ## BlahDNS
-# NOTE: Hobby project - intermittently available (tested Sept 2025)
-# 78.46.244.143
-# 178.82.102.190
-
-## Alternate DNS
-# NOTE: Not responding (tested Sept 2025)
-# 76.76.19.19
-# 76.223.100.101
+# Protocols: DoT only (plain UDP/TCP not available)
+78.46.244.143
 
 ## UncensoredDNS
-# NOTE: Do53 not responding, but DoT works (tested Oct 2025)
+# Protocols: DoT only (plain UDP/TCP not available)
+91.239.100.100
 89.233.43.71
 
 ## LibreDNS
-# NOTE: Not responding (tested Sept 2025)
-# 116.203.115.192
-# 116.202.176.26
+# NOTE: 116.202.176.26 is DoT only
+116.202.176.26
 
 ## Neustar DNS
 # Enterprise-grade DNS with threat protection
@@ -142,7 +136,3 @@
 # Privacy-focused German DNS service
 116.203.32.217
 
-## Comcast DNS
-# NOTE: Access restricted to Comcast customers only
-# 75.75.75.75
-# 75.75.76.76
