@@ -1,4 +1,4 @@
-[![PyPI](https://img.shields.io/pypi/v/dnsdiag.svg?maxAge=8600)](https://pypi.python.org/pypi/dnsdiag/) [![PyPI](https://img.shields.io/pypi/l/dnsdiag.svg?maxAge=8600)]() [![Downloads](https://static.pepy.tech/personalized-badge/dnsdiag?period=total&units=international_system&left_color=grey&right_color=blue&left_text=PyPi%20Downloads)](https://pepy.tech/project/dnsdiag) [![Downloads](https://static.pepy.tech/badge/dnsdiag/month)](https://pepy.tech/project/dnsdiag) [![PyPI](https://img.shields.io/pypi/pyversions/dnsdiag.svg?maxAge=8600)]() [![Docker Pulls](https://img.shields.io/docker/pulls/farrokhi/dnsdiag)](https://hub.docker.com/r/farrokhi/dnsdiag) [![GitHub stars](https://img.shields.io/github/stars/farrokhi/dnsdiag.svg?style=social&label=Star&maxAge=8600)](https://github.com/farrokhi/dnsdiag/stargazers) 
+[![PyPI](https://img.shields.io/pypi/v/dnsdiag.svg?maxAge=8600)](https://pypi.python.org/pypi/dnsdiag/) [![PyPI](https://img.shields.io/pypi/l/dnsdiag.svg?maxAge=8600)]() [![Downloads](https://static.pepy.tech/personalized-badge/dnsdiag?period=total&units=international_system&left_color=grey&right_color=blue&left_text=PyPi%20Downloads)](https://pepy.tech/project/dnsdiag) [![Downloads](https://static.pepy.tech/badge/dnsdiag/month)](https://pepy.tech/project/dnsdiag) [![PyPI](https://img.shields.io/pypi/pyversions/dnsdiag.svg?maxAge=8600)]() [![Docker Pulls](https://img.shields.io/docker/pulls/farrokhi/dnsdiag)](https://hub.docker.com/r/farrokhi/dnsdiag) [![GitHub stars](https://img.shields.io/github/stars/farrokhi/dnsdiag.svg?style=social&label=Star&maxAge=8600)](https://github.com/farrokhi/dnsdiag/stargazers)
 
 DNS Measurement, Troubleshooting and Security Auditing Toolset
 ===============================================================
@@ -340,7 +340,7 @@ cat results.jsonl | jq -r 'select(.data.r_lost_percent == 0) | .data.resolver'
 
 ### Author
 
-Babak Farrokhi 
+Babak Farrokhi
 
 - github: [github.com/farrokhi](https://github.com/farrokhi/)
 - website: [farrokhi.net](https://farrokhi.net/)
