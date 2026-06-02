@@ -6,7 +6,7 @@ pytest>=6.0.0
 # Additional pytest plugins (optional but recommended)
 pytest-timeout>=2.4.0           # Test timeout handling
 pytest-xdist>=2.4.0            # Parallel test execution
-pytest-cov>=3.0.0              # Code coverage reporting
+pytest-cov>=7.1.0              # Code coverage reporting
 pytest-html>=3.1.0             # HTML test reports
 pytest-json-report>=1.5.0      # JSON test reports
 
