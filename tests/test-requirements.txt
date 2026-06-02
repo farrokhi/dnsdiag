@@ -14,7 +14,7 @@ pytest-json-report>=1.5.0      # JSON test reports
 pytest-github-actions-annotate-failures>=0.1.7  # GitHub Actions integration (optional)
 
 # Performance and profiling (optional)
-pytest-benchmark>=3.4.1        # Performance benchmarking (optional)
+pytest-benchmark>=5.2.3        # Performance benchmarking (optional)
 
 # Better assertion introspection
 pytest-clarity>=1.0.1          # Better assertion failure messages (optional)
