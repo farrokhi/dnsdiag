@@ -10,6 +10,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least-privilege default: CI only needs to read the repo
+permissions:
+  contents: read
+
 jobs:
   # Fast linting and type checking (runs once)
   lint:
