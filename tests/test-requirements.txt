@@ -11,7 +11,7 @@ pytest-html>=3.1.0             # HTML test reports
 pytest-json-report>=1.5.0      # JSON test reports
 
 # For CI/CD integration
-pytest-github-actions-annotate-failures>=0.1.7  # GitHub Actions integration (optional)
+pytest-github-actions-annotate-failures>=0.4.0  # GitHub Actions integration (optional)
 
 # Performance and profiling (optional)
 pytest-benchmark>=5.2.3        # Performance benchmarking (optional)
