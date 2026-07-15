@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v2.9.4](https://github.com/farrokhi/dnsdiag/releases/tag/v2.9.4) - 2026-07-01
+
+<small>[Compare with v2.9.3](https://github.com/farrokhi/dnsdiag/compare/v2.9.3...v2.9.4)</small>
+
+### Fixed
+
+- fix: reset shutdown flag at the start of each CLI invocation ([a2a349f](https://github.com/farrokhi/dnsdiag/commit/a2a349f7354e06a080d90e7cef6093e91d8251b8) by [@farrokhi](https://github.com/farrokhi)).
+- fix(dnsping): validate source IP address family against -4/-6 flag ([54f81aa](https://github.com/farrokhi/dnsdiag/commit/54f81aa1ecee202f06329b78ee480a9fea6edf75) by [@farrokhi](https://github.com/farrokhi)).
+- fix(dnsping): fix variable shadowing and div-by-zero in stats ([f908875](https://github.com/farrokhi/dnsdiag/commit/f90887590d1a1b0b656ce6e73bfb66f9f9340cbc) by [@farrokhi](https://github.com/farrokhi)).
+- fix(dnsping): reuse TCP connection for fixed source port queries ([f9564cd](https://github.com/farrokhi/dnsdiag/commit/f9564cd0ce695658198be453aedfbe6aaf48d930) by [@farrokhi](https://github.com/farrokhi)).
+
 ## [v2.9.3](https://github.com/farrokhi/dnsdiag/releases/tag/v2.9.3) - 2026-02-03
 
 <small>[Compare with v2.9.2](https://github.com/farrokhi/dnsdiag/compare/v2.9.2...v2.9.3)</small>
@@ -26,7 +37,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - fix: handle transient QUIC connection failures gracefully ([87b2285](https://github.com/farrokhi/dnsdiag/commit/87b2285149c23b9758d332ef811c1970e407f2d6) by [@farrokhi](https://github.com/farrokhi)).
 - fix: detect Windows ARM64 architecture correctly in build script ([19f3dc2](https://github.com/farrokhi/dnsdiag/commit/19f3dc2eebc3da8c29dde26df09fe593c6b63aa2) by [@farrokhi](https://github.com/farrokhi)).
 
-<!-- insertion marker -->
 ## [v2.9.2](https://github.com/farrokhi/dnsdiag/releases/tag/v2.9.2) - 2026-01-13
 
 <small>[Compare with v2.9.1](https://github.com/farrokhi/dnsdiag/compare/v2.9.1...v2.9.2)</small>

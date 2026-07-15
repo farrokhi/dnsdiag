@@ -34,7 +34,7 @@ from typing import Any, NoReturn
 
 shutdown: bool = False
 
-__version__ = '2.9.3'
+__version__ = '2.9.4'
 
 
 def signal_handler(sig: int, frame: Any) -> None:
