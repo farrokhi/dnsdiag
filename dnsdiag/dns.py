@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Copyright (c) 2016-2026, Babak Farrokhi
 # All rights reserved.
@@ -30,14 +29,14 @@ import time
 from statistics import stdev
 from typing import Any
 
-import httpx
 import dns.edns
 import dns.message
 import dns.query
 import dns.rcode
 import dns.rdataclass
+import httpx
 
-from dnsdiag.shared import random_string, err, unsupported_feature
+from dnsdiag.shared import err, random_string, unsupported_feature
 
 # Transport protocols
 PROTO_UDP: int = 0

@@ -42,10 +42,27 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.dns
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, flags_to_text, get_default_port
-import dnsdiag.shared as shared
-from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_protocol_exclusive, parse_ip_address, \
-    setup_signal_handler
+from dnsdiag import shared
+from dnsdiag.dns import (
+    PROTO_HTTP3,
+    PROTO_HTTPS,
+    PROTO_QUIC,
+    PROTO_TCP,
+    PROTO_TLS,
+    PROTO_UDP,
+    flags_to_text,
+    get_default_port,
+)
+from dnsdiag.shared import (
+    Colors,
+    __version__,
+    die,
+    err,
+    parse_ip_address,
+    set_protocol_exclusive,
+    setup_signal_handler,
+    valid_hostname,
+)
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'
@@ -161,10 +178,9 @@ def evaluate_server(server: str, qname: str, rdatatype: str, waittime: int, coun
         if json_filename == '-':
             output_lines.append(json.dumps(outer_data))
         else:
-            with print_lock:
-                with open(json_filename, 'a+') as outfile:
-                    json.dump(outer_data, outfile)
-                    outfile.write('\n')
+            with print_lock, open(json_filename, 'a+') as outfile:
+                json.dump(outer_data, outfile)
+                outfile.write('\n')
 
     else:
         result = "%s  %-7.2f  %-7.2f  %-7.2f  %-10.2f  %s%%%-3d%s     %-7s  %-26s  %-12s" % (

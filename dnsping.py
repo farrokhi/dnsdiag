@@ -48,11 +48,31 @@ import dns.rdatatype
 import dns.resolver
 import httpx
 
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_TLS, PROTO_HTTPS, PROTO_QUIC, PROTO_HTTP3, proto_to_text, \
-    get_default_port, valid_rdatatype, CustomSocket
-import dnsdiag.shared as shared
-from dnsdiag.shared import __version__, valid_hostname, unsupported_feature, random_string, die, err, \
-    set_protocol_exclusive, parse_ip_address, setup_signal_handler, resolve_server_address
+from dnsdiag import shared
+from dnsdiag.dns import (
+    PROTO_HTTP3,
+    PROTO_HTTPS,
+    PROTO_QUIC,
+    PROTO_TCP,
+    PROTO_TLS,
+    PROTO_UDP,
+    CustomSocket,
+    get_default_port,
+    proto_to_text,
+    valid_rdatatype,
+)
+from dnsdiag.shared import (
+    __version__,
+    die,
+    err,
+    parse_ip_address,
+    random_string,
+    resolve_server_address,
+    set_protocol_exclusive,
+    setup_signal_handler,
+    unsupported_feature,
+    valid_hostname,
+)
 
 __author__ = 'Babak Farrokhi (babak@farrokhi.net)'
 __license__ = 'BSD'

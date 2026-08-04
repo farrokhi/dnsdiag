@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Copyright (c) 2016-2026, Babak Farrokhi
 # All rights reserved.
@@ -55,7 +54,7 @@ def restore() -> dict[str, Any]:
         with open(WHOIS_CACHE_FILE, 'rb') as pkl_file:
             whois: dict[str, Any] = pickle.load(pkl_file)
             return whois
-    except (IOError, EOFError, pickle.UnpicklingError):
+    except (OSError, EOFError, pickle.UnpicklingError):
         return {}
 
 

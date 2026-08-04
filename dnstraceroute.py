@@ -40,10 +40,19 @@ import dns.rdatatype
 import dns.resolver
 
 import dnsdiag.whois
-from dnsdiag.dns import PROTO_UDP, PROTO_TCP, PROTO_QUIC, PROTO_HTTP3, get_default_port
-import dnsdiag.shared as shared
-from dnsdiag.shared import __version__, Colors, valid_hostname, die, err, set_protocol_exclusive, parse_ip_address, \
-    setup_signal_handler, resolve_server_address
+from dnsdiag import shared
+from dnsdiag.dns import PROTO_HTTP3, PROTO_QUIC, PROTO_TCP, PROTO_UDP, get_default_port
+from dnsdiag.shared import (
+    Colors,
+    __version__,
+    die,
+    err,
+    parse_ip_address,
+    resolve_server_address,
+    set_protocol_exclusive,
+    setup_signal_handler,
+    valid_hostname,
+)
 
 # Global Variables
 quiet = False
@@ -396,7 +405,7 @@ def main() -> None:
                             curr_addr = None
                     else:
                         curr_addr = None
-            except socket.error:
+            except OSError:
                 pass
             except KeyboardInterrupt:
                 shared.shutdown = True
@@ -429,7 +438,7 @@ def main() -> None:
             try:
                 if curr_addr:
                     curr_name = socket.gethostbyaddr(curr_addr)[0]
-            except socket.error:
+            except OSError:
                 curr_name = curr_addr
             except KeyboardInterrupt:
                 shared.shutdown = True

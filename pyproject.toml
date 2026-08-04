@@ -105,4 +105,7 @@ ignore = ["E501", "E741"]
 target-version = "py310"
 
 [tool.ruff.lint]
+# Pin the rule set explicitly so it does not shift when ruff's defaults change.
+# Beyond the E/F/W baseline, only rules we have cleaned up are enabled.
+select = ["E", "F", "W", "I", "EXE001", "PLR0402", "UP024", "FURB188", "SIM117"]
 ignore = ["E501", "E741"]

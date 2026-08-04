@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # Copyright (c) 2016-2026, Babak Farrokhi
 # All rights reserved.
@@ -156,8 +155,7 @@ def valid_hostname(hostname: str, allow_underscore: bool = False) -> bool:
         return False
 
     # Remove trailing dot if present (FQDN notation)
-    if hostname.endswith('.'):
-        hostname = hostname[:-1]
+    hostname = hostname.removesuffix('.')
 
     # Check overall length (max 253 characters for FQDN)
     if len(hostname) > 253:
