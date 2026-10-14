@@ -492,6 +492,8 @@ def main() -> None:
                         answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
                                                   source=src_ip, source_port=src_port,
                                                   http_version=dns.query.HTTPVersion.H3)
+                    except dns.query.NoDOH:
+                        die("ERROR: DNS-over-HTTP/3 requires the aioquic module")
                     except ConnectionRefusedError:
                         if not quiet:
                             print("Connection refused", flush=True)
@@ -529,6 +531,8 @@ def main() -> None:
                         answers = dns.query.quic(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                                  source=src_ip, source_port=src_port,
                                                  server_hostname=server_hostname)
+                    except dns.query.NoDOQ:
+                        die("ERROR: DNS-over-QUIC requires the aioquic module")
                     except dns.exception.Timeout:
                         if not quiet:
                             print("Request timeout", flush=True)
@@ -594,6 +598,9 @@ def main() -> None:
                 die(f"ERROR: {e}")
             else:
                 sys.exit(1)
+        except dns.exception.FormError:
+            if not quiet:
+                print("Malformed response", flush=True)
         except ValueError:
             if not quiet:
                 err("ERROR: invalid response")
