@@ -30,11 +30,12 @@ from statistics import stdev
 from typing import Any
 
 import dns.edns
+import dns.exception
 import dns.message
 import dns.query
 import dns.rcode
 import dns.rdataclass
-import httpx
+import httpx2
 
 from dnsdiag.shared import err, random_string, unsupported_feature
 
@@ -172,12 +173,12 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
                 else:
                     unsupported_feature()
 
-        except dns.query.NoDOH:
+        except (dns.query.NoDOH, dns.query.NoDOQ):
             raise
-        except (httpx.ConnectTimeout, httpx.ReadTimeout,
-                httpx.ConnectError):
+        except (httpx2.ConnectTimeout, httpx2.ReadTimeout,
+                httpx2.ConnectError):
             raise ConnectionError('Connection failed')
-        except ValueError:
+        except (ValueError, dns.exception.FormError):
             retval.rcode_text = "Invalid Response"
             break
         except dns.exception.Timeout:

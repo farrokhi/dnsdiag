@@ -89,11 +89,17 @@ mkdir -p "${PKG_PATH}" || die "Cannot create dir hierarcy: ${PKG_PATH}"
 
 for i in dnsping.py dnstraceroute.py dnseval.py; do
     msg "Building package for ${i}"
+    # dnspython enables DoH/DoQ only after checking these packages' versions via
+    # importlib.metadata, so their dist-info must be bundled or both report unavailable.
     pyinstaller ${i} -y --onefile --clean \
         --log-level=ERROR \
         --distpath="${PKG_PATH}" \
         --hidden-import=dns \
-        --hidden-import=httpx
+        --hidden-import=httpx2 \
+        --copy-metadata=httpx2 \
+        --copy-metadata=httpcore2 \
+        --copy-metadata=h2 \
+        --copy-metadata=aioquic
 done
 
 msg "Verifying built binaries..."

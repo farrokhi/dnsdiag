@@ -46,7 +46,7 @@ import dns.rdata
 import dns.rdataclass
 import dns.rdatatype
 import dns.resolver
-import httpx
+import httpx2
 
 from dnsdiag import shared
 from dnsdiag.dns import (
@@ -459,8 +459,8 @@ def main() -> None:
                                                   source=src_ip, source_port=src_port,
                                                   http_version=dns.query.HTTPVersion.HTTP_2)
                     except dns.query.NoDOH:
-                        die("ERROR: python httpx module not available")
-                    except httpx.ConnectError:
+                        die("ERROR: DNS-over-HTTPS requires the httpx2, httpcore2 and h2 modules")
+                    except httpx2.ConnectError:
                         if not quiet:
                             print("Connection refused", flush=True)
                         continue
@@ -474,7 +474,7 @@ def main() -> None:
                         continue
                     except ssl.SSLCertVerificationError as e:
                         die(f"Certificate verification failed: {e}")
-                    except (ssl.SSLError, httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
+                    except (ssl.SSLError, httpx2.WriteTimeout, httpx2.StreamError, httpx2.ProtocolError):
                         if not quiet:
                             print("Connection failed", flush=True)
                         continue
@@ -492,6 +492,8 @@ def main() -> None:
                         answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
                                                   source=src_ip, source_port=src_port,
                                                   http_version=dns.query.HTTPVersion.H3)
+                    except dns.query.NoDOH:
+                        die("ERROR: DNS-over-HTTP/3 requires the aioquic module")
                     except ConnectionRefusedError:
                         if not quiet:
                             print("Connection refused", flush=True)
@@ -506,7 +508,7 @@ def main() -> None:
                         continue
                     except ssl.SSLCertVerificationError as e:
                         die(f"Certificate verification failed: {e}")
-                    except (ssl.SSLError, httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
+                    except (ssl.SSLError, httpx2.WriteTimeout, httpx2.StreamError, httpx2.ProtocolError):
                         if not quiet:
                             print("Connection failed", flush=True)
                         continue
@@ -529,6 +531,8 @@ def main() -> None:
                         answers = dns.query.quic(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                                  source=src_ip, source_port=src_port,
                                                  server_hostname=server_hostname)
+                    except dns.query.NoDOQ:
+                        die("ERROR: DNS-over-QUIC requires the aioquic module")
                     except dns.exception.Timeout:
                         if not quiet:
                             print("Request timeout", flush=True)
@@ -569,10 +573,10 @@ def main() -> None:
                 if verbose:
                     err(f"ERROR: {e}")
             sys.exit(1)
-        except (httpx.ConnectTimeout, dns.exception.Timeout):
+        except (httpx2.ConnectTimeout, dns.exception.Timeout):
             if not quiet:
                 print("Request timeout", flush=True)
-        except httpx.ReadTimeout:
+        except httpx2.ReadTimeout:
             if not quiet:
                 print("Read timeout", flush=True)
         except EOFError:
@@ -594,6 +598,9 @@ def main() -> None:
                 die(f"ERROR: {e}")
             else:
                 sys.exit(1)
+        except dns.exception.FormError:
+            if not quiet:
+                print("Malformed response", flush=True)
         except ValueError:
             if not quiet:
                 err("ERROR: invalid response")
@@ -722,8 +729,12 @@ def main() -> None:
                                         tag = struct.unpack('!H', ans_opt.data[idx:idx + 2])[0]
                                         key_tags.append(str(tag))
                                 option_details = "tags=[%s]" % ",".join(key_tags)
-                        else:
+                        elif isinstance(ans_opt, dns.edns.GenericOption):
                             option_details = "type=%d, length=%d" % (ans_opt.otype, len(ans_opt.data))
+                        else:
+                            # Options dnspython parses into a typed class carry no raw .data; their
+                            # to_text() is "NAME value", which fits the "NAME (code): value" layout.
+                            option_name, _, option_details = ans_opt.to_text().partition(" ")
 
                         print("%s (%d): %s" % (option_name, ans_opt.otype, option_details), flush=True)
 

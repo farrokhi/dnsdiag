@@ -53,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
     steps:
       - uses: actions/checkout@v7
@@ -73,7 +73,7 @@ jobs:
 
       - name: Run unit tests (no network)
         run: |
-          python -m pytest tests/test_shared.py tests/test_packaging.py -v --tb=short
+          python -m pytest tests/test_shared.py tests/test_packaging.py tests/test_exception_handling.py tests/test_local_responses.py -v --tb=short
         env:
           PYTHONPATH: .
 
@@ -86,7 +86,7 @@ jobs:
       matrix:
         # Full OS coverage for critical Python versions
         os: [ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-latest, windows-latest]
-        python-version: ["3.10", "3.13", "3.14"]
+        python-version: ["3.11", "3.14", "3.15"]
 
     steps:
       - uses: actions/checkout@v7
@@ -107,7 +107,8 @@ jobs:
       - name: Verify critical dependencies
         run: |
           python -c "import dns; print(f'dnspython version: {dns.version.version}')" || exit 1
-          python -c "import httpx; print(f'httpx version: {httpx.__version__}')" || exit 1
+          python -c "import httpx2; print(f'httpx2 version: {httpx2.__version__}')" || exit 1
+          python -c "import dns.query, dns.quic; assert dns.query.have_doh and dns.quic.have_quic" || exit 1
 
       - name: Run integration tests
         run: |
@@ -136,7 +137,7 @@ jobs:
       matrix:
         # Reduced OS coverage for stable Python versions
         os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v7

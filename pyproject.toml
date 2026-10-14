@@ -7,7 +7,7 @@ name = "dnsdiag"
 version = "2.9.4"
 description = "DNS Measurement, Troubleshooting and Security Auditing Toolset (ping, traceroute)"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSD-2-Clause"
 license-files = ["LICENSE"]
 authors = [
@@ -18,22 +18,20 @@ classifiers = [
     "Topic :: System :: Networking",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Internet :: Name Service (DNS)",
     "Development Status :: 5 - Production/Stable",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "aioquic>=1.2.0",
     "cryptography>=42.0.5,<51",
     "cymruwhois>=1.6",
-    "dnspython>=2.8.0",
-    "h2>=4.1.0",
-    "httpx>=0.27.0",
+    "dnspython[doh,doq]>=2.9.0",
+    "httpx2>=2.13.0",
 ]
 
 [project.urls]
@@ -59,7 +57,7 @@ template = "path:.git-changelog-template.md.jinja"
 parse-trailers = false
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 mypy_path = "."
 namespace_packages = true
 ignore_missing_imports = true
@@ -91,7 +89,7 @@ disallow_untyped_defs = false
 ignore_errors = false
 
 [[tool.mypy.overrides]]
-module = ["cymruwhois", "dns.*", "httpx"]
+module = ["cymruwhois", "dns.*", "httpx2"]
 ignore_missing_imports = true
 
 [tool.flake8]
@@ -102,7 +100,7 @@ exclude = [".venv"]
 ignore = ["E501", "E741"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 # Pin the rule set explicitly so it does not shift when ruff's defaults change.
