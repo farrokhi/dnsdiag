@@ -46,7 +46,7 @@ import dns.rdata
 import dns.rdataclass
 import dns.rdatatype
 import dns.resolver
-import httpx
+import httpx2
 
 from dnsdiag import shared
 from dnsdiag.dns import (
@@ -459,8 +459,8 @@ def main() -> None:
                                                   source=src_ip, source_port=src_port,
                                                   http_version=dns.query.HTTPVersion.HTTP_2)
                     except dns.query.NoDOH:
-                        die("ERROR: python httpx module not available")
-                    except httpx.ConnectError:
+                        die("ERROR: DNS-over-HTTPS requires the httpx2, httpcore2 and h2 modules")
+                    except httpx2.ConnectError:
                         if not quiet:
                             print("Connection refused", flush=True)
                         continue
@@ -474,7 +474,7 @@ def main() -> None:
                         continue
                     except ssl.SSLCertVerificationError as e:
                         die(f"Certificate verification failed: {e}")
-                    except (ssl.SSLError, httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
+                    except (ssl.SSLError, httpx2.WriteTimeout, httpx2.StreamError, httpx2.ProtocolError):
                         if not quiet:
                             print("Connection failed", flush=True)
                         continue
@@ -506,7 +506,7 @@ def main() -> None:
                         continue
                     except ssl.SSLCertVerificationError as e:
                         die(f"Certificate verification failed: {e}")
-                    except (ssl.SSLError, httpx.WriteTimeout, httpx.StreamError, httpx.ProtocolError):
+                    except (ssl.SSLError, httpx2.WriteTimeout, httpx2.StreamError, httpx2.ProtocolError):
                         if not quiet:
                             print("Connection failed", flush=True)
                         continue
@@ -569,10 +569,10 @@ def main() -> None:
                 if verbose:
                     err(f"ERROR: {e}")
             sys.exit(1)
-        except (httpx.ConnectTimeout, dns.exception.Timeout):
+        except (httpx2.ConnectTimeout, dns.exception.Timeout):
             if not quiet:
                 print("Request timeout", flush=True)
-        except httpx.ReadTimeout:
+        except httpx2.ReadTimeout:
             if not quiet:
                 print("Read timeout", flush=True)
         except EOFError:

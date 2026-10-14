@@ -93,7 +93,7 @@ for i in dnsping.py dnstraceroute.py dnseval.py; do
         --log-level=ERROR \
         --distpath="${PKG_PATH}" \
         --hidden-import=dns \
-        --hidden-import=httpx
+        --hidden-import=httpx2
 done
 
 msg "Verifying built binaries..."

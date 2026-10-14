@@ -34,7 +34,7 @@ import dns.message
 import dns.query
 import dns.rcode
 import dns.rdataclass
-import httpx
+import httpx2
 
 from dnsdiag.shared import err, random_string, unsupported_feature
 
@@ -174,8 +174,8 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
 
         except dns.query.NoDOH:
             raise
-        except (httpx.ConnectTimeout, httpx.ReadTimeout,
-                httpx.ConnectError):
+        except (httpx2.ConnectTimeout, httpx2.ReadTimeout,
+                httpx2.ConnectError):
             raise ConnectionError('Connection failed')
         except ValueError:
             retval.rcode_text = "Invalid Response"
