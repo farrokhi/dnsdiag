@@ -73,7 +73,7 @@ jobs:
 
       - name: Run unit tests (no network)
         run: |
-          python -m pytest tests/test_shared.py tests/test_packaging.py -v --tb=short
+          python -m pytest tests/test_shared.py tests/test_packaging.py tests/test_exception_handling.py tests/test_local_responses.py -v --tb=short
         env:
           PYTHONPATH: .
 
