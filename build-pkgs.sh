@@ -120,6 +120,19 @@ for tool in dnsping dnstraceroute dnseval; do
         die "Binary failed to execute: ${BINARY}"
     fi
 done
+
+# --help passes even when dnspython has DoH/DoQ disabled in the frozen binary, as
+# happened in 2.9.4. A query to a closed local port (9/discard) should end in a
+# connection error; dnsping exits non-zero only if the protocol is unavailable or it crashed.
+DNSPING="${PKG_PATH}/dnsping"
+[ "${PLATFORM}" = "windows" ] && DNSPING="${DNSPING}.exe"
+for proto in --doh --http3 --quic; do
+    msg "Testing dnsping ${proto}..."
+    if ! OUTPUT=$("${DNSPING}" ${proto} -s 127.0.0.1 -p 9 -c 1 -w 1 example.com 2>&1); then
+        echo "${OUTPUT}" 1>&2
+        die "dnsping ${proto} is not functional in the built binary"
+    fi
+done
 msg "All binaries verified successfully"
 
 msg "Adding extra files..."
