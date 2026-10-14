@@ -31,7 +31,8 @@ view for informed decision-making.
 # Installation
 
 There are several ways to use this toolset, though we recommend running it
-directly from the source code for optimal flexibility and control.
+directly from the source code for optimal flexibility and control. Running from
+source or installing with pip requires Python 3.11 or newer.
 
 ## Source Code
 

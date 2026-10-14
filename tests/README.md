@@ -7,6 +7,7 @@ Comprehensive pytest-based test suites for dnsdiag tools.
 This directory contains automated tests for:
 - **dnsping** - DNS latency and response testing
 - **dnstraceroute** - DNS path tracing with IPv4/IPv6 support
+- **transport error handling** - offline tests that need no network access
 
 ## Quick Start
 
@@ -88,6 +89,24 @@ pytest tests/test_dnstraceroute_pytest.py -k "ipv6"
 
 # Test address family handling
 pytest tests/test_dnstraceroute_pytest.py::TestAddressFamilyHandling
+```
+
+### Offline Error Handling Tests
+
+These run without network access and are part of the CI unit test job.
+
+`test_exception_handling.py` replaces dnspython's query functions with stubs that
+raise a chosen exception, so every error handler in `dnsping` and
+`dnsdiag.dns.ping()` is exercised: httpx2 connection and timeout errors on DoH,
+QUIC errors on DoQ and DoH3, malformed responses, and missing DoH/DoQ support.
+
+`test_local_responses.py` runs `dnsping` and `dnseval` against local stand-in
+servers: a UDP responder that sends unusual EDNS options or malformed replies, a
+closed port that refuses DoH connections, and a listener that never completes the
+TLS handshake.
+
+```bash
+pytest tests/test_exception_handling.py tests/test_local_responses.py
 ```
 
 ## Common Usage Patterns
@@ -197,10 +216,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
       with:
-        python-version: '3.9'
+        python-version: '3.15'
     - name: Install dependencies
       run: |
         pip install -r tests/test-requirements.txt
