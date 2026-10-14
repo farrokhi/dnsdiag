@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dnsdiag"
-version = "2.9.4"
+version = "2.10.0"
 description = "DNS Measurement, Troubleshooting and Security Auditing Toolset (ping, traceroute)"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -49,7 +49,8 @@ packages = ["dnsdiag"]
 py-modules = ["dnsping", "dnstraceroute", "dnseval"]
 
 [tool.git-changelog]
-convention = "basic"
+convention = "conventional"
+sections = ["build", "feat", "fix", "docs"]
 in-place = true
 marker-line = "<!-- insertion marker -->"
 output = "CHANGELOG.md"

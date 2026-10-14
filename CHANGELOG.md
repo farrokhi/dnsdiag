@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v2.10.0](https://github.com/farrokhi/dnsdiag/releases/tag/v2.10.0) - 2026-10-14
+
+<small>[Compare with v2.9.4](https://github.com/farrokhi/dnsdiag/compare/v2.9.4...v2.10.0)</small>
+
+### Build
+
+- check DoH, DoH3 and DoQ in frozen binaries before packaging ([d18fea3](https://github.com/farrokhi/dnsdiag/commit/d18fea353241eedcb9fe33085a7fda3cfe2774cb) by [@farrokhi](https://github.com/farrokhi)).
+- move to dnspython 2.9 and httpx2, require Python 3.11 ([461dafd](https://github.com/farrokhi/dnsdiag/commit/461dafd160d7d1e4bd7543ae6f6652ea998f4f3f) by [@farrokhi](https://github.com/farrokhi)).
+- update pytest-benchmark requirement from >=5.2.3 to >=5.3.0 ([57406f2](https://github.com/farrokhi/dnsdiag/commit/57406f295b22a2875d90435f72520d981703aae4) by [@dependabot[bot]](https://github.com/dependabot[bot])).
+- update cryptography requirement ([166a7f7](https://github.com/farrokhi/dnsdiag/commit/166a7f7d806be5e1367e4eeb74247aede10e824d) by [@dependabot[bot]](https://github.com/dependabot[bot])).
+- bump actions/setup-python from 6 to 7 ([46214f1](https://github.com/farrokhi/dnsdiag/commit/46214f152ef8209970de516e970e334df75ebca9) by [@dependabot[bot]](https://github.com/dependabot[bot])).
+
+### Bug Fixes
+
+- report malformed responses and missing QUIC support instead of crash ([ccafbef](https://github.com/farrokhi/dnsdiag/commit/ccafbefbd8c54f9e164cee10e3919101edcec69b) by [@farrokhi](https://github.com/farrokhi)).
+- don't crash on typed EDNS options in verbose output ([835883f](https://github.com/farrokhi/dnsdiag/commit/835883fa765b5e63952b9ab934b8b6dd969ff1d6) by [@farrokhi](https://github.com/farrokhi)).
+- bundle package metadata to fix frozen binaries (DoQ and DoH) ([c576fd3](https://github.com/farrokhi/dnsdiag/commit/c576fd3352e65a04259888636441fe33deffd4af) by [@farrokhi](https://github.com/farrokhi)).
+
+### Docs
+
+- note Python 3.11 requirement and document offline tests ([f404682](https://github.com/farrokhi/dnsdiag/commit/f404682e2b755b5f1b5040e9daf514e6eb508299) by [@farrokhi](https://github.com/farrokhi)).
+
 ## [v2.9.4](https://github.com/farrokhi/dnsdiag/releases/tag/v2.9.4) - 2026-07-01
 
 <small>[Compare with v2.9.3](https://github.com/farrokhi/dnsdiag/compare/v2.9.3...v2.9.4)</small>
