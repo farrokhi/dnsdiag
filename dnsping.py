@@ -722,8 +722,12 @@ def main() -> None:
                                         tag = struct.unpack('!H', ans_opt.data[idx:idx + 2])[0]
                                         key_tags.append(str(tag))
                                 option_details = "tags=[%s]" % ",".join(key_tags)
-                        else:
+                        elif isinstance(ans_opt, dns.edns.GenericOption):
                             option_details = "type=%d, length=%d" % (ans_opt.otype, len(ans_opt.data))
+                        else:
+                            # Options dnspython parses into a typed class carry no raw .data; their
+                            # to_text() is "NAME value", which fits the "NAME (code): value" layout.
+                            option_name, _, option_details = ans_opt.to_text().partition(" ")
 
                         print("%s (%d): %s" % (option_name, ans_opt.otype, option_details), flush=True)
 
