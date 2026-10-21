@@ -90,6 +90,14 @@
 76.76.2.11
 76.76.10.11
 
+## CleanBrowsing
+# DNS filtering service with security, adult and family filters
+185.228.168.9
+185.228.169.9
+185.228.168.10
+185.228.168.168
+185.228.169.168
+
 ## NextDNS
 # Highly customizable DNS service
 45.90.28.157
