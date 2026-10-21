@@ -172,6 +172,20 @@
 2606:1a40::11
 2606:1a40:1::11
 
+## CleanBrowsing
+# DNS filtering service with free security, adult and family tiers
+# Variants: .9 (security), .10 (adult), .168 (family)
+# Website: https://cleanbrowsing.org/
+# DNSSEC: NO | ECS: NO | EDE: NO
+# Protocols: UDP, TCP, DoT, DoH
+# DoT: security-filter-dns.cleanbrowsing.org (port 853)
+# DoH: https://doh.cleanbrowsing.org/doh/security-filter/
+185.228.168.9
+185.228.169.9
+185.228.168.10
+185.228.168.168
+185.228.169.168
+
 ## NextDNS
 # Highly customizable DNS service with extensive filtering options
 # Cloud-based DNS with detailed analytics and custom block lists
