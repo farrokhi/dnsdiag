@@ -446,7 +446,7 @@ def main() -> None:
         if should_resolve:
             try:
                 if curr_addr:
-                    curr_name = socket.gethostbyaddr(curr_addr)[0]
+                    curr_name = escape_text(socket.gethostbyaddr(curr_addr)[0])
             except OSError:
                 curr_name = curr_addr
             except KeyboardInterrupt:

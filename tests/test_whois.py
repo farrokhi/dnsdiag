@@ -1,5 +1,5 @@
 """
-Offline tests for dnstraceroute's AS number lookups and its use of the working directory.
+Offline tests for dnstraceroute's AS number and reverse DNS lookups and its use of the working directory.
 
 dnstraceroute normally runs as root from whatever directory the user is in, so
 it must not load or write anything there. The trace tests run main() in-process
@@ -198,8 +198,9 @@ def trace(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
           tmp_path: Path) -> Iterator[Callable[..., str]]:
     """Run dnstraceroute.main() in-process for a trace that reaches the server at the first hop."""
 
-    def run(*args: str) -> str:
-        monkeypatch.setattr(sys, "argv", ["dnstraceroute.py", "-n", "-c", "1", "-s", SERVER, *args, "example.com"])
+    def run(*args: str, resolve: bool = False) -> str:
+        no_resolve = [] if resolve else ["-n"]
+        monkeypatch.setattr(sys, "argv", ["dnstraceroute.py", *no_resolve, "-c", "1", "-s", SERVER, *args, "example.com"])
         dnstraceroute.main()
         return capsys.readouterr().out
 
@@ -245,3 +246,15 @@ class TestTraceWithAsn:
         trace("-a")
         assert [path.name for path in tmp_path.iterdir()] == [CACHE_FILE]
         assert (tmp_path / CACHE_FILE).read_bytes() == planted
+
+
+class TestTraceWithReverseDns:
+    @pytest.mark.parametrize(("name", "printed"), [
+        ("dns.example", "dns.example"),
+        # Whoever controls a hop's reverse DNS sets this name, and musl returns it unchecked
+        ("evil\nFORGED\x1b[2J.example", "evil\\010FORGED\\027[2J.example"),
+    ], ids=["plain", "hostile"])
+    def test_hop_name(self, monkeypatch: pytest.MonkeyPatch, trace: Callable[..., str],
+                      name: str, printed: str) -> None:
+        monkeypatch.setattr(dnstraceroute.socket, "gethostbyaddr", lambda address: (name, [], [address]))
+        assert f"1\t{printed} ({SERVER}) 12.500 ms\n" in trace(resolve=True)
