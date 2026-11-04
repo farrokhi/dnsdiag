@@ -130,7 +130,8 @@ def evaluate_server(server: str, qname: str, rdatatype: str, waittime: int, coun
 
     try:
         retval = dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, count, proto, src_ip,
-                                  use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
+                                  use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec,
+                                  server_hostname=server if server != resolver else None)
 
     except (KeyboardInterrupt, SystemExit):
         raise
@@ -354,7 +355,8 @@ def main() -> None:
                 if resolver is not None:
                     try:
                         dnsdiag.dns.ping(qname, resolver, dst_port, rdatatype, waittime, 1, proto, src_ip,
-                                         use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec)
+                                         use_edns=use_edns, force_miss=force_miss, want_dnssec=want_dnssec,
+                                         server_hostname=server if server != resolver else None)
                     except (KeyboardInterrupt, SystemExit):
                         shared.shutdown = True
                         break

@@ -99,6 +99,8 @@ These run without network access and are part of the CI unit test job.
 raise a chosen exception, so every error handler in `dnsping` and
 `dnsdiag.dns.ping()` is exercised: httpx2 connection and timeout errors on DoH,
 QUIC errors on DoQ and DoH3, malformed responses, and missing DoH/DoQ support.
+Other stubs record their arguments, to check that the tools send the server name
+on encrypted transports.
 
 `test_local_responses.py` runs `dnsping` and `dnseval` against local stand-in
 servers: a UDP responder that sends unusual EDNS options or malformed replies, a

@@ -57,6 +57,7 @@ from dnsdiag.dns import (
     PROTO_TLS,
     PROTO_UDP,
     CustomSocket,
+    doh_target,
     escape_text,
     get_default_port,
     nsid_to_text,
@@ -344,6 +345,10 @@ def main() -> None:
     dnsserver_hostname = dnsserver  # keep original name for display and SNI
     dnsserver_ip = resolve_server_address(dnsserver, af)
 
+    # Use resolved IP for connection, but provide hostname for SNI/certificate validation
+    server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
+    doh_where, doh_bootstrap = doh_target(dnsserver_ip, server_hostname, dst_port)
+
     response_time = []
     i = 0
 
@@ -423,8 +428,6 @@ def main() -> None:
             elif proto is PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
                     try:
-                        # Use resolved IP for connection, but provide hostname for SNI/certificate validation
-                        server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
                         answers = dns.query.tls(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                                 source=src_ip, source_port=src_port,
                                                 server_hostname=server_hostname)
@@ -452,13 +455,9 @@ def main() -> None:
             elif proto is PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
                     try:
-                        # For hostnames, construct full URL; for IPs, use IP directly
-                        if dnsserver_hostname != dnsserver_ip:
-                            https_server = f"https://{dnsserver_hostname}/dns-query"
-                        else:
-                            https_server = dnsserver_ip
-                        answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
+                        answers = dns.query.https(query, doh_where, timeout=timeout, port=dst_port,
                                                   source=src_ip, source_port=src_port,
+                                                  bootstrap_address=doh_bootstrap,
                                                   http_version=dns.query.HTTPVersion.HTTP_2)
                     except dns.query.NoDOH:
                         die("ERROR: DNS-over-HTTPS requires the httpx2, httpcore2 and h2 modules")
@@ -486,13 +485,9 @@ def main() -> None:
             elif proto is PROTO_HTTP3:
                 if hasattr(dns.query, 'https') and hasattr(dns.query, 'HTTPVersion') and hasattr(dns.query.HTTPVersion, 'H3'):
                     try:
-                        # For hostnames, construct full URL; for IPs, use IP directly
-                        if dnsserver_hostname != dnsserver_ip:
-                            https_server = f"https://{dnsserver_hostname}/dns-query"
-                        else:
-                            https_server = dnsserver_ip
-                        answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
+                        answers = dns.query.https(query, doh_where, timeout=timeout, port=dst_port,
                                                   source=src_ip, source_port=src_port,
+                                                  bootstrap_address=doh_bootstrap,
                                                   http_version=dns.query.HTTPVersion.H3)
                     except dns.query.NoDOH:
                         die("ERROR: DNS-over-HTTP/3 requires the aioquic module")
@@ -528,8 +523,6 @@ def main() -> None:
             elif proto is PROTO_QUIC:
                 if hasattr(dns.query, 'quic'):
                     try:
-                        # Use resolved IP for connection, but provide hostname for SNI/certificate validation
-                        server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
                         answers = dns.query.quic(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                                  source=src_ip, source_port=src_port,
                                                  server_hostname=server_hostname)

@@ -105,13 +105,24 @@ class CustomSocket(socket.socket):
                 self.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_UNICAST_HOPS, _TTL)
 
 
+def doh_target(server: str, server_hostname: str | None, port: int) -> tuple[str, str | None]:
+    """Return the where and bootstrap_address arguments for dns.query.https()."""
+    if server_hostname is None:
+        return server, None
+    # The URL supplies SNI and the Host header; bootstrap_address stops dnspython
+    # looking the name up again on every query.
+    return f"https://{server_hostname}:{port}/dns-query", server
+
+
 def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, count: int, proto: int,
          src_ip: str | None, use_edns: bool = False, force_miss: bool = False,
-         want_dnssec: bool = False, want_nsid: bool = False, socket_ttl: int | None = None) -> PingResponse:
+         want_dnssec: bool = False, want_nsid: bool = False, socket_ttl: int | None = None,
+         server_hostname: str | None = None) -> PingResponse:
     retval = PingResponse()
     retval.rcode_text = "No Response"
 
     response_times: list[float] = []
+    doh_where, doh_bootstrap = doh_target(server, server_hostname, dst_port)
 
     if socket_ttl is not None:
         global _TTL
@@ -152,24 +163,28 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
                 response = dns.query.tcp(query, server, timeout=timeout, port=dst_port, source=src_ip)
             elif proto == PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
-                    response = dns.query.tls(query, server, timeout, dst_port, src_ip)
+                    response = dns.query.tls(query, server, timeout, dst_port, src_ip,
+                                             server_hostname=server_hostname)
                 else:
                     unsupported_feature()
             elif proto == PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
-                    response = dns.query.https(query, server, timeout, dst_port, src_ip,
-                                              http_version=dns.query.HTTPVersion.HTTP_2)
+                    response = dns.query.https(query, doh_where, timeout, dst_port, src_ip,
+                                               bootstrap_address=doh_bootstrap,
+                                               http_version=dns.query.HTTPVersion.HTTP_2)
                 else:
                     unsupported_feature()
             elif proto == PROTO_QUIC:
                 if hasattr(dns.query, 'quic'):
-                    response = dns.query.quic(query, server, timeout, dst_port, src_ip)
+                    response = dns.query.quic(query, server, timeout, dst_port, src_ip,
+                                              hostname=server_hostname)
                 else:
                     unsupported_feature()
             elif proto == PROTO_HTTP3:
-                if hasattr(dns.query, '_http3'):
-                    url = f"https://{server}:{dst_port}/dns-query"
-                    response = dns.query._http3(query, server, url, timeout, dst_port, src_ip)
+                if hasattr(dns.query, 'https'):
+                    response = dns.query.https(query, doh_where, timeout, dst_port, src_ip,
+                                               bootstrap_address=doh_bootstrap,
+                                               http_version=dns.query.HTTPVersion.H3)
                 else:
                     unsupported_feature()
 

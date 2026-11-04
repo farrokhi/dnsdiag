@@ -138,7 +138,8 @@ def expert_report(trace_path: list[str], color_mode: bool) -> None:
 
 
 def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
-         timeout: int, src_ip: str | None, use_edns: bool, want_nsid: bool) -> tuple[bool, float | None, str | None]:
+         timeout: int, src_ip: str | None, use_edns: bool, want_nsid: bool,
+         server_hostname: str | None = None) -> tuple[bool, float | None, str | None]:
     reached = False
     resp_time = None
     nsid_value = None
@@ -146,7 +147,8 @@ def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
 
     try:
         resp = dnsdiag.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
-                                want_dnssec=False, want_nsid=want_nsid, socket_ttl=ttl)
+                                want_dnssec=False, want_nsid=want_nsid, socket_ttl=ttl,
+                                server_hostname=server_hostname)
 
     except SystemExit:
         raise
@@ -312,6 +314,8 @@ def main() -> None:
         else:
             dnsserver = str(nameservers[0])
 
+    server_hostname = None
+
     # Detect address family from IP, or resolve hostname and default af to IPv4
     try:
         addr = ipaddress.ip_address(dnsserver)
@@ -326,6 +330,7 @@ def main() -> None:
     except ValueError:  # hostname — resolve it
         if af is None:
             af = socket.AF_INET
+        server_hostname = dnsserver
         dnsserver = resolve_server_address(dnsserver, af)
 
     # Validate source IP address family against the resolved server family
@@ -378,7 +383,7 @@ def main() -> None:
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
             stime = time.perf_counter()
             thr = pool.submit(ping, qname, dnsserver, rdatatype, proto, dest_port, ttl, timeout, src_ip=src_ip,
-                              use_edns=use_edns, want_nsid=want_nsid)
+                              use_edns=use_edns, want_nsid=want_nsid, server_hostname=server_hostname)
 
             try:  # expect ICMP response
                 packet, curr_addr = icmp_socket.recvfrom(512)
