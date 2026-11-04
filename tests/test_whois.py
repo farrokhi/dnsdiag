@@ -7,6 +7,7 @@ with a fake ICMP socket, and lookups use the real cymruwhois client with only
 its network call replaced.
 """
 
+import itertools
 import os
 import pickle
 import signal
@@ -119,18 +120,24 @@ class TestAsnLookup:
 
 STARTS = {
     # How the source tree, the Docker image and the standalone binaries start the tool
-    "script": [sys.executable, str(PROJECT_ROOT / "dnstraceroute.py"), "-h"],
+    "script": [sys.executable, str(PROJECT_ROOT / "dnstraceroute.py")],
     # How the console script from a pip install starts it
     "entry point": [sys.executable, "-c",
-                    "import sys, dnstraceroute; sys.argv = ['dnstraceroute', '-h']; dnstraceroute.main()"],
+                    "import sys, dnstraceroute; sys.argv[0] = 'dnstraceroute'; dnstraceroute.main()"],
 }
+# -h exits before any trace, so start-up code runs without root or a network. The -a case
+# reaches it with the flag on the command line; the trace tests below cover -a inside main().
+ARGUMENTS = {"-h": ["-h"], "-a -h": ["-a", "-h"]}
 
 
-@pytest.fixture(params=STARTS, ids=list(STARTS))
+@pytest.fixture(params=list(itertools.product(STARTS, ARGUMENTS)), ids=lambda param: " ".join(param))
 def start_tool(request: pytest.FixtureRequest) -> Callable[[Path], subprocess.CompletedProcess[str]]:
+    start_with, arguments = request.param
+
     def start(cwd: Path) -> subprocess.CompletedProcess[str]:
         env = {**os.environ, "PYTHONPATH": str(PROJECT_ROOT), "PYTHONDONTWRITEBYTECODE": "1"}
-        return subprocess.run(STARTS[request.param], cwd=cwd, env=env, capture_output=True, text=True, timeout=30)
+        return subprocess.run([*STARTS[start_with], *ARGUMENTS[arguments]], cwd=cwd, env=env,
+                              capture_output=True, text=True, timeout=30)
 
     return start
 
