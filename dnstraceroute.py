@@ -506,8 +506,4 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    try:
-        whois_cache = dnsdiag.whois.restore()
-        main()
-    finally:
-        dnsdiag.whois.save(whois_cache)
+    main()

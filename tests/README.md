@@ -107,8 +107,12 @@ servers: a UDP responder that sends unusual EDNS options or malformed replies, a
 closed port that refuses DoH connections, and a listener that never completes the
 TLS handshake.
 
+`test_whois.py` covers AS number lookups and checks that `dnstraceroute` neither
+loads nor writes anything in its working directory. It runs the trace loop with a
+fake ICMP socket, so it does not need root.
+
 ```bash
-pytest tests/test_exception_handling.py tests/test_local_responses.py
+pytest tests/test_exception_handling.py tests/test_local_responses.py tests/test_whois.py
 ```
 
 ## Common Usage Patterns
