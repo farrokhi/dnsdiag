@@ -41,7 +41,14 @@ import dns.resolver
 
 import dnsdiag.whois
 from dnsdiag import shared
-from dnsdiag.dns import PROTO_HTTP3, PROTO_QUIC, PROTO_TCP, PROTO_UDP, get_default_port
+from dnsdiag.dns import (
+    PROTO_HTTP3,
+    PROTO_QUIC,
+    PROTO_TCP,
+    PROTO_UDP,
+    get_default_port,
+    nsid_to_text,
+)
 from dnsdiag.shared import (
     Colors,
     __version__,
@@ -154,12 +161,8 @@ def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
             if want_nsid and resp.response and resp.response.options:
                 for option in resp.response.options:
                     if option.otype == dns.edns.OptionType.NSID:
-                        nsid_bytes = option.nsid
-                        if nsid_bytes:
-                            try:
-                                nsid_value = nsid_bytes.decode("utf-8")
-                            except UnicodeDecodeError:
-                                nsid_value = nsid_bytes.hex()
+                        if option.nsid:
+                            nsid_value = nsid_to_text(option.nsid)
                         break
 
     return reached, resp_time, nsid_value

@@ -276,3 +276,26 @@ def flags_to_text(flags: int) -> str:
         else:
             text_flags.append('--')
     return ' '.join(text_flags)
+
+
+def escape_text(text: str) -> str:
+    """Escape backslashes and unprintable characters in text taken from a response."""
+    # \DDD is the form dnspython's to_text() prints for the same characters
+    escaped = []
+    for c in text:
+        if c == '\\':
+            escaped.append('\\\\')
+        elif c.isprintable():
+            escaped.append(c)
+        elif ord(c) < 0x100:
+            escaped.append(f'\\{ord(c):03d}')
+        else:
+            escaped.append(f'\\u{ord(c):04x}')
+    return ''.join(escaped)
+
+
+def nsid_to_text(nsid: bytes) -> str:
+    try:
+        return escape_text(nsid.decode('utf-8'))
+    except UnicodeDecodeError:
+        return nsid.hex()

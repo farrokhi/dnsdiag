@@ -57,7 +57,9 @@ from dnsdiag.dns import (
     PROTO_TLS,
     PROTO_UDP,
     CustomSocket,
+    escape_text,
     get_default_port,
+    nsid_to_text,
     proto_to_text,
     valid_rdatatype,
 )
@@ -637,7 +639,7 @@ def main() -> None:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
                             nsid_val = ans_opt.nsid
                             if nsid_val:
-                                edns_parts.append("NSID:%s" % nsid_val.decode("utf-8"))
+                                edns_parts.append("NSID:%s" % nsid_to_text(nsid_val))
 
                 # Always show EDE when present (server-initiated error responses)
                 if answers.options:
@@ -646,7 +648,7 @@ def main() -> None:
                             if ans_opt.text:
                                 # Truncate EDE text for ping output to prevent display issues
                                 truncated_text = ans_opt.text[:50] + "..." if len(ans_opt.text) > 50 else ans_opt.text
-                                edns_parts.append("EDE:%d(\"%s\")" % (ans_opt.code, truncated_text))
+                                edns_parts.append("EDE:%d(\"%s\")" % (ans_opt.code, escape_text(truncated_text)))
                             else:
                                 edns_parts.append("EDE:%d" % ans_opt.code)
 
@@ -695,7 +697,7 @@ def main() -> None:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
                             option_name = "NSID"
                             nsid_val = ans_opt.nsid
-                            option_details = nsid_val.decode("utf-8") if nsid_val else ""
+                            option_details = nsid_to_text(nsid_val) if nsid_val else ""
                         elif ans_opt.otype == dns.edns.OptionType.ECS:
                             option_name = "ECS"
                             option_details = "family=%d, source=%d, scope=%d, address=%s" % (
@@ -703,7 +705,7 @@ def main() -> None:
                                 ans_opt.address if ans_opt.address else "None")
                         elif ans_opt.otype == dns.edns.EDE:
                             option_name = "EDE"
-                            option_details = "code=%d, text=\"%s\"" % (ans_opt.code, ans_opt.text or "")
+                            option_details = "code=%d, text=\"%s\"" % (ans_opt.code, escape_text(ans_opt.text or ""))
                         elif ans_opt.otype == 10:  # COOKIE
                             option_name = "COOKIE"
                             client_hex = ans_opt.client.hex()
@@ -719,7 +721,7 @@ def main() -> None:
                             option_details = "length=%d" % len(ans_opt.data)
                         elif ans_opt.otype == 13:  # CHAIN
                             option_name = "CHAIN"
-                            option_details = "closest_encloser=%s" % ans_opt.data.decode('utf-8', errors='ignore')
+                            option_details = "closest_encloser=%s" % escape_text(ans_opt.data.decode('utf-8', errors='ignore'))
                         elif ans_opt.otype == 14:  # KEY-TAG
                             option_name = "KEY-TAG"
                             if len(ans_opt.data) >= 2:
