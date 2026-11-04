@@ -46,6 +46,7 @@ from dnsdiag.dns import (
     PROTO_QUIC,
     PROTO_TCP,
     PROTO_UDP,
+    escape_text,
     get_default_port,
     nsid_to_text,
 )
@@ -468,7 +469,7 @@ def main() -> None:
                 as_name = ''
                 try:
                     if asn and asn.asn != "NA":
-                        as_name = "[AS%s %s] " % (asn.asn, asn.owner)
+                        as_name = "[AS%s %s] " % (escape_text(asn.asn), escape_text(asn.owner))
                 except AttributeError:
                     if shared.shutdown:
                         sys.exit(0)

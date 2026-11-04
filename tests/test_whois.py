@@ -232,6 +232,13 @@ class TestTraceWithAsn:
         monkeypatch.setattr(cymruwhois.Client, "_lookupmany_raw", failing_lookup)
         assert f"1\t{SERVER} ({SERVER}) 12.500 ms\n" in trace("-a")
 
+    def test_text_from_the_whois_service_is_escaped(self, monkeypatch: pytest.MonkeyPatch,
+                                                    trace: Callable[..., str]) -> None:
+        hostile = cymruwhois.record("15169\x1b[2J", SERVER, "192.0.2.0/24", "US", "EVIL\x1b]0;title\x07 ‮CORP")
+        monkeypatch.setattr(cymruwhois.Client, "_lookupmany_raw", lambda self, ips: iter([hostile]))
+        expected = f"1\t{SERVER} ({SERVER}) [AS15169\\027[2J EVIL\\027]0;title\\007 \\u202eCORP] 12.500 ms\n"
+        assert expected in trace("-a")
+
     def test_trace_leaves_the_working_directory_alone(self, trace: Callable[..., str], whois_answers: list[str],
                                                       tmp_path: Path) -> None:
         planted = plant_cache(tmp_path)
