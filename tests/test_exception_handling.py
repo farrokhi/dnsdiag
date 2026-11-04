@@ -115,7 +115,7 @@ class TestDNSPingDoH:
     """dnsping --doh, where dnspython raises httpx2 exceptions"""
 
     @pytest.mark.parametrize("exc,message", [
-        (httpx2.ConnectError("refused"), "Connection refused"),
+        (httpx2.ConnectError("no address worked"), "Connection failed"),
         (httpx2.ConnectTimeout("timed out"), "Request timeout"),
         (httpx2.ReadTimeout("timed out"), "Read timeout"),
         (httpx2.WriteTimeout("timed out"), "Connection failed"),

@@ -462,8 +462,9 @@ def main() -> None:
                     except dns.query.NoDOH:
                         die("ERROR: DNS-over-HTTPS requires the httpx2, httpcore2 and h2 modules")
                     except httpx2.ConnectError:
+                        # dnspython drops each attempt's error, so this may not be a refusal
                         if not quiet:
-                            print("Connection refused", flush=True)
+                            print("Connection failed", flush=True)
                         continue
                     except (ConnectionResetError, BrokenPipeError):
                         if not quiet:

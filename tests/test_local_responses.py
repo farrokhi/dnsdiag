@@ -263,7 +263,8 @@ class TestDoHConnectionFailures:
                           "-c", "1", "-w", "2", "example.com")
 
         assert_clean_exit(result)
-        assert "Connection refused" in result.stdout
+        # dnspython drops the reason, so a closed port gets the same message as any failed connect
+        assert "Connection failed" in result.stdout
         assert ALL_LOST in result.stdout
 
     def test_dnsping_connect_timeout(self, silent_tcp_port: int) -> None:
