@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 <!-- insertion marker -->
+## [v2.10.1](https://github.com/farrokhi/dnsdiag/releases/tag/v2.10.1) - 2026-11-05
+
+<small>[Compare with v2.10.0](https://github.com/farrokhi/dnsdiag/compare/v2.10.0...v2.10.1)</small>
+
+### Build
+
+- require dnspython 2.9.2, drop direct cryptography ([4ed348c](https://github.com/farrokhi/dnsdiag/commit/4ed348c60a3afd8bf0bc74e00f7f71525916bc1d) by [@farrokhi](https://github.com/farrokhi)).
+
+### Bug Fixes
+
+- escape reverse DNS names in hop lines ([1ea85a0](https://github.com/farrokhi/dnsdiag/commit/1ea85a090097b2c92b9bdc5fe384dffab6696583) by [@farrokhi](https://github.com/farrokhi)).
+- escape text from the whois service ([f1c553a](https://github.com/farrokhi/dnsdiag/commit/f1c553a9e60a690e8ddc80f090e99d934d404cdf) by [@farrokhi](https://github.com/farrokhi)).
+- don't report every DoH connect failure as refused ([c49d687](https://github.com/farrokhi/dnsdiag/commit/c49d687fdb8f1f5077360aff9fa1851fc6fe6041) by [@farrokhi](https://github.com/farrokhi)).
+- stop loading whois.cache from the working directory ([d5737ee](https://github.com/farrokhi/dnsdiag/commit/d5737ee6992e5593c800132dd4385d2eacc24aa2) by [@farrokhi](https://github.com/farrokhi)).
+- send the server name on encrypted transports ([5645fcd](https://github.com/farrokhi/dnsdiag/commit/5645fcd1079183134559db5e7b0d9825a6c48df1) by [@farrokhi](https://github.com/farrokhi)).
+- escape server-supplied text and handle non-UTF-8 NSID ([02fb160](https://github.com/farrokhi/dnsdiag/commit/02fb1605a0bc218c0ddf2519c80569541fa5f3de) by [@farrokhi](https://github.com/farrokhi)).
+
 ## [v2.10.0](https://github.com/farrokhi/dnsdiag/releases/tag/v2.10.0) - 2026-10-14
 
 <small>[Compare with v2.9.4](https://github.com/farrokhi/dnsdiag/compare/v2.9.4...v2.10.0)</small>
