@@ -57,7 +57,10 @@ from dnsdiag.dns import (
     PROTO_TLS,
     PROTO_UDP,
     CustomSocket,
+    doh_target,
+    escape_text,
     get_default_port,
+    nsid_to_text,
     proto_to_text,
     valid_rdatatype,
 )
@@ -342,6 +345,10 @@ def main() -> None:
     dnsserver_hostname = dnsserver  # keep original name for display and SNI
     dnsserver_ip = resolve_server_address(dnsserver, af)
 
+    # Use resolved IP for connection, but provide hostname for SNI/certificate validation
+    server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
+    doh_where, doh_bootstrap = doh_target(dnsserver_ip, server_hostname, dst_port)
+
     response_time = []
     i = 0
 
@@ -421,8 +428,6 @@ def main() -> None:
             elif proto is PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
                     try:
-                        # Use resolved IP for connection, but provide hostname for SNI/certificate validation
-                        server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
                         answers = dns.query.tls(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                                 source=src_ip, source_port=src_port,
                                                 server_hostname=server_hostname)
@@ -450,19 +455,16 @@ def main() -> None:
             elif proto is PROTO_HTTPS:
                 if hasattr(dns.query, 'https'):
                     try:
-                        # For hostnames, construct full URL; for IPs, use IP directly
-                        if dnsserver_hostname != dnsserver_ip:
-                            https_server = f"https://{dnsserver_hostname}/dns-query"
-                        else:
-                            https_server = dnsserver_ip
-                        answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
+                        answers = dns.query.https(query, doh_where, timeout=timeout, port=dst_port,
                                                   source=src_ip, source_port=src_port,
+                                                  bootstrap_address=doh_bootstrap,
                                                   http_version=dns.query.HTTPVersion.HTTP_2)
                     except dns.query.NoDOH:
                         die("ERROR: DNS-over-HTTPS requires the httpx2, httpcore2 and h2 modules")
                     except httpx2.ConnectError:
+                        # dnspython drops each attempt's error, so this may not be a refusal
                         if not quiet:
-                            print("Connection refused", flush=True)
+                            print("Connection failed", flush=True)
                         continue
                     except (ConnectionResetError, BrokenPipeError):
                         if not quiet:
@@ -484,13 +486,9 @@ def main() -> None:
             elif proto is PROTO_HTTP3:
                 if hasattr(dns.query, 'https') and hasattr(dns.query, 'HTTPVersion') and hasattr(dns.query.HTTPVersion, 'H3'):
                     try:
-                        # For hostnames, construct full URL; for IPs, use IP directly
-                        if dnsserver_hostname != dnsserver_ip:
-                            https_server = f"https://{dnsserver_hostname}/dns-query"
-                        else:
-                            https_server = dnsserver_ip
-                        answers = dns.query.https(query, https_server, timeout=timeout, port=dst_port,
+                        answers = dns.query.https(query, doh_where, timeout=timeout, port=dst_port,
                                                   source=src_ip, source_port=src_port,
+                                                  bootstrap_address=doh_bootstrap,
                                                   http_version=dns.query.HTTPVersion.H3)
                     except dns.query.NoDOH:
                         die("ERROR: DNS-over-HTTP/3 requires the aioquic module")
@@ -526,8 +524,6 @@ def main() -> None:
             elif proto is PROTO_QUIC:
                 if hasattr(dns.query, 'quic'):
                     try:
-                        # Use resolved IP for connection, but provide hostname for SNI/certificate validation
-                        server_hostname = dnsserver_hostname if dnsserver_hostname != dnsserver_ip else None
                         answers = dns.query.quic(query, dnsserver_ip, timeout=timeout, port=dst_port,
                                                  source=src_ip, source_port=src_port,
                                                  server_hostname=server_hostname)
@@ -637,7 +633,7 @@ def main() -> None:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
                             nsid_val = ans_opt.nsid
                             if nsid_val:
-                                edns_parts.append("NSID:%s" % nsid_val.decode("utf-8"))
+                                edns_parts.append("NSID:%s" % nsid_to_text(nsid_val))
 
                 # Always show EDE when present (server-initiated error responses)
                 if answers.options:
@@ -646,7 +642,7 @@ def main() -> None:
                             if ans_opt.text:
                                 # Truncate EDE text for ping output to prevent display issues
                                 truncated_text = ans_opt.text[:50] + "..." if len(ans_opt.text) > 50 else ans_opt.text
-                                edns_parts.append("EDE:%d(\"%s\")" % (ans_opt.code, truncated_text))
+                                edns_parts.append("EDE:%d(\"%s\")" % (ans_opt.code, escape_text(truncated_text)))
                             else:
                                 edns_parts.append("EDE:%d" % ans_opt.code)
 
@@ -695,7 +691,7 @@ def main() -> None:
                         if ans_opt.otype == dns.edns.OptionType.NSID:
                             option_name = "NSID"
                             nsid_val = ans_opt.nsid
-                            option_details = nsid_val.decode("utf-8") if nsid_val else ""
+                            option_details = nsid_to_text(nsid_val) if nsid_val else ""
                         elif ans_opt.otype == dns.edns.OptionType.ECS:
                             option_name = "ECS"
                             option_details = "family=%d, source=%d, scope=%d, address=%s" % (
@@ -703,7 +699,7 @@ def main() -> None:
                                 ans_opt.address if ans_opt.address else "None")
                         elif ans_opt.otype == dns.edns.EDE:
                             option_name = "EDE"
-                            option_details = "code=%d, text=\"%s\"" % (ans_opt.code, ans_opt.text or "")
+                            option_details = "code=%d, text=\"%s\"" % (ans_opt.code, escape_text(ans_opt.text or ""))
                         elif ans_opt.otype == 10:  # COOKIE
                             option_name = "COOKIE"
                             client_hex = ans_opt.client.hex()
@@ -719,7 +715,7 @@ def main() -> None:
                             option_details = "length=%d" % len(ans_opt.data)
                         elif ans_opt.otype == 13:  # CHAIN
                             option_name = "CHAIN"
-                            option_details = "closest_encloser=%s" % ans_opt.data.decode('utf-8', errors='ignore')
+                            option_details = "closest_encloser=%s" % escape_text(ans_opt.data.decode('utf-8', errors='ignore'))
                         elif ans_opt.otype == 14:  # KEY-TAG
                             option_name = "KEY-TAG"
                             if len(ans_opt.data) >= 2:

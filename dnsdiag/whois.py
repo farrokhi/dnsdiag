@@ -23,41 +23,21 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import pickle
-import time
 from typing import Any
 
 import cymruwhois
 
-WHOIS_CACHE_FILE = 'whois.cache'
-
 
 def asn_lookup(ip: str, whois_cache: dict[str, Any]) -> tuple[Any | None, dict[str, Any]]:
+    # The cache lasts for one run. dnstraceroute usually runs as root from any directory,
+    # so it must not load cached objects from disk.
+    if ip in whois_cache:
+        return whois_cache[ip], whois_cache
     asn: Any | None = None
     try:
-        currenttime = time.time()
-        if ip in whois_cache:
-            asn, ts = whois_cache[ip]
-        else:
-            ts = 0
-        if (currenttime - ts) > 36000:
-            c = cymruwhois.Client()
-            asn = c.lookup(ip)
-            whois_cache[ip] = (asn, currenttime)
+        # cymruwhois would otherwise use memcached on localhost whenever python-memcached is installed
+        asn = cymruwhois.Client(memcache_host=None).lookup(ip)
+        whois_cache[ip] = asn
     except Exception:
         pass
     return asn, whois_cache
-
-
-def restore() -> dict[str, Any]:
-    try:
-        with open(WHOIS_CACHE_FILE, 'rb') as pkl_file:
-            whois: dict[str, Any] = pickle.load(pkl_file)
-            return whois
-    except (OSError, EOFError, pickle.UnpicklingError):
-        return {}
-
-
-def save(whois_data: dict[str, Any]) -> None:
-    with open(WHOIS_CACHE_FILE, 'wb') as pkl_file:
-        pickle.dump(whois_data, pkl_file)

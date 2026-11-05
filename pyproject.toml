@@ -28,9 +28,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "cryptography>=42.0.5,<51",
     "cymruwhois>=1.6",
-    "dnspython[doh,doq]>=2.9.0",
+    "dnspython[doh,doq]>=2.9.2",
     "httpx2>=2.13.0",
 ]
 

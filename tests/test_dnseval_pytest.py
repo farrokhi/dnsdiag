@@ -184,6 +184,23 @@ class TestProtocols:
         assert result.success, f"HTTP/3 evaluation failed: {result.error}"
         assert result.has_results
 
+    @pytest.mark.parametrize("server", ["dns.adguard-dns.com", "dns.nextdns.io"])
+    @pytest.mark.parametrize("flag", ["--tls", "--doh", "--http3", "--quic"])
+    def test_hostname_entry_gets_answers(self, runner, flag, server):
+        """Servers that need the name for SNI must get it from the server list"""
+        result = runner.run([flag, '-c', '2', '-f', '-', '-j', '-', 'google.com'],
+                           stdin=f'{server}\n'.encode())
+        assert result.success, f"{flag} evaluation of {server} failed: {result.error}"
+        assert json.loads(result.output)['data']['rcode_text'] == 'NOERROR', result.output
+
+    @pytest.mark.ipv6
+    def test_http3_on_ipv6_address(self, runner):
+        """DoH3 URLs must bracket IPv6 addresses"""
+        result = runner.run(['--http3', '-c', '2', '-f', '-', '-j', '-', 'google.com'],
+                           stdin=b'2606:4700:4700::1111\n')
+        assert result.success, f"HTTP/3 evaluation failed: {result.error}"
+        assert json.loads(result.output)['data']['rcode_text'] == 'NOERROR', result.output
+
 
 class TestRecordTypes:
     """Tests for different DNS record types"""

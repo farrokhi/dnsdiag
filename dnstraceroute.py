@@ -41,7 +41,15 @@ import dns.resolver
 
 import dnsdiag.whois
 from dnsdiag import shared
-from dnsdiag.dns import PROTO_HTTP3, PROTO_QUIC, PROTO_TCP, PROTO_UDP, get_default_port
+from dnsdiag.dns import (
+    PROTO_HTTP3,
+    PROTO_QUIC,
+    PROTO_TCP,
+    PROTO_UDP,
+    escape_text,
+    get_default_port,
+    nsid_to_text,
+)
 from dnsdiag.shared import (
     Colors,
     __version__,
@@ -131,7 +139,8 @@ def expert_report(trace_path: list[str], color_mode: bool) -> None:
 
 
 def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
-         timeout: int, src_ip: str | None, use_edns: bool, want_nsid: bool) -> tuple[bool, float | None, str | None]:
+         timeout: int, src_ip: str | None, use_edns: bool, want_nsid: bool,
+         server_hostname: str | None = None) -> tuple[bool, float | None, str | None]:
     reached = False
     resp_time = None
     nsid_value = None
@@ -139,7 +148,8 @@ def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
 
     try:
         resp = dnsdiag.dns.ping(qname, server, port, rdtype, timeout, 1, proto, src_ip, use_edns, force_miss=False,
-                                want_dnssec=False, want_nsid=want_nsid, socket_ttl=ttl)
+                                want_dnssec=False, want_nsid=want_nsid, socket_ttl=ttl,
+                                server_hostname=server_hostname)
 
     except SystemExit:
         raise
@@ -154,12 +164,8 @@ def ping(qname: str, server: str, rdtype: str, proto: int, port: int, ttl: int,
             if want_nsid and resp.response and resp.response.options:
                 for option in resp.response.options:
                     if option.otype == dns.edns.OptionType.NSID:
-                        nsid_bytes = option.nsid
-                        if nsid_bytes:
-                            try:
-                                nsid_value = nsid_bytes.decode("utf-8")
-                            except UnicodeDecodeError:
-                                nsid_value = nsid_bytes.hex()
+                        if option.nsid:
+                            nsid_value = nsid_to_text(option.nsid)
                         break
 
     return reached, resp_time, nsid_value
@@ -309,6 +315,8 @@ def main() -> None:
         else:
             dnsserver = str(nameservers[0])
 
+    server_hostname = None
+
     # Detect address family from IP, or resolve hostname and default af to IPv4
     try:
         addr = ipaddress.ip_address(dnsserver)
@@ -323,6 +331,7 @@ def main() -> None:
     except ValueError:  # hostname — resolve it
         if af is None:
             af = socket.AF_INET
+        server_hostname = dnsserver
         dnsserver = resolve_server_address(dnsserver, af)
 
     # Validate source IP address family against the resolved server family
@@ -375,7 +384,7 @@ def main() -> None:
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:  # dispatch dns lookup to another thread
             stime = time.perf_counter()
             thr = pool.submit(ping, qname, dnsserver, rdatatype, proto, dest_port, ttl, timeout, src_ip=src_ip,
-                              use_edns=use_edns, want_nsid=want_nsid)
+                              use_edns=use_edns, want_nsid=want_nsid, server_hostname=server_hostname)
 
             try:  # expect ICMP response
                 packet, curr_addr = icmp_socket.recvfrom(512)
@@ -437,7 +446,7 @@ def main() -> None:
         if should_resolve:
             try:
                 if curr_addr:
-                    curr_name = socket.gethostbyaddr(curr_addr)[0]
+                    curr_name = escape_text(socket.gethostbyaddr(curr_addr)[0])
             except OSError:
                 curr_name = curr_addr
             except KeyboardInterrupt:
@@ -460,7 +469,7 @@ def main() -> None:
                 as_name = ''
                 try:
                     if asn and asn.asn != "NA":
-                        as_name = "[AS%s %s] " % (asn.asn, asn.owner)
+                        as_name = "[AS%s %s] " % (escape_text(asn.asn), escape_text(asn.owner))
                 except AttributeError:
                     if shared.shutdown:
                         sys.exit(0)
@@ -498,8 +507,4 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    try:
-        whois_cache = dnsdiag.whois.restore()
-        main()
-    finally:
-        dnsdiag.whois.save(whois_cache)
+    main()

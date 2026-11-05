@@ -360,6 +360,17 @@ class TestCLIParameterValidation:
         assert not result.success, "Empty hostname should fail"
 
 
+class TestASNLookup:
+    """Tests for AS number lookups against the real whois service"""
+
+    def test_destination_asn_is_printed(self):
+        """A real trace with -a names the AS of the server it reaches"""
+        result = DNSTracerouteRunner(timeout=90).run(['-a', '-n', '-w', '1', '-s', RESOLVERS_IPV4['google'],
+                                                      'google.com'])
+        assert result.success, f"ASN trace failed: {result.error}"
+        assert '[AS15169 ' in result.output
+
+
 class TestRegressionBugs:
     """Tests for specific regression bugs and fixes"""
 

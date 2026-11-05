@@ -99,14 +99,20 @@ These run without network access and are part of the CI unit test job.
 raise a chosen exception, so every error handler in `dnsping` and
 `dnsdiag.dns.ping()` is exercised: httpx2 connection and timeout errors on DoH,
 QUIC errors on DoQ and DoH3, malformed responses, and missing DoH/DoQ support.
+Other stubs record their arguments, to check that the tools send the server name
+on encrypted transports.
 
 `test_local_responses.py` runs `dnsping` and `dnseval` against local stand-in
 servers: a UDP responder that sends unusual EDNS options or malformed replies, a
 closed port that refuses DoH connections, and a listener that never completes the
 TLS handshake.
 
+`test_whois.py` covers AS number lookups and checks that `dnstraceroute` neither
+loads nor writes anything in its working directory. It runs the trace loop with a
+fake ICMP socket, so it does not need root.
+
 ```bash
-pytest tests/test_exception_handling.py tests/test_local_responses.py
+pytest tests/test_exception_handling.py tests/test_local_responses.py tests/test_whois.py
 ```
 
 ## Common Usage Patterns

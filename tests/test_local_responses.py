@@ -21,8 +21,16 @@ import dns.name
 import dns.rrset
 import pytest
 
+import dnsdiag.dns
+import dnstraceroute
+from dnsdiag.dns import PROTO_UDP
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ALL_LOST = "1 requests transmitted, 0 responses received, 100% lost"
+
+# A terminal escape sequence and a line break, which a server can put in any text field
+HOSTILE_TEXT = "\x1b[31mred\nforged"
+ESCAPED_TEXT = "\\027[31mred\\010forged"
 
 ReplyBuilder = Callable[[bytes], bytes]
 
@@ -138,6 +146,88 @@ class TestEDNSOptionDisplay:
         assert "UNKNOWN (65001): type=65001, length=3" in result.stdout
 
 
+class TestServerSuppliedText:
+    """Text from a response must not reach the terminal as control characters"""
+
+    @pytest.mark.parametrize("option,args", [
+        (dns.edns.EDEOption(dns.edns.EDECode.BLOCKED, HOSTILE_TEXT), []),
+        (dns.edns.EDEOption(dns.edns.EDECode.BLOCKED, HOSTILE_TEXT), ["-v"]),
+        (dns.edns.NSIDOption(HOSTILE_TEXT.encode()), ["--nsid"]),
+        (dns.edns.NSIDOption(HOSTILE_TEXT.encode()), ["--nsid", "-v"]),
+        (dns.edns.GenericOption(dns.edns.OptionType.CHAIN, HOSTILE_TEXT.encode()), ["-v"]),
+    ], ids=["ede", "ede-verbose", "nsid", "nsid-verbose", "chain-verbose"])
+    def test_dnsping_escapes_control_characters(self, option: dns.edns.Option, args: list[str]) -> None:
+        with UDPResponder(answer_with_options(option)) as server:
+            result = run_tool("dnsping.py", "-s", "127.0.0.1", "-p", str(server.port),
+                              "-c", "1", "-w", "2", *args, "example.com")
+
+        assert_clean_exit(result)
+        assert "\x1b" not in result.stdout
+        assert "\nforged" not in result.stdout
+        assert ESCAPED_TEXT in result.stdout
+
+    def test_dnsping_truncates_ede_text_before_escaping(self) -> None:
+        option = dns.edns.EDEOption(dns.edns.EDECode.BLOCKED, "a" * 49 + "\n" + "b")
+        with UDPResponder(answer_with_options(option)) as server:
+            result = run_tool("dnsping.py", "-s", "127.0.0.1", "-p", str(server.port),
+                              "-c", "1", "-w", "2", "example.com")
+
+        assert_clean_exit(result)
+        assert 'EDE:15("' + "a" * 49 + '\\010...")' in result.stdout
+
+    @pytest.mark.parametrize("args,expected", [
+        (["--nsid"], "NSID:fffe"),
+        (["--nsid", "-v"], "NSID (3): fffe"),
+    ], ids=["compact", "verbose"])
+    def test_dnsping_prints_non_utf8_nsid_as_hex(self, args: list[str], expected: str) -> None:
+        option = dns.edns.NSIDOption(b"\xff\xfe")
+        with UDPResponder(answer_with_options(option)) as server:
+            result = run_tool("dnsping.py", "-s", "127.0.0.1", "-p", str(server.port),
+                              "-c", "1", "-w", "2", *args, "example.com")
+
+        assert_clean_exit(result)
+        assert expected in result.stdout
+
+    def test_dnstraceroute_escapes_nsid(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Running dnstraceroute needs root, so stop at the function that reads the NSID.
+        response = dns.message.make_response(dns.message.make_query("example.com", "A"))
+        response.use_edns(0, options=[dns.edns.NSIDOption(HOSTILE_TEXT.encode())])
+        ping_result = dnsdiag.dns.PingResponse()
+        ping_result.answer = ["example.com. 300 IN A 192.0.2.1"]
+        ping_result.response = response
+        monkeypatch.setattr(dnsdiag.dns, "ping", lambda *args, **kwargs: ping_result)
+
+        _, _, nsid = dnstraceroute.ping("example.com", "127.0.0.1", "A", PROTO_UDP, 53, 64, 1, None, True, True)
+
+        assert nsid == ESCAPED_TEXT
+
+
+class TestEscapeHelpers:
+    @pytest.mark.parametrize("text,expected", [
+        ("ns1.example", "ns1.example"),
+        ("two words", "two words"),
+        ("café", "café"),
+        ("back\\slash", "back\\\\slash"),
+        ("\x00", "\\000"),
+        ("\x1b", "\\027"),
+        ("\x7f", "\\127"),
+        ("\x85", "\\133"),
+        ("‮", "\\u202e"),  # right-to-left override
+        (" ", "\\u2028"),  # line separator
+    ])
+    def test_escape_text(self, text: str, expected: str) -> None:
+        assert dnsdiag.dns.escape_text(text) == expected
+
+    @pytest.mark.parametrize("nsid,expected", [
+        (b"ns1.example", "ns1.example"),
+        (b"caf\xc3\xa9", "café"),
+        (b"\x1b", "\\027"),
+        (b"\xff\xfe", "fffe"),
+    ])
+    def test_nsid_to_text(self, nsid: bytes, expected: str) -> None:
+        assert dnsdiag.dns.nsid_to_text(nsid) == expected
+
+
 class TestMalformedResponses:
     """Replies that dnspython refuses to parse count as lost, not as crashes"""
 
@@ -173,7 +263,8 @@ class TestDoHConnectionFailures:
                           "-c", "1", "-w", "2", "example.com")
 
         assert_clean_exit(result)
-        assert "Connection refused" in result.stdout
+        # dnspython drops the reason, so a closed port gets the same message as any failed connect
+        assert "Connection failed" in result.stdout
         assert ALL_LOST in result.stdout
 
     def test_dnsping_connect_timeout(self, silent_tcp_port: int) -> None:
