@@ -163,6 +163,8 @@ def ping(qname: str, server: str, dst_port: int, rdtype: str, timeout: float, co
                 response = dns.query.tcp(query, server, timeout=timeout, port=dst_port, source=src_ip)
             elif proto == PROTO_TLS:
                 if hasattr(dns.query, 'tls'):
+                    # TODO: DoT fails in the macOS binaries, whose OpenSSL looks for CAs under the build
+                    # machine's Python framework. dnsping.py has the same call. Workaround: SSL_CERT_FILE.
                     response = dns.query.tls(query, server, timeout, dst_port, src_ip,
                                              server_hostname=server_hostname)
                 else:
